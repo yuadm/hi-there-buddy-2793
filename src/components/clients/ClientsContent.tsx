@@ -18,6 +18,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { useClientData } from "@/hooks/useClientData";
 import { useClientActions } from "@/hooks/queries/useClientQueries";
 import { useActivitySync } from "@/hooks/useActivitySync";
+import { ClientDeleteConfirmDialog } from "./ClientDeleteConfirmDialog";
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -1099,6 +1100,19 @@ export function ClientsContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ClientDeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        client={selectedClient}
+        onConfirm={() => {
+          if (selectedClient) {
+            handleDeleteClient(selectedClient.id);
+          }
+        }}
+        isDeleting={deleteClient.isPending}
+      />
     </div>
   );
 }
