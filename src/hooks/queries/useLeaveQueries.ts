@@ -27,7 +27,10 @@ async function fetchLeaves(): Promise<Leave[]> {
     .from('leave_requests')
     .select(`
       *,
-      employees!leave_requests_employee_id_fkey(id, name, email, employee_code, remaining_leave_days, leave_taken, branch, branch_id),
+      employees!leave_requests_employee_id_fkey(
+        id, name, email, employee_code, remaining_leave_days, leave_taken, branch_id,
+        branches!employees_branch_id_fkey (id, name)
+      ),
       leave_types!leave_requests_leave_type_id_fkey(id, name, reduces_balance)
     `)
     .order('created_at', { ascending: false });
@@ -83,7 +86,10 @@ async function fetchLeaves(): Promise<Leave[]> {
 async function fetchEmployees(): Promise<Employee[]> {
   const { data, error } = await supabase
     .from('employees')
-    .select('id, name, email, employee_code, remaining_leave_days, leave_taken, branch, branch_id')
+    .select(`
+      id, name, email, employee_code, remaining_leave_days, leave_taken, branch_id,
+      branches!employees_branch_id_fkey (id, name)
+    `)
     .order('name');
 
   if (error) throw error;

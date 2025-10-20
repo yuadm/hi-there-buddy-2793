@@ -44,7 +44,10 @@ export interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;
@@ -60,11 +63,14 @@ export interface Employee {
   id: string;
   name: string;
   email: string;
-  branch: string;
   branch_id: string;
   employee_code: string;
   sponsored?: boolean;
   twenty_hours?: boolean;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Branch {
@@ -88,7 +94,11 @@ export const fetchDocuments = async () => {
     .from('document_tracker')
     .select(`
       *,
-      employees (name, email, branch)
+      employees (
+        name, 
+        email,
+        branches!employees_branch_id_fkey (id, name)
+      )
     `)
     .order('created_at', { ascending: true });
 
@@ -146,7 +156,10 @@ export const fetchDocuments = async () => {
 export const fetchDocumentEmployees = async () => {
   const { data, error } = await supabase
     .from('employees')
-    .select('id, name, email, branch, branch_id, employee_code, sponsored, twenty_hours')
+    .select(`
+      id, name, email, branch_id, employee_code, sponsored, twenty_hours,
+      branches!employees_branch_id_fkey (id, name)
+    `)
     .order('name');
 
   if (error) throw error;

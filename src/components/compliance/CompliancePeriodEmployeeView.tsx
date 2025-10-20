@@ -241,7 +241,7 @@ export function CompliancePeriodEmployeeView({
   const filteredEmployeeStatusList = employeeStatusList.filter(item => {
     if (!searchTerm.trim()) return true;
     return item.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           item.employee.branch.toLowerCase().includes(searchTerm.toLowerCase());
+           item.employee.branches?.name?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const compliantCount = filteredEmployeeStatusList.filter(item => item.status === 'compliant').length;
@@ -553,7 +553,7 @@ export function CompliancePeriodEmployeeView({
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {item.employee.branch}
+                            {item.employee.branches?.name}
                           </Badge>
                         </TableCell>
                         <TableCell>

@@ -66,8 +66,11 @@ interface ComplianceType {
 interface Employee {
   id: string;
   name: string;
-  branch: string;
   branch_id?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface Branch {
@@ -147,7 +150,7 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
   // Get unique branches for filter - filtered by user access
   const uniqueBranches = useMemo(() => {
     const accessibleBranches = getAccessibleBranches();
-    let branchNames = [...new Set(employeeStatusList.map(emp => emp.employee.branch))];
+    let branchNames = [...new Set(employeeStatusList.map(emp => emp.employee.branches?.name).filter(Boolean))];
     
     // Filter branches based on user permissions
     if (!isAdmin && accessibleBranches.length > 0) {
@@ -168,7 +171,7 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
     if (searchTerm.trim()) {
       filtered = filtered.filter(item =>
         item.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.employee.branch.toLowerCase().includes(searchTerm.toLowerCase())
+        item.employee.branches?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -179,7 +182,7 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
 
     // Apply branch filter
     if (branchFilter !== 'all') {
-      filtered = filtered.filter(item => item.employee.branch === branchFilter);
+      filtered = filtered.filter(item => item.employee.branch_id === branchFilter);
     }
 
     // For non-admin users, filter by accessible branches
@@ -188,7 +191,7 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
       // Filter employees by accessible branches
       filtered = filtered.filter(item => {
         // Map branch name to branch ID and check if it's in accessible branches
-        const employeeBranchId = branches.find(b => b.name === item.employee.branch)?.id;
+        const employeeBranchId = item.employee.branch_id;
         return accessibleBranches.includes(employeeBranchId || '');
       });
     }
@@ -204,8 +207,8 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
           bValue = b.employee.name;
           break;
         case 'branch':
-          aValue = a.employee.branch;
-          bValue = b.employee.branch;
+          aValue = a.employee.branches?.name || '';
+          bValue = b.employee.branches?.name || '';
           break;
         case 'completion_status':
           const statusOrder = { 'compliant': 3, 'due': 2, 'overdue': 1, 'pending': 0 };
@@ -312,7 +315,10 @@ const [annualAppraisalTarget, setAnnualAppraisalTarget] = useState<{ recordId: s
       // Fetch all employees
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
-        .select('id, name, branch, branch_id')
+        .select(`
+          id, name, branch_id,
+          branches!employees_branch_id_fkey (id, name)
+        `)
         .order('name');
 
       if (employeesError) throw employeesError;
@@ -1077,7 +1083,7 @@ const handleStatusCardClick = (status: 'compliant' | 'overdue' | 'due' | 'pendin
     const accessibleBranches = getAccessibleBranches();
     if (!isAdmin && accessibleBranches.length > 0) {
       return employeeStatusList.filter(item => {
-        const employeeBranchId = branches.find(b => b.name === item.employee.branch)?.id;
+        const employeeBranchId = item.employee.branch_id;
         return accessibleBranches.includes(employeeBranchId || '');
       });
     }
@@ -1183,7 +1189,7 @@ const handleStatusCardClick = (status: 'compliant' | 'overdue' | 'due' | 'pendin
                 <h3 className="font-semibold text-foreground mb-2">Branch Completion</h3>
                 <div className="space-y-2">
                   {uniqueBranches.map((branch) => {
-                    const branchEmployees = filteredEmployeeStatusForStats.filter(item => item.employee.branch === branch);
+                    const branchEmployees = filteredEmployeeStatusForStats.filter(item => item.employee.branches?.name === branch);
                     const branchCompliant = branchEmployees.filter(item => item.status === 'compliant').length;
                     const branchTotal = branchEmployees.length;
                     const percentage = branchTotal > 0 ? Math.round((branchCompliant / branchTotal) * 100) : 0;
@@ -1444,7 +1450,7 @@ const handleStatusCardClick = (status: 'compliant' | 'overdue' | 'due' | 'pendin
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {item.employee.branch}
+                              {item.employee.branches?.name}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -1603,7 +1609,7 @@ const handleStatusCardClick = (status: 'compliant' | 'overdue' | 'due' | 'pendin
                                           </div>
                                           <div>
                                             <h4 className="font-semibold text-sm text-muted-foreground">Branch</h4>
-                                            <p className="font-medium">{item.employee.branch}</p>
+                                            <p className="font-medium">{item.employee.branches?.name}</p>
                                           </div>
                                           <div>
                                             <h4 className="font-semibold text-sm text-muted-foreground">Period</h4>

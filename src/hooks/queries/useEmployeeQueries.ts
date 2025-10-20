@@ -8,7 +8,6 @@ interface Employee {
   name: string;
   email?: string;
   phone?: string;
-  branch: string;
   branch_id?: string;
   employee_code: string;
   job_title?: string;
@@ -21,6 +20,10 @@ interface Employee {
   is_active?: boolean;
   password_hash?: string;
   created_at?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface Branch {
@@ -42,7 +45,13 @@ export const employeeQueryKeys = {
 async function fetchEmployees(): Promise<Employee[]> {
   const { data, error } = await supabase
     .from('employees')
-    .select('*')
+    .select(`
+      *,
+      branches!employees_branch_id_fkey (
+        id,
+        name
+      )
+    `)
     .order('name');
 
   if (error) throw error;

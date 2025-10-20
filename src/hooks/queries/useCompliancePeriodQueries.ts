@@ -17,7 +17,10 @@ export const fetchCompliancePeriodData = async (complianceTypeId: string, freque
   // Fetch employees with created_at date
   const { data: employeesData, error: employeesError } = await supabase
     .from('employees')
-    .select('id, name, branch, created_at')
+    .select(`
+      id, name, branch_id, created_at,
+      branches!employees_branch_id_fkey (id, name)
+    `)
     .order('name');
 
   if (employeesError) throw employeesError;
@@ -41,7 +44,10 @@ export const fetchCompliancePeriodEmployeeData = async (complianceTypeId: string
   // Fetch all employees with created_at date
   const { data: employeesData, error: employeesError } = await supabase
     .from('employees')
-    .select('id, name, branch, created_at')
+    .select(`
+      id, name, branch_id, created_at,
+      branches!employees_branch_id_fkey (id, name)
+    `)
     .order('name');
 
   if (employeesError) throw employeesError;

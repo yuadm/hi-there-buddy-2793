@@ -67,7 +67,7 @@ const [medicationCompetencyOpen, setMedicationCompetencyOpen] = useState(false);
 const [selectedEmployeeId, setSelectedEmployeeId] = useState(employeeId || '');
 const [selectedEmployeeName, setSelectedEmployeeName] = useState(employeeName || '');
 const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurrentPeriodIdentifier(frequency));
-  const [employees, setEmployees] = useState<Array<{id: string, name: string, branch: string}>>([]);
+  const [employees, setEmployees] = useState<Array<{id: string, name: string, branch_id?: string, branches?: {id: string, name: string}}>>([]);
   const [branches, setBranches] = useState<Array<{id: string, name: string}>>([]);
   const { toast } = useToast();
   const { getAccessibleBranches, isAdmin } = usePermissions();
@@ -85,7 +85,10 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
       // Fetch employees
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
-        .select('id, name, branch')
+        .select(`
+          id, name, branch_id,
+          branches!employees_branch_id_fkey (id, name)
+        `)
         .order('name');
       
       if (employeesError) throw employeesError;
@@ -104,8 +107,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
       
       if (!isAdmin && accessibleBranches.length > 0) {
         filteredEmployees = employeesData?.filter(employee => {
-          const employeeBranchId = branchesData?.find(b => b.name === employee.branch)?.id;
-          return accessibleBranches.includes(employeeBranchId || '');
+          return accessibleBranches.includes(employee.branch_id || '');
         }) || [];
       }
 
@@ -406,7 +408,7 @@ const [selectedPeriod, setSelectedPeriod] = useState(periodIdentifier || getCurr
                 <SelectContent>
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.branch || 'No Branch'})
+                      {employee.name} ({employee.branches?.name || 'No Branch'})
                     </SelectItem>
                   ))}
                 </SelectContent>

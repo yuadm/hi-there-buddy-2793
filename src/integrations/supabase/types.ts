@@ -1218,7 +1218,6 @@ export type Database = {
       }
       employees: {
         Row: {
-          branch: string
           branch_id: string | null
           created_at: string | null
           email: string | null
@@ -1244,7 +1243,6 @@ export type Database = {
           working_hours: number | null
         }
         Insert: {
-          branch: string
           branch_id?: string | null
           created_at?: string | null
           email?: string | null
@@ -1270,7 +1268,6 @@ export type Database = {
           working_hours?: number | null
         }
         Update: {
-          branch?: string
           branch_id?: string | null
           created_at?: string | null
           email?: string | null

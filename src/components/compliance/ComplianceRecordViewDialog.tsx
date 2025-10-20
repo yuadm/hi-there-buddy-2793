@@ -5,7 +5,11 @@ import { Eye } from "lucide-react";
 interface Employee {
   id: string;
   name: string;
-  branch?: string;
+  branch_id?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ComplianceRecord {
@@ -91,7 +95,7 @@ export function ComplianceRecordViewDialog({
             </div>
             <div>
               <h4 className="font-semibold text-sm text-muted-foreground">Branch</h4>
-              <p className="font-medium">{employee.branch || 'Unassigned'}</p>
+              <p className="font-medium">{employee.branches?.name || 'Unassigned'}</p>
             </div>
             <div>
               <h4 className="font-semibold text-sm text-muted-foreground">Period</h4>

@@ -55,7 +55,10 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
       // Fetch employees
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
-        .select('id, name, employee_code, branch')
+        .select(`
+          id, name, employee_code, branch_id,
+          branches!employees_branch_id_fkey (id, name)
+        `)
         .order('name');
 
       if (employeesError) throw employeesError;
@@ -82,7 +85,7 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
       
       if (!isAdmin && accessibleBranches.length > 0) {
         filteredEmployees = employeesData?.filter(employee => {
-          const employeeBranchId = branchesData?.find(b => b.name === employee.branch)?.id;
+          const employeeBranchId = employee.branch_id;
           return accessibleBranches.includes(employeeBranchId || '');
         }) || [];
       }
@@ -185,7 +188,7 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
               <SelectContent className="z-50 bg-background">
                 {employees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
-                    {employee.name} ({employee.branch || 'No Branch'})
+                    {employee.name} ({employee.branches?.name || 'No Branch'})
                   </SelectItem>
                 ))}
               </SelectContent>
