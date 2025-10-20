@@ -165,13 +165,7 @@ export function useEmployeeActions() {
       return { previousEmployees };
     },
     onSuccess: () => {
-      // Invalidate all employee-related queries
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.lists() });
-      // Also invalidate dependent data that uses employee information
-      queryClient.invalidateQueries({ queryKey: ['leaves'] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['compliance'] });
-      queryClient.invalidateQueries({ queryKey: ['care-worker-statements'] });
       toast({
         title: "Success",
         description: "Employee updated successfully.",
@@ -199,13 +193,7 @@ export function useEmployeeActions() {
       if (error) throw error;
     },
     onSuccess: () => {
-      // Invalidate all employee-related queries
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.lists() });
-      // Also invalidate dependent data that uses employee information
-      queryClient.invalidateQueries({ queryKey: ['leaves'] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['compliance'] });
-      queryClient.invalidateQueries({ queryKey: ['care-worker-statements'] });
       toast({
         title: "Success",
         description: "Employee deleted successfully.",
