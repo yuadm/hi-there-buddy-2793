@@ -72,7 +72,7 @@ export function BranchSettings() {
             supabase
               .from('employees')
               .select('*', { count: 'exact', head: true })
-              .eq('branch', branch.name),
+              .eq('branch_id', branch.id),
             supabase
               .from('document_tracker')
               .select('*', { count: 'exact', head: true })

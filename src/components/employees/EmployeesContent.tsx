@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { useEmployeeData } from "@/hooks/useEmployeeData";
+import { useEmployeeActions } from "@/hooks/queries/useEmployeeQueries";
 import { useActivitySync } from "@/hooks/useActivitySync";
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -43,6 +44,8 @@ interface Employee {
   hours_restriction?: string;
   is_active?: boolean;
   password_hash?: string;
+  must_change_password?: boolean;
+  failed_login_attempts?: number;
   created_at?: string;
   branches?: {
     id: string;
@@ -72,6 +75,7 @@ export type EmployeeSortDirection = 'asc' | 'desc';
 
 export function EmployeesContent() {
   const { employees, branches, loading, refetchData } = useEmployeeData();
+  const { createEmployee: createEmployeeMutation, updateEmployee: updateEmployeeMutation, deleteEmployee: deleteEmployeeMutation } = useEmployeeActions();
   const { syncNow } = useActivitySync();
   const { getAccessibleBranches, isAdmin } = usePermissions();
   const { canViewEmployees, canCreateEmployees, canEditEmployees, canDeleteEmployees } = usePagePermissions();
@@ -267,78 +271,75 @@ export function EmployeesContent() {
         return;
       }
 
-      const { data: insertedEmployee, error } = await supabase
-        .from('employees')
-        .insert([{
-          name: newEmployee.name,
-          email: newEmployee.email,
-          phone: newEmployee.phone || null,
-          branch_id: newEmployee.branch_id,
-          employee_code: newEmployee.employee_code,
-          job_title: newEmployee.job_title || null,
-          employee_type: newEmployee.employee_type,
-          working_hours: newEmployee.working_hours === "N/A" ? null : parseInt(newEmployee.working_hours) || null,
-          leave_allowance: newEmployee.leave_allowance,
-          leave_taken: 0,
-          remaining_leave_days: newEmployee.leave_allowance,
-          hours_restriction: newEmployee.hours_restriction || null,
-          password_hash: await hashDefaultPassword(),
-          must_change_password: true,
-          is_active: true,
-          failed_login_attempts: 0,
-          created_at: newEmployee.created_at
-        }])
-        .select()
-        .single();
+      const passwordHash = await hashDefaultPassword();
 
-      if (error) throw error;
-
-      // Automatically reset password to set up Supabase Auth user
-      let passwordResetSuccess = false;
-      if (insertedEmployee?.id) {
-        try {
-          const { error: resetError } = await supabase.functions.invoke('admin-reset-employee-password', {
-            body: { employeeId: insertedEmployee.id }
-          });
-          
-          if (resetError) throw resetError;
-          passwordResetSuccess = true;
-        } catch (resetError) {
-          console.error('Error auto-resetting password:', resetError);
-        }
-      }
-
-      if (passwordResetSuccess) {
-        toast({
-          title: "Employee added",
-          description: `${newEmployee.name} can now login with password: 123456`,
-        });
-      } else {
-        toast({
-          title: "Employee added with issues",
-          description: `${newEmployee.name} was created but needs manual password reset to login.`,
-          variant: "destructive",
-        });
-      }
-
-      syncNow();
-      setDialogOpen(false);
-      setNewEmployee({
-        name: "",
-        email: "",
-        phone: "",
-        branch_id: "",
-        employee_code: "",
-        job_title: "",
-        employee_type: "regular",
-        working_hours: "N/A",
-        leave_allowance: 28,
+      // Use React Query mutation to create employee
+      createEmployeeMutation.mutate({
+        name: newEmployee.name,
+        email: newEmployee.email,
+        phone: newEmployee.phone || undefined,
+        branch_id: newEmployee.branch_id,
+        employee_code: newEmployee.employee_code,
+        job_title: newEmployee.job_title || undefined,
+        employee_type: newEmployee.employee_type,
+        working_hours: newEmployee.working_hours === "N/A" ? undefined : parseInt(newEmployee.working_hours) || undefined,
+        leave_allowance: newEmployee.leave_allowance,
         leave_taken: 0,
-        remaining_leave_days: 28,
-        hours_restriction: "",
-        created_at: new Date().toISOString()
+        remaining_leave_days: newEmployee.leave_allowance,
+        hours_restriction: newEmployee.hours_restriction || undefined,
+        password_hash: passwordHash,
+        must_change_password: true,
+        is_active: true,
+        failed_login_attempts: 0
+      }, {
+        onSuccess: async (insertedEmployee) => {
+          // Automatically reset password to set up Supabase Auth user
+          let passwordResetSuccess = false;
+          if (insertedEmployee?.id) {
+            try {
+              const { error: resetError } = await supabase.functions.invoke('admin-reset-employee-password', {
+                body: { employeeId: insertedEmployee.id }
+              });
+              
+              if (resetError) throw resetError;
+              passwordResetSuccess = true;
+            } catch (resetError) {
+              console.error('Error auto-resetting password:', resetError);
+            }
+          }
+
+          if (passwordResetSuccess) {
+            toast({
+              title: "Employee added",
+              description: `${newEmployee.name} can now login with password: 123456`,
+            });
+          } else {
+            toast({
+              title: "Employee added with issues",
+              description: `${newEmployee.name} was created but needs manual password reset to login.`,
+              variant: "destructive",
+            });
+          }
+
+          syncNow();
+          setDialogOpen(false);
+          setNewEmployee({
+            name: "",
+            email: "",
+            phone: "",
+            branch_id: "",
+            employee_code: "",
+            job_title: "",
+            employee_type: "regular",
+            working_hours: "N/A",
+            leave_allowance: 28,
+            leave_taken: 0,
+            remaining_leave_days: 28,
+            hours_restriction: "",
+            created_at: new Date().toISOString()
+          });
+        }
       });
-      refetchData();
     } catch (error) {
       console.error('Error adding employee:', error);
       toast({
@@ -462,36 +463,29 @@ export function EmployeesContent() {
       if (!isEmailValid) {
         return;
       }
-      const { error } = await supabase
-        .from('employees')
-        .update({
-          name: editedEmployee.name,
-          email: editedEmployee.email,
-          phone: editedEmployee.phone || null,
-          branch_id: editedEmployee.branch_id,
-          employee_code: editedEmployee.employee_code,
-          job_title: editedEmployee.job_title || null,
-          employee_type: editedEmployee.employee_type,
-          working_hours: editedEmployee.working_hours === "N/A" ? null : parseInt(editedEmployee.working_hours) || null,
-          leave_allowance: editedEmployee.leave_allowance,
-          leave_taken: editedEmployee.leave_taken,
-          remaining_leave_days: editedEmployee.remaining_leave_days,
-          hours_restriction: editedEmployee.hours_restriction || null,
-          created_at: editedEmployee.created_at.toISOString()
-        })
-        .eq('id', selectedEmployee.id);
 
-      if (error) throw error;
-
-      toast({
-        title: "Employee updated",
-        description: "The employee has been updated successfully.",
+      // Use React Query mutation to update employee
+      updateEmployeeMutation.mutate({
+        id: selectedEmployee.id,
+        name: editedEmployee.name,
+        email: editedEmployee.email,
+        phone: editedEmployee.phone || undefined,
+        branch_id: editedEmployee.branch_id,
+        employee_code: editedEmployee.employee_code,
+        job_title: editedEmployee.job_title || undefined,
+        employee_type: editedEmployee.employee_type,
+        working_hours: editedEmployee.working_hours === "N/A" ? undefined : parseInt(editedEmployee.working_hours) || undefined,
+        leave_allowance: editedEmployee.leave_allowance,
+        leave_taken: editedEmployee.leave_taken,
+        remaining_leave_days: editedEmployee.remaining_leave_days,
+        hours_restriction: editedEmployee.hours_restriction || undefined
+      }, {
+        onSuccess: () => {
+          syncNow();
+          setEditMode(false);
+          setViewDialogOpen(false);
+        }
       });
-
-      syncNow();
-      setEditMode(false);
-      setViewDialogOpen(false);
-      refetchData();
     } catch (error) {
       console.error('Error updating employee:', error);
       toast({
@@ -512,31 +506,13 @@ export function EmployeesContent() {
       return;
     }
     
-    try {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('id', employeeId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Employee deleted",
-        description: "The employee has been deleted successfully.",
-      });
-
-      syncNow();
-      setDeleteDialogOpen(false);
-      setSelectedEmployee(null);
-      refetchData();
-    } catch (error) {
-      console.error('Error deleting employee:', error);
-      toast({
-        title: "Error deleting employee",
-        description: "Could not delete employee. Please try again.",
-        variant: "destructive",
-      });
-    }
+    deleteEmployeeMutation.mutate(employeeId, {
+      onSuccess: () => {
+        syncNow();
+        setDeleteDialogOpen(false);
+        setSelectedEmployee(null);
+      }
+    });
   };
 
   const batchDeleteEmployees = async () => {
@@ -682,6 +658,14 @@ export function EmployeesContent() {
       if (!employee.name) errors.push('Name is required');
       if (!employee.employee_code) errors.push('Employee Code is required');
       if (!employee.branch_name) errors.push('Branch is required');
+
+      // Validate branch exists and get branch_id
+      if (employee.branch_name) {
+        const branch = branches.find(b => b.name.toLowerCase() === employee.branch_name.toLowerCase());
+        if (!branch) {
+          errors.push(`Branch "${employee.branch_name}" not found`);
+        }
+      }
 
       // Set defaults for leave days if not provided
       if (employee.days_taken === undefined && employee.days_remaining === undefined) {

@@ -19,6 +19,8 @@ interface Employee {
   hours_restriction?: string;
   is_active?: boolean;
   password_hash?: string;
+  must_change_password?: boolean;
+  failed_login_attempts?: number;
   created_at?: string;
   branches?: {
     id: string;
