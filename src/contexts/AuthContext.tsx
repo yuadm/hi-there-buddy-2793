@@ -45,16 +45,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(session?.user ?? null);
     
     if (session?.user) {
-      // Defer role fetching to prevent deadlocks
-      setTimeout(async () => {
-        try {
-          const role = await fetchUserRole(session.user.id);
-          setUserRole(role);
-        } catch (error) {
-          console.error('Error in handleAuthState:', error);
-          setUserRole('user');
-        }
-      }, 0);
+      // Verify user still exists in user_roles table
+      const { data: roleCheck, error: roleCheckError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (roleCheckError) {
+        console.error('Error checking user role:', roleCheckError);
+      }
+      
+      if (!roleCheck) {
+        // User was deleted, force sign out
+        console.log('User has no role record, forcing sign out');
+        await forceSignOut(supabase);
+        setSession(null);
+        setUser(null);
+        setUserRole(null);
+        setLoading(false);
+        setInitialAuthCheckComplete(true);
+        return;
+      }
+      
+      // User is valid, set their role
+      setUserRole(roleCheck.role);
     } else {
       setUserRole(null);
     }

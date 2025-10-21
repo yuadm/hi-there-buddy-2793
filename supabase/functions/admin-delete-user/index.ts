@@ -74,7 +74,14 @@ Deno.serve(async (req) => {
 
     console.log('Deleting user:', userId)
 
-    // First, delete the user role from the database
+    // First, sign out all sessions for this user
+    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global')
+    if (signOutError) {
+      console.warn('Error signing out user sessions:', signOutError)
+      // Continue even if this fails
+    }
+
+    // Second, delete the user role from the database
     const { error: roleDeleteError } = await supabaseAdmin
       .from('user_roles')
       .delete()
@@ -85,8 +92,11 @@ Deno.serve(async (req) => {
       throw roleDeleteError
     }
 
-    // Then, delete the user from Supabase Auth
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    // Finally, hard delete the user from Supabase Auth
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      userId,
+      false // shouldSoftDelete = false for hard delete
+    )
 
     if (authDeleteError) {
       console.error('Error deleting auth user:', authDeleteError)

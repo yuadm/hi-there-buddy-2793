@@ -113,96 +113,119 @@ function UnifiedAuthContent() {
       });
 
       if (authError) {
-        // If auth fails, check if this might be an employee login
-        const { data: employee } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('email', email)
-          .eq('is_active', true)
-          .single();
-
-        if (employee) {
-          // Check if account is locked
-          if (employee.locked_until && new Date(employee.locked_until) > new Date()) {
-            throw new Error('Account is temporarily locked. Please try again later.');
-          }
-
-          // Verify password using the stored hash
-          const { data: passwordCheckResult, error: passwordError } = await supabase
-            .rpc('verify_password', {
-              password_input: password,
-              password_hash: employee.password_hash
-            });
-
-          if (passwordError || !passwordCheckResult) {
-            // Increment failed login attempts
-            await supabase
-              .from('employees')
-              .update({ 
-                failed_login_attempts: employee.failed_login_attempts + 1,
-                locked_until: employee.failed_login_attempts >= 4 ? 
-                  new Date(Date.now() + 30 * 60 * 1000).toISOString() : null
-              })
-              .eq('id', employee.id);
-            
-            throw new Error('Invalid email or password');
-          }
-
-          // Password is correct, create/update auth account
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-              data: {
-                role: 'employee',
-                employee_id: employee.id,
-                name: employee.name
-              }
-            }
-          });
-
-          if (signUpError && !signUpError.message.includes('already registered')) {
-            throw signUpError;
-          }
-
-          // Try to sign in again
-          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (retryError) {
-            throw retryError;
-          }
-
-          // Update employee last login
-          await supabase
-            .from('employees')
-            .update({
-              last_login: new Date().toISOString(),
-              failed_login_attempts: 0,
-              locked_until: null
-            })
-            .eq('id', employee.id);
-
-          toast({
-            title: "Login successful",
-            description: `Welcome back, ${employee.name}!`,
-          });
-
-          await redirectBasedOnUserType(retryData.user);
-          return;
-        }
-
         throw authError;
       }
 
+      // Verify user still has a valid role record or is an employee
       if (authData.user) {
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('user_id', authData.user.id)
+          .maybeSingle();
+
+        // Check if user is an employee
+        const isEmployee = authData.user.user_metadata?.role === 'employee';
+
+        if (!userRole && !isEmployee) {
+          // User was deleted, sign them out
+          await supabase.auth.signOut();
+          throw new Error('This account has been deleted. Please contact your administrator.');
+        }
+
         await redirectBasedOnUserType(authData.user);
       }
 
     } catch (error: any) {
       console.error('Login error:', error);
+      
+      // If initial auth failed, check if this might be an employee login
+      if (error.message && !error.message.includes('deleted')) {
+        try {
+          const { data: employee } = await supabase
+            .from('employees')
+            .select('*')
+            .eq('email', email)
+            .eq('is_active', true)
+            .single();
+
+          if (employee) {
+            // Check if account is locked
+            if (employee.locked_until && new Date(employee.locked_until) > new Date()) {
+              throw new Error('Account is temporarily locked. Please try again later.');
+            }
+
+            // Verify password using the stored hash
+            const { data: passwordCheckResult, error: passwordError } = await supabase
+              .rpc('verify_password', {
+                password_input: password,
+                password_hash: employee.password_hash
+              });
+
+            if (passwordError || !passwordCheckResult) {
+              // Increment failed login attempts
+              await supabase
+                .from('employees')
+                .update({ 
+                  failed_login_attempts: employee.failed_login_attempts + 1,
+                  locked_until: employee.failed_login_attempts >= 4 ? 
+                    new Date(Date.now() + 30 * 60 * 1000).toISOString() : null
+                })
+                .eq('id', employee.id);
+              
+              throw new Error('Invalid email or password');
+            }
+
+            // Password is correct, create/update auth account
+            const { error: signUpError } = await supabase.auth.signUp({
+              email: email,
+              password: password,
+              options: {
+                data: {
+                  role: 'employee',
+                  employee_id: employee.id,
+                  name: employee.name
+                }
+              }
+            });
+
+            if (signUpError && !signUpError.message.includes('already registered')) {
+              throw signUpError;
+            }
+
+            // Try to sign in again
+            const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+
+            if (retryError) {
+              throw retryError;
+            }
+
+            // Update employee last login
+            await supabase
+              .from('employees')
+              .update({
+                last_login: new Date().toISOString(),
+                failed_login_attempts: 0,
+                locked_until: null
+              })
+              .eq('id', employee.id);
+
+            toast({
+              title: "Login successful",
+              description: `Welcome back, ${employee.name}!`,
+            });
+
+            await redirectBasedOnUserType(retryData.user);
+            return;
+          }
+        } catch (employeeError) {
+          console.error('Employee login fallback error:', employeeError);
+        }
+      }
+      
       setError(error.message);
     } finally {
       setLoading(false);

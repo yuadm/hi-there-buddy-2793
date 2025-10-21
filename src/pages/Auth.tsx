@@ -33,12 +33,31 @@ export default function Auth() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+
+      // Verify user still has a valid role record
+      if (authData.user) {
+        const { data: userRole, error: roleError } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('user_id', authData.user.id)
+          .maybeSingle();
+
+        if (roleError) {
+          console.error('Error checking user role:', roleError);
+        }
+
+        if (!userRole) {
+          // User was deleted, sign them out
+          await supabase.auth.signOut();
+          throw new Error('This account has been deleted. Please contact your administrator.');
+        }
+      }
 
       navigate('/');
     } catch (error: any) {
