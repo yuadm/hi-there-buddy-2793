@@ -299,7 +299,7 @@ function EmployeeDashboardContent() {
                   icon: FileText
                 }, {
                   label: 'Branch Location',
-                  value: employee.branch,
+                  value: employee.branches?.name || 'Not specified',
                   icon: Calendar
                 }, {
                   label: 'Job Title',

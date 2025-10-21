@@ -49,7 +49,10 @@ interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;
@@ -60,11 +63,14 @@ interface Employee {
   id: string;
   name: string;
   email: string;
-  branch: string;
   branch_id: string;
   employee_code: string;
   sponsored?: boolean;
   twenty_hours?: boolean;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface DocumentType {
@@ -406,7 +412,7 @@ export function DocumentsContent() {
     }
     
     const matchesStatus = statusFilter === 'all' || documentStatus === statusFilter;
-    const matchesBranch = branchFilter === 'all' || document.employees?.branch === branchFilter;
+    const matchesBranch = branchFilter === 'all' || document.employees?.branches?.name === branchFilter;
     
     // Category filtering
     const employee = employees.find(emp => emp.id === document.employee_id);
@@ -1250,10 +1256,10 @@ export function DocumentsContent() {
                   </SelectTrigger>
                   <SelectContent>
                     {employees
-                      .filter(emp => isAdmin || getAccessibleBranches().includes(emp.branch_id))
+                      .filter(emp => isAdmin || getAccessibleBranches().includes(emp.branch_id || ''))
                       .map((emp) => (
                         <SelectItem key={emp.id} value={emp.id}>
-                          {emp.name} ({emp.branch})
+                          {emp.name} ({emp.branches?.name || 'No Branch'})
                         </SelectItem>
                       ))}
                   </SelectContent>

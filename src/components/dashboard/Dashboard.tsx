@@ -123,13 +123,13 @@ export function Dashboard() {
         // Leaves - filter by accessible branches via employees
         supabase.from('leave_requests').select(`
           *,
-          employees!leave_requests_employee_id_fkey(name, branch, branch_id),
+          employees!leave_requests_employee_id_fkey(name, branch_id),
           leave_types!leave_requests_leave_type_id_fkey(name)
         `),
         
         // Compliance - filter by accessible branches via employees
         supabase.from('compliance_period_records')
-          .select('status, employee_id, employees!compliance_period_records_employee_id_fkey(branch, branch_id)'),
+          .select('status, employee_id, employees!compliance_period_records_employee_id_fkey(branch_id)'),
         
         // Branches - only accessible branches
         supabase.from('branches')
@@ -181,14 +181,16 @@ export function Dashboard() {
         })) || [];
 
       const leavesByBranch = pendingLeaves.reduce((acc, leave) => {
-        const branch = leave.employees?.branch || 'Unknown';
+        const branchId = leave.employees?.branch_id;
+        const branch = branchesData?.find(b => b.id === branchId)?.name || 'Unknown';
         acc[branch] = (acc[branch] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
       // Calculate compliance rates using filtered data
       const complianceByBranch = filteredCompliance?.reduce((acc, record) => {
-        const branch = (record.employees as any)?.branch || 'Unknown';
+        const branchId = (record.employees as any)?.branch_id;
+        const branch = branchesData?.find(b => b.id === branchId)?.name || 'Unknown';
         if (!acc[branch]) {
           acc[branch] = { total: 0, completed: 0 };
         }

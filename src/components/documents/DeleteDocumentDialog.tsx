@@ -28,7 +28,10 @@ interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;

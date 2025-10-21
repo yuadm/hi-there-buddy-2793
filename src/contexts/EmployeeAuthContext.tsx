@@ -6,13 +6,17 @@ interface Employee {
   id: string;
   name: string;
   email: string;
-  branch: string;
+  branch_id: string;
   employee_code: string;
   job_title: string;
   employee_type: string;
   leave_allowance: number;
   remaining_leave_days: number;
   leave_taken: number;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface EmployeeAuthContextType {

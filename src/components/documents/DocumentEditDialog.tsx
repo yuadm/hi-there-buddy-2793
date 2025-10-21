@@ -29,7 +29,10 @@ interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;
@@ -40,10 +43,13 @@ interface Employee {
   id: string;
   name: string;
   email: string;
-  branch: string;
   branch_id: string;
   sponsored?: boolean;
   twenty_hours?: boolean;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface DocumentType {
@@ -284,7 +290,7 @@ export function DocumentEditDialog({
                 <SelectContent>
                   {employees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.branch})
+                      {emp.name} ({emp.branches?.name || 'No Branch'})
                     </SelectItem>
                   ))}
                 </SelectContent>

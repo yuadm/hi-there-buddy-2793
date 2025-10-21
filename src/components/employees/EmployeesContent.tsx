@@ -32,7 +32,6 @@ interface Employee {
   name: string;
   email?: string;
   phone?: string;
-  branch: string;
   branch_id?: string;
   employee_code: string;
   job_title?: string;
@@ -45,12 +44,16 @@ interface Employee {
   is_active?: boolean;
   password_hash?: string;
   created_at?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ImportEmployee {
   name: string;
   employee_code: string;
-  branch: string;
+  branch_name: string;
   email?: string;
   phone?: string;
   job_title?: string;
@@ -64,7 +67,7 @@ interface ImportEmployee {
   error?: string;
 }
 
-export type EmployeeSortField = 'name' | 'employee_code' | 'branch' | 'working_hours' | 'remaining_leave_days';
+export type EmployeeSortField = 'name' | 'employee_code' | 'branch_name' | 'working_hours' | 'remaining_leave_days';
 export type EmployeeSortDirection = 'asc' | 'desc';
 
 export function EmployeesContent() {
@@ -95,7 +98,7 @@ export function EmployeesContent() {
     name: "",
     email: "",
     phone: "",
-    branch: "",
+    branch_id: "",
     employee_code: "",
     job_title: "",
     employee_type: "regular",
@@ -110,7 +113,7 @@ export function EmployeesContent() {
     name: "",
     email: "",
     phone: "",
-    branch: "",
+    branch_id: "",
     employee_code: "",
     job_title: "",
     employee_type: "regular",
@@ -139,7 +142,7 @@ export function EmployeesContent() {
     try {
       let query = supabase
         .from('employees')
-        .select('id, name, email, employee_code, branch')
+        .select('id, name, email, employee_code, branch_id, branches!employees_branch_id_fkey(id, name)')
         .ilike('email', normalizedEmail);
       
       if (excludeEmployeeId) {
@@ -249,7 +252,7 @@ export function EmployeesContent() {
     }
     
     try {
-      if (!newEmployee.name || !newEmployee.email || !newEmployee.branch || !newEmployee.employee_code) {
+      if (!newEmployee.name || !newEmployee.email || !newEmployee.branch_id || !newEmployee.employee_code) {
         toast({
           title: "Missing information",
           description: "Please fill in all required fields.",
@@ -270,7 +273,7 @@ export function EmployeesContent() {
           name: newEmployee.name,
           email: newEmployee.email,
           phone: newEmployee.phone || null,
-          branch: newEmployee.branch,
+          branch_id: newEmployee.branch_id,
           employee_code: newEmployee.employee_code,
           job_title: newEmployee.job_title || null,
           employee_type: newEmployee.employee_type,
@@ -324,7 +327,7 @@ export function EmployeesContent() {
         name: "",
         email: "",
         phone: "",
-        branch: "",
+        branch_id: "",
         employee_code: "",
         job_title: "",
         employee_type: "regular",
@@ -352,7 +355,7 @@ export function EmployeesContent() {
       name: employee.name || "",
       email: employee.email || "",
       phone: employee.phone || "",
-      branch: employee.branch || "",
+      branch_id: employee.branch_id || "",
       employee_code: employee.employee_code || "",
       job_title: employee.job_title || "",
       employee_type: employee.employee_type || "regular",
@@ -465,7 +468,7 @@ export function EmployeesContent() {
           name: editedEmployee.name,
           email: editedEmployee.email,
           phone: editedEmployee.phone || null,
-          branch: editedEmployee.branch,
+          branch_id: editedEmployee.branch_id,
           employee_code: editedEmployee.employee_code,
           job_title: editedEmployee.job_title || null,
           employee_type: editedEmployee.employee_type,
@@ -642,7 +645,7 @@ export function EmployeesContent() {
       const employee: ImportEmployee = {
         name: '',
         employee_code: '',
-        branch: '',
+        branch_name: '',
         error: ''
       };
 
@@ -656,7 +659,7 @@ export function EmployeesContent() {
         } else if (lowerKey.includes('employee') && lowerKey.includes('code')) {
           employee.employee_code = value?.toString().trim() || '';
         } else if (lowerKey.includes('branch')) {
-          employee.branch = value?.toString().trim() || '';
+          employee.branch_name = value?.toString().trim() || '';
         } else if (lowerKey.includes('email')) {
           employee.email = value?.toString().trim() || '';
         } else if (lowerKey.includes('phone')) {
@@ -678,7 +681,7 @@ export function EmployeesContent() {
       const errors = [];
       if (!employee.name) errors.push('Name is required');
       if (!employee.employee_code) errors.push('Employee Code is required');
-      if (!employee.branch) errors.push('Branch is required');
+      if (!employee.branch_name) errors.push('Branch is required');
 
       // Set defaults for leave days if not provided
       if (employee.days_taken === undefined && employee.days_remaining === undefined) {
@@ -832,23 +835,26 @@ export function EmployeesContent() {
         });
       }
 
-      const employeesToInsert = validEmployees.map(emp => ({
-        name: emp.name,
-        email: emp.email || null,
-        phone: emp.phone || null,
-        branch: emp.branch,
-        employee_code: emp.employee_code,
-        job_title: emp.job_title || null,
-        employee_type: emp.employee_type || 'regular',
-        working_hours: emp.working_hours || null,
-        leave_allowance: emp.leave_allowance || 28,
-        leave_taken: emp.leave_taken || 0,
-        remaining_leave_days: emp.remaining_leave_days || 28,
-        password_hash: 'temp',
-        must_change_password: true,
-        is_active: true,
-        failed_login_attempts: 0
-      }));
+      const employeesToInsert = validEmployees.map(emp => {
+        const branchId = branches.find(b => b.name === emp.branch_name)?.id || '';
+        return {
+          name: emp.name,
+          email: emp.email || null,
+          phone: emp.phone || null,
+          branch_id: branchId,
+          employee_code: emp.employee_code,
+          job_title: emp.job_title || null,
+          employee_type: emp.employee_type || 'regular',
+          working_hours: emp.working_hours || null,
+          leave_allowance: emp.leave_allowance || 28,
+          leave_taken: emp.leave_taken || 0,
+          remaining_leave_days: emp.remaining_leave_days || 28,
+          password_hash: 'temp',
+          must_change_password: true,
+          is_active: true,
+          failed_login_attempts: 0
+        };
+      });
 
       const { data: insertedEmployees, error } = await supabase
         .from('employees')
@@ -962,18 +968,16 @@ export function EmployeesContent() {
       (employee.employee_code || '').toLowerCase().includes(searchLower) ||
       (employee.job_title || '').toLowerCase().includes(searchLower);
     
-    const matchesBranch = branchFilter === 'all' || employee.branch === branchFilter;
+    const matchesBranch = branchFilter === 'all' || employee.branches?.name === branchFilter;
     
   // For non-admin users, filter by accessible branches
     const accessibleBranches = getAccessibleBranches();
-    console.log('Employee filtering - isAdmin:', isAdmin, 'accessibleBranches:', accessibleBranches, 'employee.branch:', employee.branch);
+    console.log('Employee filtering - isAdmin:', isAdmin, 'accessibleBranches:', accessibleBranches, 'employee.branch_id:', employee.branch_id);
     
     let hasAccess = true;
     if (!isAdmin && accessibleBranches.length > 0) {
-      // Check if employee's branch_id is in accessible branches  
-      // Map branch name to branch ID since employee uses branch name
-      const employeeBranchId = branches.find(b => b.name === employee.branch)?.id;
-      hasAccess = accessibleBranches.includes(employeeBranchId || '');
+      // Check if employee's branch_id is in accessible branches
+      hasAccess = accessibleBranches.includes(employee.branch_id || '');
     }
     
     return matchesSearch && matchesBranch && hasAccess;
@@ -990,9 +994,9 @@ export function EmployeesContent() {
         aVal = a.employee_code || '';
         bVal = b.employee_code || '';
         break;
-      case 'branch':
-        aVal = a.branch || '';
-        bVal = b.branch || '';
+      case 'branch_name':
+        aVal = a.branches?.name || '';
+        bVal = b.branches?.name || '';
         break;
       case 'working_hours':
         // Treat null/undefined as 0 for sorting, so N/A entries go to the bottom in ascending order
@@ -1029,10 +1033,8 @@ export function EmployeesContent() {
   const statsEmployees = employees.filter(employee => {
     let hasAccess = true;
     if (!isAdmin && accessibleBranches.length > 0) {
-      // Check if employee's branch_id is in accessible branches  
-      // Map branch name to branch ID since employee uses branch name
-      const employeeBranchId = branches.find(b => b.name === employee.branch)?.id;
-      hasAccess = accessibleBranches.includes(employeeBranchId || '');
+      // Check if employee's branch_id is in accessible branches
+      hasAccess = accessibleBranches.includes(employee.branch_id || '');
     }
     return hasAccess;
   });
@@ -1126,8 +1128,8 @@ export function EmployeesContent() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Branches</SelectItem>
-            {Array.from(new Set(employees.map(emp => emp.branch))).map(branch => (
-              <SelectItem key={branch} value={branch}>{branch}</SelectItem>
+            {Array.from(new Set(employees.map(emp => emp.branches?.name).filter(Boolean))).map(branch => (
+              <SelectItem key={branch} value={branch!}>{branch}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -1246,9 +1248,9 @@ export function EmployeesContent() {
                       <Button 
                         variant="ghost" 
                         className="p-0 h-auto font-medium hover:bg-transparent"
-                        onClick={() => handleSort('branch')}
+                        onClick={() => handleSort('branch_name')}
                       >
-                        Branch {getSortIcon('branch')}
+                        Branch {getSortIcon('branch_name')}
                       </Button>
                     </TableHead>
                     <TableHead>
@@ -1298,7 +1300,7 @@ export function EmployeesContent() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
                             <Building className="w-3 h-3" />
-                            {employee.branch}
+                            {employee.branches?.name || 'No Branch'}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1481,8 +1483,8 @@ export function EmployeesContent() {
               <div className="space-y-2">
                 <Label htmlFor="branch">Branch *</Label>
                 <Select
-                  value={newEmployee.branch}
-                  onValueChange={(value) => setNewEmployee({...newEmployee, branch: value})}
+                  value={newEmployee.branch_id}
+                  onValueChange={(value) => setNewEmployee({...newEmployee, branch_id: value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select branch" />
@@ -1732,7 +1734,7 @@ export function EmployeesContent() {
                       <TableCell className="font-mono text-sm">
                         {employee.employee_code || 'Missing'}
                       </TableCell>
-                      <TableCell>{employee.branch || 'Missing'}</TableCell>
+                      <TableCell>{employee.branch_name || 'Missing'}</TableCell>
                       <TableCell className="text-sm">
                         {employee.email || 'Not provided'}
                       </TableCell>
@@ -1876,22 +1878,22 @@ export function EmployeesContent() {
                   <Label htmlFor="view_branch">Branch</Label>
                   {editMode ? (
                     <Select
-                      value={editedEmployee.branch}
-                      onValueChange={(value) => setEditedEmployee({...editedEmployee, branch: value})}
+                      value={editedEmployee.branch_id}
+                      onValueChange={(value) => setEditedEmployee({...editedEmployee, branch_id: value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select branch" />
                       </SelectTrigger>
                       <SelectContent>
                         {branches.map((branch: any) => (
-                          <SelectItem key={branch.id} value={branch.name}>
+                          <SelectItem key={branch.id} value={branch.id}>
                             {branch.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="p-2 bg-muted rounded text-sm">{selectedEmployee.branch}</div>
+                    <div className="p-2 bg-muted rounded text-sm">{selectedEmployee.branches?.name || 'No Branch'}</div>
                   )}
                 </div>
                 <div className="space-y-2">

@@ -16,7 +16,10 @@ interface Employee {
   id: string;
   name: string;
   employee_code: string;
-  branch?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface LeaveType {

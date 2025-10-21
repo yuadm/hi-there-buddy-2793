@@ -30,7 +30,10 @@ interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;
@@ -336,7 +339,7 @@ export function DocumentViewDialog({ document, open, onClose }: DocumentViewDial
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Branch</label>
-              <p className="text-sm">{document.employees?.branch}</p>
+              <p className="text-sm">{document.employees?.branches?.name || 'No Branch'}</p>
             </div>
           </div>
 

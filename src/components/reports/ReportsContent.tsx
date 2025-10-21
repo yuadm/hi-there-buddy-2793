@@ -302,7 +302,7 @@ export function ReportsContent() {
     
     const baseData = {
       'Employee Name': employee.name,
-      'Branch': employee.branch,
+      'Branch': employee.branches?.name || '',
       'Status': tracker?.nationality_status || '',
       'Country': tracker?.country || '',
       'Sponsored': employee.sponsored ? 'Yes' : 'No',
@@ -343,9 +343,10 @@ export function ReportsContent() {
             .from('employees')
             .select(`
               name,
-              branch,
+              branch_id,
               sponsored,
               twenty_hours,
+              branches!employees_branch_id_fkey(id, name),
               document_tracker (
                 documents,
                 country,
@@ -386,7 +387,18 @@ export function ReportsContent() {
         case "employees":
           const { data: employeesData, error: employeesError } = await supabase
             .from('employees')
-            .select('name, employee_code, job_title, branch, leave_taken, remaining_leave_days, working_hours, email, phone')
+            .select(`
+              name, 
+              employee_code, 
+              job_title, 
+              branch_id,
+              leave_taken, 
+              remaining_leave_days, 
+              working_hours, 
+              email, 
+              phone,
+              branches!employees_branch_id_fkey(id, name)
+            `)
             .order('name');
           
           if (employeesError) throw employeesError;
@@ -395,7 +407,7 @@ export function ReportsContent() {
             'Name': emp.name,
             'Employee Code': emp.employee_code,
             'Job Title': emp.job_title || '',
-            'Branch': emp.branch,
+            'Branch': (emp.branches as any)?.name || '',
             'Days Taken': emp.leave_taken || 0,
             'Days Remaining': emp.remaining_leave_days || 0,
             'Hours': emp.working_hours || '',
@@ -444,13 +456,22 @@ export function ReportsContent() {
             .from('leave_requests')
             .select(`
               *,
-              employees!leave_requests_employee_id_fkey (name, employee_code, remaining_leave_days, branch),
+              employees!leave_requests_employee_id_fkey (
+                name, 
+                employee_code, 
+                remaining_leave_days, 
+                branch_id,
+                branches!employees_branch_id_fkey(id, name)
+              ),
               leave_types!leave_requests_leave_type_id_fkey (name)
             `)
             .order('start_date', { ascending: false });
 
           if (selectedBranch !== "all") {
-            query = query.eq('employees.branch', selectedBranch);
+            const branchId = branches.find(b => b.name === selectedBranch)?.id;
+            if (branchId) {
+              query = query.eq('employees.branch_id', branchId);
+            }
           }
 
           if (selectedLeaveType !== "all") {
@@ -506,7 +527,7 @@ export function ReportsContent() {
             return {
               Employee: leave.employees?.name || '',
               'Employee Code': leave.employees?.employee_code || '',
-              Branch: leave.employees?.branch || '',
+              Branch: (leave.employees as any)?.branches?.name || '',
               Type: leave.leave_types?.name || '',
               'Start Date': new Date(leave.start_date).toLocaleDateString('en-GB'),
               'End Date': new Date(leave.end_date).toLocaleDateString('en-GB'),
@@ -537,13 +558,20 @@ export function ReportsContent() {
               .from('compliance_period_records')
               .select(`
                 *,
-                employees!compliance_period_records_employee_id_fkey (name, branch),
+                employees!compliance_period_records_employee_id_fkey (
+                  name, 
+                  branch_id,
+                  branches!employees_branch_id_fkey(id, name)
+                ),
                 compliance_types (name, frequency)
               `)
               .order('completion_date', { ascending: false });
 
             if (selectedBranch !== "all") {
-              employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch', selectedBranch);
+              const branchId = branches.find(b => b.name === selectedBranch)?.id;
+              if (branchId) {
+                employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
+              }
             }
 
             if (selectedComplianceType !== "all") {
@@ -582,7 +610,7 @@ export function ReportsContent() {
                   'Type': 'Employee Compliance',
                   'Task Name': record.compliance_types?.name || '',
                   'Employee/Client': record.employees?.name || '',
-                  'Branch': record.employees?.branch || '',
+                  'Branch': (record.employees as any)?.branches?.name || '',
                   'Period': record.period_identifier || '',
                   'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
                     ? new Date(record.completion_date).toLocaleDateString('en-GB') 

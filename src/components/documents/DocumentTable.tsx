@@ -21,7 +21,10 @@ interface Document {
   employees?: {
     name: string;
     email: string;
-    branch: string;
+    branches?: {
+      id: string;
+      name: string;
+    };
   };
   document_types?: {
     name: string;
@@ -32,10 +35,13 @@ interface Employee {
   id: string;
   name: string;
   email: string;
-  branch: string;
   branch_id: string;
   sponsored?: boolean;
   twenty_hours?: boolean;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface DocumentType {
@@ -192,8 +198,8 @@ export function DocumentTable({ documents, employees, documentTypes, selectedDoc
         valueB = firstDocB.employees?.name || '';
         break;
       case 'branch':
-        valueA = firstDocA.employees?.branch || '';
-        valueB = firstDocB.employees?.branch || '';
+        valueA = firstDocA.employees?.branches?.name || '';
+        valueB = firstDocB.employees?.branches?.name || '';
         break;
       case 'country':
         valueA = firstDocA.country || '';
@@ -360,7 +366,7 @@ export function DocumentTable({ documents, employees, documentTypes, selectedDoc
                 </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
-                      {firstDocument.employees?.branch}
+                      {firstDocument.employees?.branches?.name || 'No Branch'}
                     </Badge>
                   </TableCell>
                   <TableCell>
