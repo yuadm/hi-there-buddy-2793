@@ -954,9 +954,8 @@ export function EmployeesContent() {
     
     const matchesBranch = branchFilter === 'all' || employee.branches?.name === branchFilter;
     
-  // For non-admin users, filter by accessible branches
+    // For non-admin users, filter by accessible branches
     const accessibleBranches = getAccessibleBranches();
-    console.log('Employee filtering - isAdmin:', isAdmin, 'accessibleBranches:', accessibleBranches, 'employee.branch_id:', employee.branch_id);
     
     let hasAccess = true;
     if (!isAdmin && accessibleBranches.length > 0) {
@@ -1485,7 +1484,7 @@ export function EmployeesContent() {
                       }
                       
                       return filteredBranches.map((branch: any) => (
-                        <SelectItem key={branch.id} value={branch.name}>
+                        <SelectItem key={branch.id} value={branch.id}>
                           {branch.name}
                         </SelectItem>
                       ));
