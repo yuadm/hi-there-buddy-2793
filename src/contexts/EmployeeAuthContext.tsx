@@ -44,7 +44,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
       // Fetch employee data using employee_id from user metadata
       const { data: employeeData, error: empError } = await supabase
         .from('employees')
-        .select('*')
+        .select(`
+          *,
+          branches!employees_branch_id_fkey (
+            id,
+            name
+          )
+        `)
         .eq('id', employeeId)
         .single();
 
