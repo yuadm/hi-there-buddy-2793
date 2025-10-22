@@ -1868,11 +1868,13 @@ export function EmployeesContent() {
                         <SelectValue placeholder="Select branch" />
                       </SelectTrigger>
                       <SelectContent>
-                        {branches.map((branch: any) => (
-                          <SelectItem key={branch.id} value={branch.id}>
-                            {branch.name}
-                          </SelectItem>
-                        ))}
+                        {branches
+                          .filter(branch => isAdmin || getAccessibleBranches().includes(branch.id))
+                          .map((branch: any) => (
+                            <SelectItem key={branch.id} value={branch.id}>
+                              {branch.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   ) : (
