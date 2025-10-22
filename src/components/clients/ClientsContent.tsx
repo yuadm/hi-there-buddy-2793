@@ -902,7 +902,7 @@ export function ClientsContent() {
                 <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
                   Close
                 </Button>
-                {isAdmin && (
+                {hasPageAction('clients', 'edit') && (
                   <Button onClick={() => setEditMode(true)}>
                     <Edit3 className="w-4 h-4 mr-2" />
                     Edit
