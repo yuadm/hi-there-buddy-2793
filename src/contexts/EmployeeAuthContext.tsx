@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanupAuthState, forceSignOut } from '@/utils/authCleanup';
-import { Session } from '@supabase/supabase-js';
 
 interface Employee {
   id: string;
@@ -22,7 +21,6 @@ interface Employee {
 
 interface EmployeeAuthContextType {
   employee: Employee | null;
-  session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshEmployeeData: () => Promise<void>;
@@ -32,7 +30,6 @@ const EmployeeAuthContext = createContext<EmployeeAuthContextType | undefined>(u
 
 export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
@@ -87,7 +84,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
     try {
       await forceSignOut(supabase);
       setEmployee(null);
-      setSession(null);
       setLoading(false);
       
       // Force page reload for clean state
@@ -119,11 +115,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
             setInitialCheckComplete(true);
           }
           return;
-        }
-        
-        // Always set session state
-        if (isMounted) {
-          setSession(session);
         }
         
         if (session?.user?.user_metadata?.role === 'employee') {
@@ -158,9 +149,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         
         console.log('Employee auth state change:', event, session ? 'session exists' : 'no session');
         
-        // Always update session state
-        setSession(session);
-        
         // Handle different events appropriately
         if (event === 'SIGNED_OUT') {
           cleanupAuthState();
@@ -175,9 +163,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
               const success = await fetchEmployeeData(session.user);
               if (!success && isMounted) {
                 setEmployee(null);
-                setLoading(false);
-                setInitialCheckComplete(true);
-              } else {
                 setLoading(false);
                 setInitialCheckComplete(true);
               }
@@ -213,7 +198,6 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     employee,
-    session,
     loading: loading && !initialCheckComplete,
     signOut,
     refreshEmployeeData
