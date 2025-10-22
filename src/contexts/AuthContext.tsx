@@ -45,7 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(session?.user ?? null);
     
     if (session?.user) {
-      // Verify user still exists in user_roles table
+      // Skip user_roles validation for employee users
+      if (session.user.user_metadata?.role === 'employee') {
+        // This is an employee, let EmployeeAuthContext handle validation
+        setUserRole(null);
+        setLoading(false);
+        setInitialAuthCheckComplete(true);
+        return;
+      }
+      
+      // Verify user still exists in user_roles table (for admin/manager users only)
       const { data: roleCheck, error: roleCheckError } = await supabase
         .from('user_roles')
         .select('user_id, role')
@@ -128,7 +137,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           setUser(session?.user ?? null);
           
-          // Defer async operations
+          // Skip role fetching for employees
+          if (session?.user?.user_metadata?.role === 'employee') {
+            setUserRole(null);
+            setLoading(false);
+            setInitialAuthCheckComplete(true);
+            return;
+          }
+          
+          // Defer async operations for admin users
           if (session?.user) {
             setTimeout(async () => {
               try {
