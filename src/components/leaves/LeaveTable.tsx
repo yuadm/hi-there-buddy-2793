@@ -145,7 +145,7 @@ export function LeaveTable({
                       <div className="space-y-1">
                         <Badge variant="outline">{leave.leave_type?.name}</Badge>
                         <div className="text-xs text-muted-foreground">
-                          {leave.employee?.branch || 'No Branch'}
+                          {leave.employee?.branches?.name || 'No Branch'}
                         </div>
                       </div>
                     </TableCell>

@@ -7,8 +7,11 @@ export interface Employee {
   remaining_leave_days: number;
   leave_taken: number;
   leave_allowance?: number;
-  branch?: string;
   branch_id?: string;
+  branches?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface LeaveType {
