@@ -9,6 +9,12 @@ export const RESTRICTED_PAGES = [
   '/user-management'
 ];
 
+// Specific actions that are restricted even on accessible pages
+export const RESTRICTED_ACTIONS: Record<string, string[]> = {
+  'employees': ['delete'],
+  'job-applications': ['delete', 'edit', 'reference-manual-pdf']
+};
+
 // All available page modules with their paths and actions
 export const ALL_PAGE_MODULES = [
   {
@@ -112,10 +118,13 @@ export const generateLimitedPermissions = () => {
 
     // Page action permissions
     module.actions.forEach(action => {
+      // Check if this specific action is restricted for this module
+      const isActionRestricted = RESTRICTED_ACTIONS[module.key]?.includes(action);
+      
       permissions.push({
         permission_type: 'page_action',
         permission_key: `${module.key}:${action}`,
-        granted: !isRestricted
+        granted: !isRestricted && !isActionRestricted
       });
     });
   });
