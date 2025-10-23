@@ -990,7 +990,8 @@ export function EmployeesContent() {
       (employee.employee_code || '').toLowerCase().includes(searchLower) ||
       (employee.job_title || '').toLowerCase().includes(searchLower);
     
-    const matchesBranch = branchFilter === 'all' || employee.branches?.name === branchFilter;
+    const matchesBranch = branchFilter === 'all' || 
+                          (branchFilter === 'no-branch' ? !employee.branches?.name : employee.branches?.name === branchFilter);
     
     // For non-admin users, filter by accessible branches
     const accessibleBranches = getAccessibleBranches();
@@ -1152,6 +1153,9 @@ export function EmployeesContent() {
             {Array.from(new Set(employees.map(emp => emp.branches?.name).filter(Boolean))).map(branch => (
               <SelectItem key={branch} value={branch!}>{branch}</SelectItem>
             ))}
+            {employees.some(emp => !emp.branches?.name) && (
+              <SelectItem value="no-branch">No Branch</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
