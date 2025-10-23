@@ -881,7 +881,13 @@ export function EmployeesContent() {
       const { data: insertedEmployees, error } = await supabase
         .from('employees')
         .insert(employeesToInsert)
-        .select();
+        .select(`
+          *,
+          branches!employees_branch_id_fkey (
+            id,
+            name
+          )
+        `);
 
       if (error) throw error;
 
