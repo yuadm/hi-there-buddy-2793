@@ -2176,14 +2176,8 @@ export type Database = {
         Args: { p_days: number; p_employee_id: string; p_operation: string }
         Returns: Json
       }
-      backfill_annual_appraisal_responses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      backfill_compliance_notes_responses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      backfill_annual_appraisal_responses: { Args: never; Returns: number }
+      backfill_compliance_notes_responses: { Args: never; Returns: number }
       calculate_archive_dates: {
         Args: { base_year?: number; frequency: string }
         Returns: {
@@ -2199,14 +2193,8 @@ export type Database = {
         Args: { p_compliance_type_id: string; p_year: number }
         Returns: boolean
       }
-      create_user_branch_permissions_table: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      create_user_menu_permissions_table: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      create_user_branch_permissions_table: { Args: never; Returns: undefined }
+      create_user_menu_permissions_table: { Args: never; Returns: undefined }
       create_user_with_role: {
         Args: {
           email_param: string
@@ -2235,12 +2223,9 @@ export type Database = {
         Args: { p_compliance_type_id: string; p_year: number }
         Returns: Json
       }
-      generate_employee_accounts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      generate_employee_accounts: { Args: never; Returns: undefined }
       get_all_compliance_automation_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: boolean
           job_name: string
@@ -2248,33 +2233,24 @@ export type Database = {
         }[]
       }
       get_compliance_automation_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: boolean
           job_name: string
           schedule: string
         }[]
       }
-      get_email_settings: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_email_settings: { Args: never; Returns: Json }
       get_leave_automation_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: boolean
           job_name: string
           schedule: string
         }[]
       }
-      get_leave_settings: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_leave_settings_internal: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_leave_settings: { Args: never; Returns: Json }
+      get_leave_settings_internal: { Args: never; Returns: Json }
       get_period_end_date: {
         Args: { p_frequency: string; p_period_identifier: string }
         Returns: string
@@ -2296,38 +2272,17 @@ export type Database = {
           branch_id: string
         }[]
       }
-      get_user_display_name: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      get_user_role: {
-        Args: { input_user_id: string }
-        Returns: string
-      }
-      hash_password: {
-        Args: { password: string }
-        Returns: string
-      }
+      get_user_display_name: { Args: { user_id: string }; Returns: string }
+      get_user_role: { Args: { input_user_id: string }; Returns: string }
+      hash_password: { Args: { password: string }; Returns: string }
       increment: {
         Args: { increment_amount: number; row_id: string }
         Returns: number
       }
-      is_admin_by_id: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      migrate_application_settings_data: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      migrate_documents_to_jsonb: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      is_admin_by_id: { Args: { user_id: string }; Returns: boolean }
+      is_admin_user: { Args: never; Returns: boolean }
+      migrate_application_settings_data: { Args: never; Returns: number }
+      migrate_documents_to_jsonb: { Args: never; Returns: number }
       notify_admins: {
         Args: {
           p_message: string
@@ -2349,26 +2304,11 @@ export type Database = {
         }
         Returns: undefined
       }
-      reset_all_leave_balances: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      run_historical_data_backfill: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      run_leave_annual_reset_if_needed: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      update_client_compliance_statuses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      update_compliance_statuses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      reset_all_leave_balances: { Args: never; Returns: number }
+      run_historical_data_backfill: { Args: never; Returns: Json }
+      run_leave_annual_reset_if_needed: { Args: never; Returns: string }
+      update_client_compliance_statuses: { Args: never; Returns: number }
+      update_compliance_statuses: { Args: never; Returns: number }
       update_leave_status_with_balance: {
         Args: {
           p_leave_id: string
