@@ -234,15 +234,14 @@ export function DocumentViewDialog({ document, open, onClose }: DocumentViewDial
     try {
       if (!document) return;
 
-      // Update document_tracker for country and nationality_status only, preserving documents array
-      const { error: trackerError } = await supabase
-        .from('document_tracker')
-        .update({
-          country: employeeInfoValues.country || null,
-          nationality_status: employeeInfoValues.nationality_status || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('employee_id', document.employee_id);
+      // Update document_tracker for country and nationality_status
+      const { error: trackerError } = await supabase.rpc('upsert_employee_document', {
+        p_employee_id: document.employee_id,
+        p_document: null,
+        p_country: employeeInfoValues.country || null,
+        p_nationality_status: employeeInfoValues.nationality_status || null,
+        p_branch_id: document.branch_id
+      });
 
       if (trackerError) throw trackerError;
 
