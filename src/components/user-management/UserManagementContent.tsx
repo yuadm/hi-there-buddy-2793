@@ -16,6 +16,7 @@ import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { UserPermissionsDialog } from "./UserPermissionsDialog";
 import { UserManagementMetrics } from "./UserManagementMetrics";
+import { applyLimitedRolePermissions } from "@/utils/limitedRoleTemplate";
 
 interface UserWithRole {
   id: string;
@@ -31,6 +32,7 @@ export function UserManagementContent() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState("user");
+  const [applyLimitedRole, setApplyLimitedRole] = useState(false);
   const [creating, setCreating] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -103,15 +105,27 @@ export function UserManagementContent() {
       if (error) throw error;
 
       if (data.success) {
-        toast({
-          title: "User created successfully",
-          description: `${newUserEmail} has been added with ${newUserRole} role`,
-        });
+        // Apply limited permissions if checkbox is checked
+        if (applyLimitedRole && data?.user_id) {
+          const result = await applyLimitedRolePermissions(data.user_id);
+          if (result.success) {
+            toast({
+              title: "User created with limited access",
+              description: "User has restricted access to sensitive pages",
+            });
+          }
+        } else {
+          toast({
+            title: "User created successfully",
+            description: `${newUserEmail} has been added with ${newUserRole} role`,
+          });
+        }
         
         setCreateUserOpen(false);
         setNewUserEmail("");
         setNewUserPassword("");
         setNewUserRole("user");
+        setApplyLimitedRole(false);
         fetchUsers();
       } else {
         throw new Error(data.error || 'Failed to create user');
@@ -386,6 +400,35 @@ export function UserManagementContent() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {newUserRole === 'user' && (
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant={applyLimitedRole ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setApplyLimitedRole(!applyLimitedRole)}
+                      className="w-full"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      {applyLimitedRole ? "✓ Limited Access Enabled" : "Apply Limited Access"}
+                    </Button>
+                    
+                    {applyLimitedRole && (
+                      <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg border">
+                        <p className="font-semibold mb-2">Limited access will restrict:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Documents</li>
+                          <li>Document Signing</li>
+                          <li>Reports</li>
+                          <li>Settings</li>
+                          <li>User Management</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-3">
                   <Button
                     variant="outline"

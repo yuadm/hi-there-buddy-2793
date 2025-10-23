@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Key, Save, Shield } from "lucide-react";
+import { Key, Save, Shield, Users } from "lucide-react";
+import { generateLimitedPermissions, generateFullPermissions, ALL_PAGE_MODULES } from "@/utils/limitedRoleTemplate";
 
 interface UserWithRole {
   id: string;
@@ -39,86 +40,7 @@ export function UserPermissionsDialog({ user, onSuccess }: UserPermissionsDialog
   const [branchAccess, setBranchAccess] = useState<BranchAccess[]>([]);
   const { toast } = useToast();
 
-  const pageModules = [
-    {
-      name: 'Dashboard',
-      key: 'dashboard',
-      path: '/',
-      actions: ['view']
-    },
-    {
-      name: 'Employees',
-      key: 'employees', 
-      path: '/employees',
-      actions: ['view', 'create', 'edit', 'delete']
-    },
-    {
-      name: 'Clients',
-      key: 'clients',
-      path: '/clients',
-      actions: ['view', 'create', 'edit', 'delete', 'import', 'bulk-delete']
-    },
-    {
-      name: 'Leaves',
-      key: 'leaves',
-      path: '/leaves', 
-      actions: ['view', 'create', 'edit', 'delete', 'approve']
-    },
-    {
-      name: 'Documents',
-      key: 'documents',
-      path: '/documents',
-      actions: ['view', 'create', 'edit', 'delete', 'upload']
-    },
-    {
-      name: 'Document Signing',
-      key: 'document-signing',
-      path: '/document-signing',
-      actions: ['view', 'create', 'edit', 'delete', 'sign']
-    },
-    {
-      name: 'Compliance',
-      key: 'compliance',
-      path: '/compliance',
-      actions: ['view', 'create', 'edit', 'delete']
-    },
-    {
-      name: 'Compliance Types',
-      key: 'compliance-types',
-      path: '/compliance/types',
-      actions: ['view']
-    },
-    {
-      name: 'Care Worker Statements',
-      key: 'care-worker-statements', 
-      path: '/compliance/statements',
-      actions: ['view']
-    },
-    {
-      name: 'Reports',
-      key: 'reports',
-      path: '/reports',
-      actions: ['view', 'generate', 'export']
-    },
-    {
-      name: 'Job Applications',
-      key: 'job-applications',
-      path: '/job-applications',
-      actions: ['view', 'delete', 'edit', 'download-pdf', 'reference-send-request', 'reference-download-pdf', 'reference-manual-pdf']
-    },
-    {
-      name: 'Settings',
-      key: 'settings',
-      path: '/settings',
-      actions: ['view', 'edit']
-    },
-    {
-      name: 'User Management',
-      key: 'user-management',
-      path: '/user-management',
-      actions: ['view', 'create', 'edit', 'delete']
-    }
-  ];
+  const pageModules = ALL_PAGE_MODULES;
 
   const generateDefaultPermissions = () => {
     const permissions: Permission[] = [];
@@ -238,25 +160,47 @@ export function UserPermissionsDialog({ user, onSuccess }: UserPermissionsDialog
     ));
   };
 
+  const applyLimitedTemplate = () => {
+    const limitedPerms = generateLimitedPermissions();
+    setPermissions(prev => prev.map(perm => {
+      const match = limitedPerms.find(
+        lp => lp.permission_type === perm.type && lp.permission_key === perm.key
+      );
+      return match ? { ...perm, granted: match.granted } : perm;
+    }));
+    toast({
+      title: "Limited template applied",
+      description: "5 sensitive pages have been restricted",
+    });
+  };
+
+  const applyFullTemplate = () => {
+    setPermissions(prev => prev.map(perm => ({ ...perm, granted: true })));
+    toast({
+      title: "Full access template applied",
+      description: "All pages and actions have been enabled",
+    });
+  };
+
   const savePermissions = async () => {
     setLoading(true);
     try {
-      // Save page and feature permissions
-      for (const permission of permissions) {
-        const { error: upsertError } = await supabase
-          .from('user_permissions')
-          .upsert({
-            user_id: user.id,
-            permission_type: permission.type,
-            permission_key: permission.key,
-            granted: permission.granted,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id,permission_type,permission_key'
-          });
+      // Batch save all permissions in a single call
+      const permissionsToUpsert = permissions.map(p => ({
+        user_id: user.id,
+        permission_type: p.type,
+        permission_key: p.key,
+        granted: p.granted,
+        updated_at: new Date().toISOString()
+      }));
 
-        if (upsertError) throw upsertError;
-      }
+      const { error: permError } = await supabase
+        .from('user_permissions')
+        .upsert(permissionsToUpsert, {
+          onConflict: 'user_id,permission_type,permission_key'
+        });
+
+      if (permError) throw permError;
 
       // Save branch access permissions
       // First, remove all existing branch access for this user
@@ -327,6 +271,47 @@ export function UserPermissionsDialog({ user, onSuccess }: UserPermissionsDialog
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Quick Templates Section */}
+          {user.role !== 'admin' && (
+            <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Quick Templates
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={applyLimitedTemplate}
+                  className="flex flex-col items-start h-auto py-3 hover:bg-primary/5 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Shield className="w-4 h-4 text-orange-600" />
+                    <span className="font-semibold">Limited Access</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground text-left">
+                    Restricts 5 sensitive pages
+                  </span>
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={applyFullTemplate}
+                  className="flex flex-col items-start h-auto py-3 hover:bg-primary/5 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Users className="w-4 h-4 text-green-600" />
+                    <span className="font-semibold">Full Access</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground text-left">
+                    Enables all pages & actions
+                  </span>
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Page Access Permissions */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
