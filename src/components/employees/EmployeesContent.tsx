@@ -858,12 +858,12 @@ export function EmployeesContent() {
       }
 
       const employeesToInsert = validEmployees.map(emp => {
-        const branchId = branches.find(b => b.name === emp.branch_name)?.id || '';
+        const branchId = branches.find(b => b.name === emp.branch_name)?.id;
         return {
           name: emp.name,
           email: emp.email || null,
           phone: emp.phone || null,
-          branch_id: branchId,
+          branch_id: branchId || null,
           employee_code: emp.employee_code,
           job_title: emp.job_title || null,
           employee_type: emp.employee_type || 'regular',
