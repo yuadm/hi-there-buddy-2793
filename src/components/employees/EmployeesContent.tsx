@@ -858,7 +858,7 @@ export function EmployeesContent() {
       }
 
       const employeesToInsert = validEmployees.map(emp => {
-        const branchId = branches.find(b => b.name === emp.branch_name)?.id;
+        const branchId = branches.find(b => b.name.toLowerCase() === emp.branch_name?.toLowerCase())?.id;
         return {
           name: emp.name,
           email: emp.email || null,
