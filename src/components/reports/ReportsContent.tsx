@@ -597,12 +597,18 @@ export function ReportsContent() {
               const transformedEmployeeData = employeeComplianceData.map(record => {
                 let notes = record.notes || '';
                 const taskName = record.compliance_types?.name;
-                if ((taskName === 'Annual Appraisal' || taskName === 'Supervision') && notes) {
-                  try {
-                    JSON.parse(notes);
-                    notes = '';
-                  } catch {
-                    // Not JSON, keep the original notes
+                
+                // Handle JSON notes for certain compliance types (case-insensitive)
+                if (taskName && notes) {
+                  const lowerTaskName = taskName.toLowerCase();
+                  if (lowerTaskName === 'annual appraisal' || lowerTaskName === 'supervision') {
+                    try {
+                      const parsedNotes = JSON.parse(notes);
+                      // Extract only the freeTextNotes field if it exists
+                      notes = parsedNotes.freeTextNotes || '';
+                    } catch {
+                      // Not JSON, keep the original notes as-is
+                    }
                   }
                 }
                 
