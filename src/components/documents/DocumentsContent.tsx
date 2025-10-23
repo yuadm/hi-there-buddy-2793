@@ -88,10 +88,7 @@ interface ImportDocument {
   branch: string;
   status: string;
   country: string;
-  passport_expiry?: string;
-  passport_days_left?: string;
-  right_to_work_expiry?: string;
-  right_to_work_days_left?: string;
+  documents?: Record<string, string>; // Dynamic document types: { docTypeId: expiryDate }
   sponsored?: string;
   twenty_hours_restriction?: string;
   error?: string;
@@ -541,21 +538,25 @@ export function DocumentsContent() {
 
   // Document Import Functions
   const downloadTemplate = () => {
-    const template = [
-      {
-        'Employee Name': 'John Doe',
-        'Branch': 'Main Office',
-        'Status': 'BRITISH',
-        'Country': 'United Kingdom',
-        'Passport': '27/10/2030',
-        'Passport Days Left': '1991',
-        'Right to Work': '14/07/2030',
-        'Right to Work Days Left': '1826',
-        'Sponsored': 'Yes',
-        '20 Hours Restriction': 'No'
-      }
-    ];
+    // Build template dynamically based on available document types
+    const templateRow: any = {
+      'Employee Name': 'John Doe',
+      'Branch': 'Main Office',
+      'Status': 'BRITISH',
+      'Country': 'United Kingdom'
+    };
 
+    // Add columns for each document type
+    documentTypes.forEach(docType => {
+      templateRow[docType.name] = '27/10/2030';
+      templateRow[`${docType.name} Days Left`] = '1991';
+    });
+
+    // Add additional fields
+    templateRow['Sponsored'] = 'Yes';
+    templateRow['20 Hours Restriction'] = 'No';
+
+    const template = [templateRow];
     const csv = Papa.unparse(template);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -581,7 +582,8 @@ export function DocumentsContent() {
         branch: '',
         status: '',
         country: '',
-        error: ''
+        error: '',
+        documents: {} // Store document types dynamically
       };
 
       // Helper function to process cell values
@@ -605,18 +607,21 @@ export function DocumentsContent() {
           document.status = processCellValue(value);
         } else if (lowerKey.includes('country')) {
           document.country = processCellValue(value);
-        } else if (lowerKey.includes('passport') && !lowerKey.includes('days')) {
-          document.passport_expiry = processCellValue(value);
-        } else if (lowerKey.includes('passport') && lowerKey.includes('days')) {
-          document.passport_days_left = processCellValue(value);
-        } else if (lowerKey.includes('right') && lowerKey.includes('work') && !lowerKey.includes('days')) {
-          document.right_to_work_expiry = processCellValue(value);
-        } else if (lowerKey.includes('right') && lowerKey.includes('work') && lowerKey.includes('days')) {
-          document.right_to_work_days_left = processCellValue(value);
         } else if (lowerKey.includes('sponsored')) {
           document.sponsored = processCellValue(value);
         } else if (lowerKey.includes('20') && lowerKey.includes('hours')) {
           document.twenty_hours_restriction = processCellValue(value);
+        } else {
+          // Check if this column matches any document type name
+          const matchingDocType = documentTypes.find(dt => 
+            key.toLowerCase().trim() === dt.name.toLowerCase().trim()
+          );
+          
+          if (matchingDocType && !lowerKey.includes('days')) {
+            // This is a document expiry date column
+            if (!document.documents) document.documents = {};
+            document.documents[matchingDocType.id] = processCellValue(value);
+          }
         }
       });
 
@@ -626,9 +631,9 @@ export function DocumentsContent() {
       
       // Check if at least one document type has a valid date or text value
       const isValidDateOrText = (dateStr: string) => {
-        if (!dateStr) return false;
+        if (!dateStr || dateStr === 'N/A') return false;
         
-        // Accept text values like "NOT REQUIRED", "N/A", etc.
+        // Accept text values like "NOT REQUIRED", etc.
         if (dateStr.trim().length > 0 && isNaN(Date.parse(dateStr))) {
           return true; // Accept any text that's not a parseable date
         }
@@ -648,10 +653,11 @@ export function DocumentsContent() {
         return false;
       };
 
-      const hasValidPassportEntry = isValidDateOrText(document.passport_expiry);
-      const hasValidRightToWorkEntry = isValidDateOrText(document.right_to_work_expiry);
+      // Check if at least one document has a valid entry
+      const hasValidDocument = document.documents && 
+        Object.values(document.documents).some(value => isValidDateOrText(value as string));
       
-      if (!hasValidPassportEntry && !hasValidRightToWorkEntry) {
+      if (!hasValidDocument) {
         errors.push('At least one document field must have a valid date (DD/MM/YYYY format) or text value');
       }
 
@@ -778,30 +784,7 @@ export function DocumentsContent() {
         return null;
       };
 
-      // Get document types
       console.log(`📋 Available document types: ${documentTypes.map(dt => dt.name).join(', ')}`);
-      const passportType = documentTypes.find(type => 
-        type.name.toLowerCase().includes('passport') || 
-        type.name.toLowerCase() === 'pass'
-      );
-      const rightToWorkType = documentTypes.find(type => 
-        type.name.toLowerCase().includes('right to work') || 
-        type.name.toLowerCase() === 'r2w' ||
-        type.name.toLowerCase() === 'rtw'
-      );
-      
-      console.log(`🔍 Passport type found:`, passportType ? `✅ ${passportType.name} (${passportType.id})` : '❌ NOT FOUND');
-      console.log(`🔍 Right to Work type found:`, rightToWorkType ? `✅ ${rightToWorkType.name} (${rightToWorkType.id})` : '❌ NOT FOUND');
-      
-      if (!passportType || !rightToWorkType) {
-        toast({
-          title: "Missing document types",
-          description: `Required document types not found: ${!passportType ? 'Passport ' : ''}${!rightToWorkType ? 'Right to Work' : ''}`,
-          variant: "destructive",
-        });
-        setImporting(false);
-        return;
-      }
 
       const documentsToInsert = [];
       const employeesToUpdate = [];
@@ -828,72 +811,45 @@ export function DocumentsContent() {
           console.log(`  📝 Will update employee: sponsored=${sponsored}, twentyHours=${twentyHours}`);
         }
 
-        // Create passport document if expiry date exists
-        if (doc.passport_expiry && passportType) {
-          console.log(`  📄 Creating passport document with expiry: ${doc.passport_expiry}`);
-          const expiryDate = parseDate(doc.passport_expiry);
-          let status = 'valid';
-          let expiryDateValue = doc.passport_expiry;
-          
-          if (expiryDate) {
-            // Valid date - calculate status and convert to ISO format
-            const today = new Date();
-            const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+        // Process each document type dynamically
+        if (doc.documents) {
+          for (const [docTypeId, expiryValue] of Object.entries(doc.documents)) {
+            if (!expiryValue || expiryValue === 'N/A') continue;
             
-            if (daysUntilExpiry < 0) {
-              status = 'expired';
-            } else if (daysUntilExpiry <= 30) {
-              status = 'expiring';
-            }
-            expiryDateValue = expiryDate.toISOString().split('T')[0];
-          } else {
-            // Text value - keep as is, don't calculate status
-            expiryDateValue = doc.passport_expiry;
-          }
+            const docType = documentTypes.find(dt => dt.id === docTypeId);
+            if (!docType) continue;
 
-          documentsToInsert.push({
-            employee_id: employee.id,
-            document_type_id: passportType.id,
-            branch_id: employee.branch_id,
-            expiry_date: expiryDateValue,
-            country: doc.country || null,
-            nationality_status: doc.status || null,
-            status
-          });
-        }
-
-        // Create right to work document if expiry date exists
-        if (doc.right_to_work_expiry && rightToWorkType) {
-          console.log(`  📄 Creating RTW document with expiry: ${doc.right_to_work_expiry}`);
-          const expiryDate = parseDate(doc.right_to_work_expiry);
-          let status = 'valid';
-          let expiryDateValue = doc.right_to_work_expiry;
-          
-          if (expiryDate) {
-            // Valid date - calculate status and convert to ISO format
-            const today = new Date();
-            const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+            console.log(`  📄 Creating ${docType.name} document with expiry: ${expiryValue}`);
+            const expiryDate = parseDate(expiryValue as string);
+            let status = 'valid';
+            let expiryDateValue = expiryValue as string;
             
-            if (daysUntilExpiry < 0) {
-              status = 'expired';
-            } else if (daysUntilExpiry <= 30) {
-              status = 'expiring';
+            if (expiryDate) {
+              // Valid date - calculate status and convert to ISO format
+              const today = new Date();
+              const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+              
+              if (daysUntilExpiry < 0) {
+                status = 'expired';
+              } else if (daysUntilExpiry <= 30) {
+                status = 'expiring';
+              }
+              expiryDateValue = expiryDate.toISOString().split('T')[0];
+            } else {
+              // Text value - keep as is, don't calculate status
+              expiryDateValue = expiryValue as string;
             }
-            expiryDateValue = expiryDate.toISOString().split('T')[0];
-          } else {
-            // Text value - keep as is, don't calculate status
-            expiryDateValue = doc.right_to_work_expiry;
-          }
 
-          documentsToInsert.push({
-            employee_id: employee.id,
-            document_type_id: rightToWorkType.id,
-            branch_id: employee.branch_id,
-            expiry_date: expiryDateValue,
-            country: doc.country || null,
-            nationality_status: doc.status || null,
-            status
-          });
+            documentsToInsert.push({
+              employee_id: employee.id,
+              document_type_id: docTypeId,
+              branch_id: employee.branch_id,
+              expiry_date: expiryDateValue,
+              country: doc.country || null,
+              nationality_status: doc.status || null,
+              status
+            });
+          }
         }
       }
 
@@ -1579,8 +1535,9 @@ export function DocumentsContent() {
                     <TableHead>Employee Name</TableHead>
                     <TableHead>Branch</TableHead>
                     <TableHead>Country</TableHead>
-                    <TableHead>Passport</TableHead>
-                    <TableHead>Right to Work</TableHead>
+                    {documentTypes.map(docType => (
+                      <TableHead key={docType.id}>{docType.name}</TableHead>
+                    ))}
                     <TableHead>Sponsored</TableHead>
                     <TableHead>20 Hours</TableHead>
                     <TableHead>Error Details</TableHead>
@@ -1619,16 +1576,13 @@ export function DocumentsContent() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {document.passport_expiry || (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {document.right_to_work_expiry || (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
+                      {documentTypes.map(docType => (
+                        <TableCell key={docType.id}>
+                          {document.documents?.[docType.id] || (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      ))}
                       <TableCell>
                         {document.sponsored || (
                           <span className="text-muted-foreground">-</span>
