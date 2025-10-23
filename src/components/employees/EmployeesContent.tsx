@@ -526,17 +526,55 @@ export function EmployeesContent() {
     }
     
     try {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .in('id', selectedEmployees);
-
-      if (error) throw error;
-
-      toast({
-        title: "Employees deleted",
-        description: `Successfully deleted ${selectedEmployees.length} employees.`,
+      // Delete each employee using the Edge Function
+      const deletePromises = selectedEmployees.map(async (employeeId) => {
+        try {
+          const { data, error } = await supabase.functions.invoke('admin-delete-employee', {
+            body: { employeeId }
+          });
+          
+          if (error || data?.error) {
+            return { success: false, employeeId, error: error?.message || data?.error };
+          }
+          return { success: true, employeeId };
+        } catch (err) {
+          return { success: false, employeeId, error: err instanceof Error ? err.message : 'Unknown error' };
+        }
       });
+      
+      const results = await Promise.allSettled(deletePromises);
+      
+      // Count successes and failures
+      let successCount = 0;
+      let failedCount = 0;
+      
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value.success) {
+          successCount++;
+        } else {
+          failedCount++;
+        }
+      });
+      
+      // Show appropriate feedback
+      if (failedCount === 0) {
+        toast({
+          title: "Employees deleted",
+          description: `Successfully deleted ${successCount} employees.`,
+        });
+      } else if (successCount === 0) {
+        toast({
+          title: "Deletion failed",
+          description: `Failed to delete ${failedCount} employees.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Partial success",
+          description: `Deleted ${successCount} employees. ${failedCount} failed.`,
+          variant: "default",
+        });
+      }
 
       syncNow();
       setBatchDeleteDialogOpen(false);

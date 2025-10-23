@@ -56,6 +56,13 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
 
       if (empError) {
         console.error('Error fetching employee data:', empError);
+        // If employee record doesn't exist, they were likely deleted
+        // Force sign out to prevent orphaned auth accounts
+        return false;
+      }
+
+      if (!employeeData) {
+        console.error('Employee record not found for ID:', employeeId);
         return false;
       }
 

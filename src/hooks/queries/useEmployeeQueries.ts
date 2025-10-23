@@ -196,12 +196,15 @@ export function useEmployeeActions() {
 
   const deleteEmployee = useMutation({
     mutationFn: async (employeeId: string) => {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('id', employeeId);
+      // Call Edge Function to delete both auth and database records
+      const { data, error } = await supabase.functions.invoke('admin-delete-employee', {
+        body: { employeeId }
+      });
       
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: employeeQueryKeys.lists() });
