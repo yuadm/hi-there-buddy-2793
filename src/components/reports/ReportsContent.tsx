@@ -634,23 +634,9 @@ export function ReportsContent() {
 
           // Fetch client compliance records
           try {
-            let clientComplianceQuery = supabase
-              .from('client_compliance_period_records')
-              .select(`
-                *,
-                clients!client_compliance_period_records_client_id_fkey (
-                  name,
-                  branches!clients_branch_id_fkey (name)
-                ),
-                client_compliance_types!client_compliance_period_records_client_compliance_type_id_fkey (name, frequency)
-              `)
-              .order('completion_date', { ascending: false });
-
-            if (selectedBranch !== "all") {
-              clientComplianceQuery = clientComplianceQuery.eq('clients.branches.name', selectedBranch);
-            }
-
-            // For client compliance, we need to check if the selected compliance type exists in client_compliance_types
+            // Check if we should fetch client compliance at all
+            let shouldFetchClientCompliance = true;
+            
             if (selectedComplianceType !== "all") {
               // First check if this is a client compliance type
               const { data: clientComplianceTypes } = await supabase
@@ -658,43 +644,64 @@ export function ReportsContent() {
                 .select('id, name')
                 .eq('id', selectedComplianceType);
               
-              if (clientComplianceTypes && clientComplianceTypes.length > 0) {
+              // Only fetch if the selected type exists in client compliance types
+              shouldFetchClientCompliance = clientComplianceTypes && clientComplianceTypes.length > 0;
+            }
+
+            if (shouldFetchClientCompliance) {
+              let clientComplianceQuery = supabase
+                .from('client_compliance_period_records')
+                .select(`
+                  *,
+                  clients!client_compliance_period_records_client_id_fkey (
+                    name,
+                    branches!clients_branch_id_fkey (name)
+                  ),
+                  client_compliance_types!client_compliance_period_records_client_compliance_type_id_fkey (name, frequency)
+                `)
+                .order('completion_date', { ascending: false });
+
+              if (selectedBranch !== "all") {
+                clientComplianceQuery = clientComplianceQuery.eq('clients.branches.name', selectedBranch);
+              }
+
+              if (selectedComplianceType !== "all") {
                 clientComplianceQuery = clientComplianceQuery.eq('client_compliance_type_id', selectedComplianceType);
               }
-            }
 
-            const currentComplianceTypeForClient = getCurrentComplianceType();
-            if (currentComplianceTypeForClient) {
-              if (currentComplianceTypeForClient.frequency.toLowerCase() === 'annual') {
-                clientComplianceQuery = clientComplianceQuery.like('period_identifier', `${selectedYear}%`);
-              } else if (currentComplianceTypeForClient.frequency.toLowerCase() === 'monthly' && selectedMonths.length > 0) {
-                const monthFilters = selectedMonths.map(month => `${selectedYear}-${month}`);
-                clientComplianceQuery = clientComplianceQuery.in('period_identifier', monthFilters);
-              } else if (currentComplianceTypeForClient.frequency.toLowerCase() === 'quarterly' && selectedQuarters.length > 0) {
-                const quarterFilters = selectedQuarters.map(quarter => `${selectedYear}-${quarter}`);
-                clientComplianceQuery = clientComplianceQuery.in('period_identifier', quarterFilters);
+              const currentComplianceTypeForClient = getCurrentComplianceType();
+              if (currentComplianceTypeForClient) {
+                if (currentComplianceTypeForClient.frequency.toLowerCase() === 'annual') {
+                  clientComplianceQuery = clientComplianceQuery.like('period_identifier', `${selectedYear}%`);
+                } else if (currentComplianceTypeForClient.frequency.toLowerCase() === 'monthly' && selectedMonths.length > 0) {
+                  const monthFilters = selectedMonths.map(month => `${selectedYear}-${month}`);
+                  clientComplianceQuery = clientComplianceQuery.in('period_identifier', monthFilters);
+                } else if (currentComplianceTypeForClient.frequency.toLowerCase() === 'quarterly' && selectedQuarters.length > 0) {
+                  const quarterFilters = selectedQuarters.map(quarter => `${selectedYear}-${quarter}`);
+                  clientComplianceQuery = clientComplianceQuery.in('period_identifier', quarterFilters);
+                }
               }
-            }
 
-            const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
-            
-            if (!clientComplianceError && clientComplianceData) {
-              const transformedClientData = clientComplianceData.map(record => {
-                return {
-                  'Type': 'Client Compliance',
-                  'Task Name': record.client_compliance_types?.name || '',
-                  'Employee/Client': record.clients?.name || '',
-                  'Branch': record.clients?.branches?.name || '',
-                  'Period': record.period_identifier || '',
-                  'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
-                    ? new Date(record.completion_date).toLocaleDateString('en-GB') 
-                    : record.completion_date || '',
-                  'Status': record.status || '',
-                  'Notes': record.notes || '',
-                  'Frequency': record.client_compliance_types?.frequency || ''
-                };
-              });
-              allComplianceData = [...allComplianceData, ...transformedClientData];
+              const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
+              
+              if (!clientComplianceError && clientComplianceData) {
+                const transformedClientData = clientComplianceData.map(record => {
+                  return {
+                    'Type': 'Client Compliance',
+                    'Task Name': record.client_compliance_types?.name || '',
+                    'Employee/Client': record.clients?.name || '',
+                    'Branch': record.clients?.branches?.name || '',
+                    'Period': record.period_identifier || '',
+                    'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
+                      ? new Date(record.completion_date).toLocaleDateString('en-GB') 
+                      : record.completion_date || '',
+                    'Status': record.status || '',
+                    'Notes': record.notes || '',
+                    'Frequency': record.client_compliance_types?.frequency || ''
+                  };
+                });
+                allComplianceData = [...allComplianceData, ...transformedClientData];
+              }
             }
           } catch (error) {
             console.error('Error fetching client compliance data:', error);
