@@ -138,8 +138,8 @@ export function Dashboard() {
         
         // Documents - filter by accessible branches via employees
         supabase.from('document_tracker')
-          .select('*, employees(name, branch_id), document_types(name)')
-          .order('expiry_date', { ascending: true })
+          .select('*, employees(name, branch_id)')
+          .order('created_at', { ascending: true })
       ]);
 
       const employeesData = employeesResult.data;
@@ -163,11 +163,41 @@ export function Dashboard() {
         return branchIds.includes(employeeBranchId);
       }) || [];
 
-      // Filter documents to only include those from accessible branches
-      const filteredDocuments = documents?.filter(d => {
-        const employeeBranchId = d.employees?.branch_id;
-        return branchIds.includes(employeeBranchId);
-      }) || [];
+      // Fetch all document types to map names
+      const { data: docTypes } = await supabase
+        .from('document_types')
+        .select('id, name');
+      
+      const docTypeMap = new Map(docTypes?.map(dt => [dt.id, dt.name]) || []);
+      
+      // Flatten JSONB documents array and filter by accessible branches
+      const flattenedDocuments = [];
+      if (documents) {
+        for (const tracker of documents) {
+          const employeeBranchId = tracker.employees?.branch_id;
+          if (!branchIds.includes(employeeBranchId)) continue;
+          
+          const docs = (tracker.documents as any[]) || [];
+          for (const doc of docs) {
+            flattenedDocuments.push({
+              id: doc.id,
+              employee_id: tracker.employee_id,
+              document_type_id: doc.document_type_id,
+              document_number: doc.document_number,
+              issue_date: doc.issue_date,
+              expiry_date: doc.expiry_date,
+              status: doc.status,
+              notes: doc.notes,
+              employees: tracker.employees,
+              document_types: {
+                name: docTypeMap.get(doc.document_type_id) || 'Unknown'
+              }
+            });
+          }
+        }
+      }
+      
+      const filteredDocuments = flattenedDocuments;
 
       // Process leaves
       const pendingLeaves = filteredLeaves?.filter(l => l.status === 'pending') || [];
@@ -225,29 +255,63 @@ export function Dashboard() {
         };
       });
 
-      // Process documents using filtered data
-      const now = new Date();
-      const next30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      
+      // Process documents using filtered data - calculate status dynamically
       const documentsExpiring = filteredDocuments
-        ?.filter(doc => {
+        .filter(doc => {
           if (!doc.expiry_date || !/^\d{4}-\d{2}-\d{2}$/.test(doc.expiry_date)) return false;
           const expiryDate = new Date(doc.expiry_date);
-          return expiryDate <= next30Days;
+          return expiryDate <= thirtyDaysFromNow;
         })
-        .map(doc => ({
-          employee_name: doc.employees?.name || 'Unknown',
-          document_type: doc.document_types?.name || 'Document',
-          expiry_date: doc.expiry_date,
-          status: doc.status as 'valid' | 'expiring' | 'expired'
-        }))
-        .slice(0, 10) || [];
+        .map(doc => {
+          const expiryDate = new Date(doc.expiry_date);
+          let status: 'valid' | 'expiring' | 'expired';
+          
+          if (expiryDate < now) {
+            status = 'expired';
+          } else if (expiryDate <= thirtyDaysFromNow) {
+            status = 'expiring';
+          } else {
+            status = 'valid';
+          }
+          
+          return {
+            employee_name: doc.employees?.name || 'Unknown',
+            document_type: doc.document_types?.name || 'Document',
+            expiry_date: doc.expiry_date,
+            status
+          };
+        })
+        .slice(0, 10);
 
+      // Calculate document status dynamically based on expiry dates
+      const now = new Date();
+      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      
+      let validCount = 0;
+      let expiringCount = 0;
+      let expiredCount = 0;
+      
+      filteredDocuments.forEach(doc => {
+        if (!doc.expiry_date || !/^\d{4}-\d{2}-\d{2}$/.test(doc.expiry_date)) {
+          validCount++; // No expiry date = valid
+          return;
+        }
+        
+        const expiryDate = new Date(doc.expiry_date);
+        if (expiryDate < now) {
+          expiredCount++;
+        } else if (expiryDate <= thirtyDaysFromNow) {
+          expiringCount++;
+        } else {
+          validCount++;
+        }
+      });
+      
       const documentStats = {
-        total: filteredDocuments?.length || 0,
-        valid: filteredDocuments?.filter(d => d.status === 'valid').length || 0,
-        expiring: filteredDocuments?.filter(d => d.status === 'expiring').length || 0,
-        expired: filteredDocuments?.filter(d => d.status === 'expired').length || 0,
+        total: filteredDocuments.length,
+        valid: validCount,
+        expiring: expiringCount,
+        expired: expiredCount,
       };
 
       // Phase 2: Parallel activity queries
@@ -379,14 +443,21 @@ export function Dashboard() {
       // Calculate branch health scores (using filtered data)
       const branchHealth = (branchesData || []).map((branch) => {
         const branchEmployees = employeesData?.filter(e => e.branch_id === branch.id) || [];
-        const branchDocuments = filteredDocuments?.filter(d => d.employees?.branch_id === branch.id) || [];
+        const branchDocuments = flattenedDocuments?.filter(d => d.employees?.branch_id === branch.id) || [];
         const branchCompliance = filteredCompliance?.filter(c => {
           const employee = employeesData?.find(e => e.id === c.employee_id);
           return employee?.branch_id === branch.id;
         }) || [];
         
         const activeEmployees = branchEmployees.filter(e => e.is_active !== false).length;
-        const validDocuments = branchDocuments.filter(d => d.status === 'valid').length;
+        
+        // Calculate valid documents based on expiry dates
+        const validDocuments = branchDocuments.filter(d => {
+          if (!d.expiry_date || !/^\d{4}-\d{2}-\d{2}$/.test(d.expiry_date)) return true;
+          const expiryDate = new Date(d.expiry_date);
+          return expiryDate >= now;
+        }).length;
+        
         const completedCompliance = branchCompliance.filter(c => c.status === 'completed').length;
         
         const documentValidityRate = branchDocuments.length > 0 
