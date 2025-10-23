@@ -780,8 +780,15 @@ export function DocumentsContent() {
 
       // Get document types
       console.log(`📋 Available document types: ${documentTypes.map(dt => dt.name).join(', ')}`);
-      const passportType = documentTypes.find(type => type.name.toLowerCase().includes('passport'));
-      const rightToWorkType = documentTypes.find(type => type.name.toLowerCase().includes('right to work'));
+      const passportType = documentTypes.find(type => 
+        type.name.toLowerCase().includes('passport') || 
+        type.name.toLowerCase() === 'pass'
+      );
+      const rightToWorkType = documentTypes.find(type => 
+        type.name.toLowerCase().includes('right to work') || 
+        type.name.toLowerCase() === 'r2w' ||
+        type.name.toLowerCase() === 'rtw'
+      );
       
       console.log(`🔍 Passport type found:`, passportType ? `✅ ${passportType.name} (${passportType.id})` : '❌ NOT FOUND');
       console.log(`🔍 Right to Work type found:`, rightToWorkType ? `✅ ${rightToWorkType.name} (${rightToWorkType.id})` : '❌ NOT FOUND');
