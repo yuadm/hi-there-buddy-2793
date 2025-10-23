@@ -739,12 +739,15 @@ export function DocumentsContent() {
   };
 
   const handleImportDocuments = async () => {
+    console.log('🚀 Starting document import...');
     setImporting(true);
     
     try {
       const validDocuments = importData.filter(doc => !doc.error);
+      console.log(`📊 Valid documents to process: ${validDocuments.length}`);
       
       if (validDocuments.length === 0) {
+        console.log('❌ No valid documents found');
         toast({
           title: "No valid documents",
           description: "Please fix the errors in your import data.",
@@ -776,15 +779,34 @@ export function DocumentsContent() {
       };
 
       // Get document types
+      console.log(`📋 Available document types: ${documentTypes.map(dt => dt.name).join(', ')}`);
       const passportType = documentTypes.find(type => type.name.toLowerCase().includes('passport'));
       const rightToWorkType = documentTypes.find(type => type.name.toLowerCase().includes('right to work'));
+      
+      console.log(`🔍 Passport type found:`, passportType ? `✅ ${passportType.name} (${passportType.id})` : '❌ NOT FOUND');
+      console.log(`🔍 Right to Work type found:`, rightToWorkType ? `✅ ${rightToWorkType.name} (${rightToWorkType.id})` : '❌ NOT FOUND');
+      
+      if (!passportType || !rightToWorkType) {
+        toast({
+          title: "Missing document types",
+          description: `Required document types not found: ${!passportType ? 'Passport ' : ''}${!rightToWorkType ? 'Right to Work' : ''}`,
+          variant: "destructive",
+        });
+        setImporting(false);
+        return;
+      }
 
       const documentsToInsert = [];
       const employeesToUpdate = [];
 
+      console.log('🔄 Processing documents...');
       for (const doc of validDocuments) {
         const employee = employees.find(emp => emp.name.toLowerCase() === doc.employee_name.toLowerCase());
-        if (!employee) continue;
+        if (!employee) {
+          console.log(`⚠️ Employee not found: ${doc.employee_name}`);
+          continue;
+        }
+        console.log(`👤 Processing employee: ${employee.name} (${employee.id})`);
 
         // Update employee sponsored and twenty_hours status
         const sponsored = doc.sponsored?.toLowerCase() === 'yes';
@@ -796,10 +818,12 @@ export function DocumentsContent() {
             sponsored,
             twenty_hours: twentyHours
           });
+          console.log(`  📝 Will update employee: sponsored=${sponsored}, twentyHours=${twentyHours}`);
         }
 
         // Create passport document if expiry date exists
         if (doc.passport_expiry && passportType) {
+          console.log(`  📄 Creating passport document with expiry: ${doc.passport_expiry}`);
           const expiryDate = parseDate(doc.passport_expiry);
           let status = 'valid';
           let expiryDateValue = doc.passport_expiry;
@@ -833,6 +857,7 @@ export function DocumentsContent() {
 
         // Create right to work document if expiry date exists
         if (doc.right_to_work_expiry && rightToWorkType) {
+          console.log(`  📄 Creating RTW document with expiry: ${doc.right_to_work_expiry}`);
           const expiryDate = parseDate(doc.right_to_work_expiry);
           let status = 'valid';
           let expiryDateValue = doc.right_to_work_expiry;
@@ -865,15 +890,25 @@ export function DocumentsContent() {
         }
       }
 
+      console.log(`📦 Documents to insert: ${documentsToInsert.length}`);
+      console.log(`👥 Employees to update: ${employeesToUpdate.length}`);
+
       // Update employees
+      console.log('🔄 Updating employees...');
       for (const empUpdate of employeesToUpdate) {
-        await supabase
+        const { error } = await supabase
           .from('employees')
           .update({ 
             sponsored: empUpdate.sponsored,
             twenty_hours: empUpdate.twenty_hours 
           })
           .eq('id', empUpdate.id);
+        
+        if (error) {
+          console.error(`❌ Error updating employee ${empUpdate.id}:`, error);
+        } else {
+          console.log(`✅ Updated employee ${empUpdate.id}`);
+        }
       }
 
       // Insert documents using RPC function
@@ -881,6 +916,7 @@ export function DocumentsContent() {
       let failCount = 0;
       
       if (documentsToInsert.length > 0) {
+        console.log('🔄 Inserting documents via RPC...');
         for (const docData of documentsToInsert) {
           try {
             // Generate unique ID for the document
@@ -897,6 +933,9 @@ export function DocumentsContent() {
               notes: ''
             };
             
+            console.log(`  📤 Calling upsert_employee_document for employee ${docData.employee_id}`);
+            console.log(`  📋 Document data:`, document);
+            
             // Call RPC function with correct parameters
             const { error } = await supabase.rpc('upsert_employee_document', {
               p_employee_id: docData.employee_id,
@@ -907,17 +946,22 @@ export function DocumentsContent() {
             });
             
             if (error) {
-              console.error('Error inserting document:', error);
+              console.error(`  ❌ Error inserting document:`, error);
               failCount++;
             } else {
+              console.log(`  ✅ Document inserted successfully`);
               successCount++;
             }
           } catch (err) {
-            console.error('Exception inserting document:', err);
+            console.error(`  ❌ Exception inserting document:`, err);
             failCount++;
           }
         }
+      } else {
+        console.log('⚠️ No documents to insert');
       }
+
+      console.log(`✅ Import complete: ${successCount} success, ${failCount} failed`);
 
       toast({
         title: "Import completed",
