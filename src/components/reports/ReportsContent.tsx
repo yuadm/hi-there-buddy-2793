@@ -554,79 +554,95 @@ export function ReportsContent() {
 
           // Fetch employee compliance records
           try {
-            let employeeComplianceQuery = supabase
-              .from('compliance_period_records')
-              .select(`
-                *,
-                employees!compliance_period_records_employee_id_fkey (
-                  name, 
-                  branch_id,
-                  branches!employees_branch_id_fkey(id, name)
-                ),
-                compliance_types (name, frequency)
-              `)
-              .order('completion_date', { ascending: false });
-
-            if (selectedBranch !== "all") {
-              const branchId = branches.find(b => b.name === selectedBranch)?.id;
-              if (branchId) {
-                employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
-              }
-            }
-
-            if (selectedComplianceType !== "all") {
-              employeeComplianceQuery = employeeComplianceQuery.eq('compliance_type_id', selectedComplianceType);
-            }
-
-            const currentComplianceType = getCurrentComplianceType();
-            if (currentComplianceType) {
-              if (currentComplianceType.frequency.toLowerCase() === 'annual') {
-                employeeComplianceQuery = employeeComplianceQuery.like('period_identifier', `${selectedYear}%`);
-              } else if (currentComplianceType.frequency.toLowerCase() === 'monthly' && selectedMonths.length > 0) {
-                const monthFilters = selectedMonths.map(month => `${selectedYear}-${month}`);
-                employeeComplianceQuery = employeeComplianceQuery.in('period_identifier', monthFilters);
-              } else if (currentComplianceType.frequency.toLowerCase() === 'quarterly' && selectedQuarters.length > 0) {
-                const quarterFilters = selectedQuarters.map(quarter => `${selectedYear}-${quarter}`);
-                employeeComplianceQuery = employeeComplianceQuery.in('period_identifier', quarterFilters);
-              }
-            }
-
-            const { data: employeeComplianceData, error: employeeComplianceError } = await employeeComplianceQuery;
+            // Check if we should fetch employee compliance at all
+            let shouldFetchEmployeeCompliance = true;
             
-            if (!employeeComplianceError && employeeComplianceData) {
-              const transformedEmployeeData = employeeComplianceData.map(record => {
-                let notes = record.notes || '';
-                const taskName = record.compliance_types?.name;
-                
-                // Handle JSON notes for certain compliance types (case-insensitive)
-                if (taskName && notes) {
-                  const lowerTaskName = taskName.toLowerCase();
-                  if (lowerTaskName === 'annual appraisal' || lowerTaskName === 'supervision') {
-                    try {
-                      const parsedNotes = JSON.parse(notes);
-                      // Extract only the freeTextNotes field if it exists
-                      notes = parsedNotes.freeTextNotes || '';
-                    } catch {
-                      // Not JSON, keep the original notes as-is
+            if (selectedComplianceType !== "all") {
+              // First check if this is an employee compliance type
+              const { data: employeeComplianceTypes } = await supabase
+                .from('compliance_types')
+                .select('id, name')
+                .eq('id', selectedComplianceType);
+              
+              // Only fetch if the selected type exists in employee compliance types
+              shouldFetchEmployeeCompliance = employeeComplianceTypes && employeeComplianceTypes.length > 0;
+            }
+
+            if (shouldFetchEmployeeCompliance) {
+              let employeeComplianceQuery = supabase
+                .from('compliance_period_records')
+                .select(`
+                  *,
+                  employees!compliance_period_records_employee_id_fkey (
+                    name, 
+                    branch_id,
+                    branches!employees_branch_id_fkey(id, name)
+                  ),
+                  compliance_types (name, frequency)
+                `)
+                .order('completion_date', { ascending: false });
+
+              if (selectedBranch !== "all") {
+                const branchId = branches.find(b => b.name === selectedBranch)?.id;
+                if (branchId) {
+                  employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
+                }
+              }
+
+              if (selectedComplianceType !== "all") {
+                employeeComplianceQuery = employeeComplianceQuery.eq('compliance_type_id', selectedComplianceType);
+              }
+
+              const currentComplianceType = getCurrentComplianceType();
+              if (currentComplianceType) {
+                if (currentComplianceType.frequency.toLowerCase() === 'annual') {
+                  employeeComplianceQuery = employeeComplianceQuery.like('period_identifier', `${selectedYear}%`);
+                } else if (currentComplianceType.frequency.toLowerCase() === 'monthly' && selectedMonths.length > 0) {
+                  const monthFilters = selectedMonths.map(month => `${selectedYear}-${month}`);
+                  employeeComplianceQuery = employeeComplianceQuery.in('period_identifier', monthFilters);
+                } else if (currentComplianceType.frequency.toLowerCase() === 'quarterly' && selectedQuarters.length > 0) {
+                  const quarterFilters = selectedQuarters.map(quarter => `${selectedYear}-${quarter}`);
+                  employeeComplianceQuery = employeeComplianceQuery.in('period_identifier', quarterFilters);
+                }
+              }
+
+              const { data: employeeComplianceData, error: employeeComplianceError } = await employeeComplianceQuery;
+              
+              if (!employeeComplianceError && employeeComplianceData) {
+                const transformedEmployeeData = employeeComplianceData.map(record => {
+                  let notes = record.notes || '';
+                  const taskName = record.compliance_types?.name;
+                  
+                  // Handle JSON notes for certain compliance types (case-insensitive)
+                  if (taskName && notes) {
+                    const lowerTaskName = taskName.toLowerCase();
+                    if (lowerTaskName === 'annual appraisal' || lowerTaskName === 'supervision') {
+                      try {
+                        const parsedNotes = JSON.parse(notes);
+                        // Extract only the freeTextNotes field if it exists
+                        notes = parsedNotes.freeTextNotes || '';
+                      } catch {
+                        // Not JSON, keep the original notes as-is
+                      }
                     }
                   }
-                }
-                
-                return {
-                  'Type': 'Employee Compliance',
-                  'Task Name': record.compliance_types?.name || '',
-                  'Employee/Client': record.employees?.name || '',
-                  'Branch': (record.employees as any)?.branches?.name || '',
-                  'Period': record.period_identifier || '',
-                  'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
-                    ? new Date(record.completion_date).toLocaleDateString('en-GB') 
-                    : record.completion_date || '',
-                  'Status': record.status || '',
-                  'Notes': notes,
-                  'Frequency': record.compliance_types?.frequency || ''
-                };
-              });
-              allComplianceData = [...allComplianceData, ...transformedEmployeeData];
+                  
+                  return {
+                    'Type': 'Employee Compliance',
+                    'Task Name': record.compliance_types?.name || '',
+                    'Employee/Client': record.employees?.name || '',
+                    'Branch': (record.employees as any)?.branches?.name || '',
+                    'Period': record.period_identifier || '',
+                    'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
+                      ? new Date(record.completion_date).toLocaleDateString('en-GB') 
+                      : record.completion_date || '',
+                    'Status': record.status || '',
+                    'Notes': notes,
+                    'Frequency': record.compliance_types?.frequency || ''
+                  };
+                });
+                allComplianceData = [...allComplianceData, ...transformedEmployeeData];
+              }
             }
           } catch (error) {
             console.error('Error fetching employee compliance data:', error);
