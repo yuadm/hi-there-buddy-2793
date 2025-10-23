@@ -858,7 +858,7 @@ export function EmployeesContent() {
       }
 
       const employeesToInsert = validEmployees.map(emp => {
-        const branchId = branches.find(b => b.name.toLowerCase() === (emp.branch_name || '').toLowerCase())?.id;
+        const branchId = branches.find(b => b.name === emp.branch_name)?.id;
         return {
           name: emp.name,
           email: emp.email || null,
@@ -990,7 +990,7 @@ export function EmployeesContent() {
       (employee.employee_code || '').toLowerCase().includes(searchLower) ||
       (employee.job_title || '').toLowerCase().includes(searchLower);
     
-    const matchesBranch = branchFilter === 'all' || employee.branches?.name === branchFilter || (employee as any).branch === branchFilter;
+    const matchesBranch = branchFilter === 'all' || employee.branches?.name === branchFilter;
     
     // For non-admin users, filter by accessible branches
     const accessibleBranches = getAccessibleBranches();
@@ -1016,8 +1016,8 @@ export function EmployeesContent() {
         bVal = b.employee_code || '';
         break;
       case 'branch_name':
-        aVal = a.branches?.name || (a as any).branch || '';
-        bVal = b.branches?.name || (b as any).branch || '';
+        aVal = a.branches?.name || '';
+        bVal = b.branches?.name || '';
         break;
       case 'working_hours':
         // Treat null/undefined as 0 for sorting, so N/A entries go to the bottom in ascending order
@@ -1321,7 +1321,7 @@ export function EmployeesContent() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
                             <Building className="w-3 h-3" />
-                            {employee.branches?.name || (employee as any).branch || 'No Branch'}
+                            {employee.branches?.name || 'No Branch'}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1916,7 +1916,7 @@ export function EmployeesContent() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="p-2 bg-muted rounded text-sm">{selectedEmployee.branches?.name || (selectedEmployee as any).branch || 'No Branch'}</div>
+                    <div className="p-2 bg-muted rounded text-sm">{selectedEmployee.branches?.name || 'No Branch'}</div>
                   )}
                 </div>
                 <div className="space-y-2">
