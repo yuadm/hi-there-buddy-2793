@@ -626,30 +626,37 @@ export function DocumentsContent() {
       
       // Check if at least one document type has a valid date or text value
       const isValidDateOrText = (dateStr: string) => {
-        if (!dateStr) return false;
+        if (!dateStr || dateStr === 'N/A') return false;
         
-        // Accept text values like "NOT REQUIRED", "N/A", etc.
-        if (dateStr.trim().length > 0 && isNaN(Date.parse(dateStr))) {
-          return true; // Accept any text that's not a parseable date
-        }
+        const trimmed = dateStr.trim();
+        if (trimmed.length === 0) return false;
         
-        // Check if it's a valid DD/MM/YYYY date format
-        const parts = dateStr.split('/');
+        // Check if it's a valid DD/MM/YYYY date format first
+        const parts = trimmed.split('/');
         if (parts.length === 3) {
           const day = parseInt(parts[0]);
           const month = parseInt(parts[1]) - 1;
           const year = parseInt(parts[2]);
-          const date = new Date(year, month, day);
-          return !isNaN(date.getTime()) && 
-                 date.getDate() === day && 
-                 date.getMonth() === month && 
-                 date.getFullYear() === year;
+          
+          if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+            const date = new Date(year, month, day);
+            const isValid = !isNaN(date.getTime()) && 
+                   date.getDate() === day && 
+                   date.getMonth() === month && 
+                   date.getFullYear() === year;
+            if (isValid) return true;
+          }
         }
-        return false;
+        
+        // Accept any non-empty text value that is not 'N/A'
+        // This includes "NOT REQUIRED", "PERMANENT", etc.
+        return trimmed.length > 0;
       };
 
-      const hasValidPassportEntry = isValidDateOrText(document.passport_expiry);
-      const hasValidRightToWorkEntry = isValidDateOrText(document.right_to_work_expiry);
+      const hasValidPassportEntry = document.passport_expiry ? isValidDateOrText(document.passport_expiry) : false;
+      const hasValidRightToWorkEntry = document.right_to_work_expiry ? isValidDateOrText(document.right_to_work_expiry) : false;
+      
+      console.log(`Row validation - Employee: ${document.employee_name}, Passport: "${document.passport_expiry}" (valid: ${hasValidPassportEntry}), RTW: "${document.right_to_work_expiry}" (valid: ${hasValidRightToWorkEntry})`);
       
       if (!hasValidPassportEntry && !hasValidRightToWorkEntry) {
         errors.push('At least one document field must have a valid date (DD/MM/YYYY format) or text value');
@@ -661,25 +668,36 @@ export function DocumentsContent() {
         errors.push('Employee not found');
       }
 
+      if (errors.length > 0) {
+        console.log(`Validation errors for ${document.employee_name}:`, errors);
+      }
+
       document.error = errors.join(', ');
       return document;
     });
   };
 
   const handleDocumentFileUpload = (file: File) => {
+    console.log('File upload started:', file.name, file.type, file.size);
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     
     if (fileExtension === 'csv') {
+      console.log('Parsing CSV file...');
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
+          console.log('CSV parsing complete. Rows found:', results.data.length);
+          console.log('First row sample:', results.data[0]);
           const processedData = processDocumentFileData(results.data);
+          console.log('Processed data:', processedData);
+          console.log('Valid documents:', processedData.filter(d => !d.error).length);
           setImportData(processedData);
           setPreviewDialogOpen(true);
           setImportDialogOpen(false);
         },
         error: (error) => {
+          console.error('CSV parsing error:', error);
           toast({
             title: "Error parsing CSV",
             description: error.message,
@@ -688,6 +706,7 @@ export function DocumentsContent() {
         }
       });
     } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+      console.log('Parsing Excel file...');
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -696,11 +715,16 @@ export function DocumentsContent() {
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet);
           
+          console.log('Excel parsing complete. Rows found:', jsonData.length);
+          console.log('First row sample:', jsonData[0]);
           const processedData = processDocumentFileData(jsonData);
+          console.log('Processed data:', processedData);
+          console.log('Valid documents:', processedData.filter(d => !d.error).length);
           setImportData(processedData);
           setPreviewDialogOpen(true);
           setImportDialogOpen(false);
         } catch (error) {
+          console.error('Excel parsing error:', error);
           toast({
             title: "Error parsing Excel file",
             description: "Failed to read the Excel file.",
@@ -710,6 +734,7 @@ export function DocumentsContent() {
       };
       reader.readAsArrayBuffer(file);
     } else {
+      console.error('Unsupported file format:', fileExtension);
       toast({
         title: "Unsupported file format",
         description: "Please upload a CSV or Excel file.",
