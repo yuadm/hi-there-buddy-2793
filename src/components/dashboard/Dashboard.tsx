@@ -255,18 +255,28 @@ export function Dashboard() {
         };
       });
 
-      // Process documents using filtered data - calculate status dynamically
+      // Date calculations for document status - used in multiple places
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const thirtyDaysFromNow = new Date(today);
+      thirtyDaysFromNow.setDate(today.getDate() + 30);
+      
+      // Process documents expiring soon
       const documentsExpiring = filteredDocuments
         .filter(doc => {
           if (!doc.expiry_date || !/^\d{4}-\d{2}-\d{2}$/.test(doc.expiry_date)) return false;
-          const expiryDate = new Date(doc.expiry_date);
+          const [year, month, day] = doc.expiry_date.split('-').map(Number);
+          const expiryDate = new Date(year, month - 1, day);
+          expiryDate.setHours(0, 0, 0, 0);
           return expiryDate <= thirtyDaysFromNow;
         })
         .map(doc => {
-          const expiryDate = new Date(doc.expiry_date);
+          const [year, month, day] = doc.expiry_date.split('-').map(Number);
+          const expiryDate = new Date(year, month - 1, day);
+          expiryDate.setHours(0, 0, 0, 0);
           let status: 'valid' | 'expiring' | 'expired';
           
-          if (expiryDate < now) {
+          if (expiryDate < today) {
             status = 'expired';
           } else if (expiryDate <= thirtyDaysFromNow) {
             status = 'expiring';
@@ -284,9 +294,6 @@ export function Dashboard() {
         .slice(0, 10);
 
       // Calculate document status dynamically based on expiry dates
-      const now = new Date();
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      
       let validCount = 0;
       let expiringCount = 0;
       let expiredCount = 0;
@@ -297,8 +304,12 @@ export function Dashboard() {
           return;
         }
         
-        const expiryDate = new Date(doc.expiry_date);
-        if (expiryDate < now) {
+        // Parse date as YYYY-MM-DD and set to midnight local time for accurate comparison
+        const [year, month, day] = doc.expiry_date.split('-').map(Number);
+        const expiryDate = new Date(year, month - 1, day); // month is 0-indexed
+        expiryDate.setHours(0, 0, 0, 0);
+        
+        if (expiryDate < today) {
           expiredCount++;
         } else if (expiryDate <= thirtyDaysFromNow) {
           expiringCount++;
@@ -454,8 +465,10 @@ export function Dashboard() {
         // Calculate valid documents based on expiry dates
         const validDocuments = branchDocuments.filter(d => {
           if (!d.expiry_date || !/^\d{4}-\d{2}-\d{2}$/.test(d.expiry_date)) return true;
-          const expiryDate = new Date(d.expiry_date);
-          return expiryDate >= now;
+          const [year, month, day] = d.expiry_date.split('-').map(Number);
+          const expiryDate = new Date(year, month - 1, day);
+          expiryDate.setHours(0, 0, 0, 0);
+          return expiryDate >= today;
         }).length;
         
         const completedCompliance = branchCompliance.filter(c => c.status === 'completed').length;
