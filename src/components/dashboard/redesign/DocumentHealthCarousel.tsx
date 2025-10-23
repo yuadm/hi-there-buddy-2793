@@ -70,6 +70,28 @@ export function DocumentHealthCarousel({ stats, expiringDocuments }: DocumentHea
   const expiredCount = expiringDocuments.filter(d => d.status === 'expired').length;
   const expiringCount = expiringDocuments.filter(d => d.status === 'expiring').length;
 
+  // Group documents by employee
+  const groupedDocuments = expiringDocuments.reduce((acc, doc) => {
+    if (!acc[doc.employee_name]) {
+      acc[doc.employee_name] = [];
+    }
+    acc[doc.employee_name].push(doc);
+    return acc;
+  }, {} as Record<string, ExpiringDocument[]>);
+
+  const groupedDocumentsList = Object.entries(groupedDocuments).map(([employee, docs]) => {
+    // Determine overall status - if any expired, show expired; else if any expiring, show expiring
+    const hasExpired = docs.some(d => d.status === 'expired');
+    const hasExpiring = docs.some(d => d.status === 'expiring');
+    const overallStatus = hasExpired ? 'expired' : hasExpiring ? 'expiring' : 'valid';
+    
+    return {
+      employee_name: employee,
+      documents: docs,
+      status: overallStatus
+    };
+  });
+
   return (
     <div className="card-premium p-6 flex flex-col min-h-[620px]">
       <Carousel 
@@ -177,8 +199,8 @@ export function DocumentHealthCarousel({ stats, expiringDocuments }: DocumentHea
               {/* Summary Stats */}
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                 <div>
-                  <div className="text-3xl font-bold">{expiringDocuments.length}</div>
-                  <div className="text-xs text-muted-foreground">Total Documents</div>
+                  <div className="text-3xl font-bold">{groupedDocumentsList.length}</div>
+                  <div className="text-xs text-muted-foreground">Employees with Issues</div>
                 </div>
                 <div className="flex gap-2">
                   {expiredCount > 0 && (
@@ -193,28 +215,34 @@ export function DocumentHealthCarousel({ stats, expiringDocuments }: DocumentHea
               {/* Document List */}
               <ScrollArea className="h-[200px] pr-2">
                 <div className="space-y-2">
-                  {expiringDocuments.length === 0 ? (
+                  {groupedDocumentsList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-6 text-center">
                       <CheckCircle2 className="w-12 h-12 text-success/50 mb-3" />
                       <p className="text-sm text-muted-foreground">No documents expiring soon</p>
                     </div>
                   ) : (
-                    expiringDocuments.map((doc, index) => (
+                    groupedDocumentsList.map((group, index) => (
                       <div
                         key={index}
-                        className={`flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 ${getStatusColor(doc.status)}`}
+                        className={`rounded-lg border p-3 transition-colors hover:bg-muted/50 ${getStatusColor(group.status)}`}
                       >
-                        <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 space-y-1 min-w-0">
-                          <p className="text-sm font-medium leading-none truncate">
-                            {doc.employee_name}
-                          </p>
-                          <p className="text-xs opacity-80 truncate">
-                            {doc.document_type}
-                          </p>
-                          <p className="text-xs opacity-80">
-                            Expires: {new Date(doc.expiry_date).toLocaleDateString()}
-                          </p>
+                        <div className="flex items-start gap-3">
+                          <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 space-y-2 min-w-0">
+                            <p className="text-sm font-medium leading-none">
+                              {group.employee_name}
+                            </p>
+                            <div className="space-y-1">
+                              {group.documents.map((doc, docIndex) => (
+                                <div key={docIndex} className="flex items-center justify-between text-xs opacity-80">
+                                  <span className="truncate">{doc.document_type}</span>
+                                  <span className="ml-2 whitespace-nowrap">
+                                    {new Date(doc.expiry_date).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))
