@@ -213,20 +213,6 @@ export function ComplianceSettings() {
 
           <div className="space-y-4">
             <h4 className="font-medium text-lg">Automation Settings</h4>
-            
-            <div className="space-y-2">
-              <Label htmlFor="grace-period">Grace Period (Days)</Label>
-              <Input
-                id="grace-period"
-                type="number"
-                value={automationSettings.grace_period_days}
-                onChange={(e) => setAutomationSettings(prev => ({ ...prev, grace_period_days: parseInt(e.target.value) }))}
-                placeholder="7"
-              />
-              <p className="text-sm text-muted-foreground">
-                Days after due date before marking as overdue
-              </p>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="notification-days">Notification Days Before</Label>
