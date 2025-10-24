@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { MapPin } from "lucide-react";
+import { usePermissions } from "@/contexts/PermissionsContext";
 import worldMapData from "@/assets/world-countries-110m.json";
 
 type CountryCounts = Record<string, number>;
@@ -11,21 +12,33 @@ export function DocumentCountryMap() {
   const [loading, setLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const { getAccessibleBranches } = usePermissions();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const accessibleBranches = getAccessibleBranches();
+        
+        // Fetch document_tracker with employee join to filter by branch
         const { data, error } = await supabase
           .from("document_tracker")
-          .select("country, employee_id");
+          .select("country, employee_id, employees!inner(branch_id)");
+        
         if (error) throw error;
         
-        // Count unique employees per country
+        // Filter by accessible branches and count unique employees per country
         const employeesByCountry: Record<string, Set<string>> = {};
         (data || []).forEach((row: any) => {
           const country = (row?.country || "").trim();
           const employeeId = row?.employee_id;
+          const branchId = row?.employees?.branch_id;
+          
           if (!country || !employeeId) return;
+          
+          // Filter by accessible branches
+          if (accessibleBranches.length > 0 && !accessibleBranches.includes(branchId)) {
+            return;
+          }
           
           const key = country.toLowerCase();
           if (!employeesByCountry[key]) {
@@ -48,7 +61,7 @@ export function DocumentCountryMap() {
       }
     };
     fetchData();
-  }, []);
+  }, [getAccessibleBranches]);
 
   const max = useMemo(() => {
     return Object.values(counts).reduce((a, b) => Math.max(a, b), 0) || 0;
