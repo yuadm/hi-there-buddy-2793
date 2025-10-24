@@ -95,9 +95,9 @@ export function DocumentCountryMap() {
   const countriesCount = useMemo(() => Object.keys(counts).length, [counts]);
 
   return (
-    <div className="w-full space-y-6">
-      {/* World Map */}
-      <div className="group card-premium p-8 relative overflow-hidden animate-fade-in">
+    <div className="w-full">
+      {/* Combined Card */}
+      <div className="group card-premium p-8 relative overflow-hidden animate-fade-in border-2">
         {/* Background decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full blur-3xl -z-10" />
@@ -122,35 +122,18 @@ export function DocumentCountryMap() {
           </div>
           
           <div className="flex gap-3">
-            <div className="text-right px-4 py-2 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+            <div className="text-right px-4 py-2 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
               <div className="text-xs text-muted-foreground mb-1">Countries</div>
               <div className="text-2xl font-bold text-primary">{countriesCount}</div>
             </div>
-            <div className="text-right px-4 py-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+            <div className="text-right px-4 py-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-2 border-blue-500/20">
               <div className="text-xs text-muted-foreground mb-1">Total Staff</div>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalEmployees}</div>
             </div>
           </div>
         </div>
 
-        <div className="w-full aspect-[2/1] rounded-2xl border-2 bg-gradient-to-br from-background via-background/95 to-muted/30 overflow-hidden shadow-xl relative">
-          {/* Map legend */}
-          <div className="absolute top-4 left-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 border shadow-lg">
-            <div className="text-xs font-medium mb-2 text-muted-foreground">Employee Density</div>
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                {[0.45, 0.6, 0.75, 0.9].map((opacity, i) => (
-                  <div
-                    key={i}
-                    className="w-4 h-4 rounded"
-                    style={{ background: `hsl(var(--primary) / ${opacity})` }}
-                  />
-                ))}
-              </div>
-              <div className="text-xs text-muted-foreground">Low → High</div>
-            </div>
-          </div>
-
+        <div className="w-full aspect-[2/1] rounded-2xl border-2 bg-gradient-to-br from-background via-background/95 to-muted/30 overflow-hidden shadow-xl relative mb-8">
           {loading ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-4">
               <div className="relative">
@@ -240,39 +223,36 @@ export function DocumentCountryMap() {
             </ComposableMap>
           )}
         </div>
-      </div>
 
-      {/* Top Countries Statistics - Redesigned */}
-      <div className="card-premium p-8 space-y-6 animate-fade-in relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-amber-500/5 to-transparent rounded-full blur-3xl -z-10" />
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <TrendingUp className="w-6 h-6 text-white" />
+        {/* Top Countries Statistics - Integrated */}
+        <div className="space-y-6 pt-6 border-t-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Top Locations</h3>
+                <p className="text-sm text-muted-foreground">Leading countries by workforce size</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold">Top Locations</h3>
-              <p className="text-sm text-muted-foreground">Leading countries by workforce size</p>
-            </div>
+            <Badge variant="secondary" className="text-xs px-3 py-1.5 gap-2 border-2">
+              <Users className="w-3.5 h-3.5" />
+              {totalEmployees} Total Employees
+            </Badge>
           </div>
-          <Badge variant="secondary" className="text-xs px-3 py-1.5 gap-2">
-            <Users className="w-3.5 h-3.5" />
-            {totalEmployees} Total Employees
-          </Badge>
-        </div>
-        
-        <div className="grid gap-4">
-          {topCountries.map((item, index) => {
-            const isTopThree = index < 3;
-            const medalColors = ['from-amber-500 to-yellow-500', 'from-gray-400 to-gray-500', 'from-orange-600 to-amber-700'];
-            
-            return (
-              <div 
-                key={item.country} 
-                className="group relative flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-muted/30 via-muted/20 to-transparent border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
+          
+          <div className="grid gap-4">
+            {topCountries.map((item, index) => {
+              const isTopThree = index < 3;
+              const medalColors = ['from-amber-500 to-yellow-500', 'from-gray-400 to-gray-500', 'from-orange-600 to-amber-700'];
+              
+              return (
+                <div 
+                  key={item.country} 
+                  className="group relative flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-muted/30 via-muted/20 to-transparent border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
                 {/* Rank badge */}
                 <div className="flex items-center gap-4 flex-1">
                   {isTopThree ? (
@@ -327,24 +307,25 @@ export function DocumentCountryMap() {
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Summary footer */}
-        {topCountries.length > 0 && (
-          <div className="pt-4 mt-2 border-t flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              Showing top {topCountries.length} of {countriesCount} countries
-            </span>
-            <span className="text-muted-foreground">
-              Coverage: <span className="font-semibold text-foreground">
-                {topCountries.reduce((sum, c) => sum + parseFloat(c.percentage), 0).toFixed(1)}%
-              </span>
-            </span>
+                </div>
+              );
+            })}
           </div>
-        )}
+
+          {/* Summary footer */}
+          {topCountries.length > 0 && (
+            <div className="pt-4 mt-2 border-t-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                Showing top {topCountries.length} of {countriesCount} countries
+              </span>
+              <span className="text-muted-foreground">
+                Coverage: <span className="font-semibold text-foreground">
+                  {topCountries.reduce((sum, c) => sum + parseFloat(c.percentage), 0).toFixed(1)}%
+                </span>
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
