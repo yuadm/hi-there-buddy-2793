@@ -213,7 +213,7 @@ export function DocumentHealthCarousel({ stats, expiringDocuments }: DocumentHea
               </div>
 
               {/* Document List */}
-              <ScrollArea className="h-[200px] pr-2">
+              <ScrollArea className="h-[360px] pr-2">
                 <div className="space-y-2">
                   {groupedDocumentsList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-6 text-center">
