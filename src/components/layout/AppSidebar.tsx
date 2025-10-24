@@ -297,32 +297,28 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border px-3 py-3">
         {!collapsed ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-sidebar-accent/80 hover:bg-sidebar-accent transition-colors cursor-pointer">
-              <Avatar className="h-10 w-10 border-2 border-sidebar-border">
-                <AvatarImage src="" alt={user?.email || 'User'} />
-                <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-sidebar-foreground">
-                  {user?.email?.split('@')[0] || 'User'}
-                </div>
-                <div className="text-xs text-sidebar-foreground/60 truncate">
-                  {user?.email || 'user@example.com'}
-                </div>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-sidebar-accent/80 hover:bg-sidebar-accent transition-all duration-200 group">
+            <Avatar className="h-10 w-10 border-2 border-sidebar-border">
+              <AvatarImage src="" alt={user?.email || 'User'} />
+              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-sidebar-foreground">
+                {user?.email?.split('@')[0] || 'User'}
               </div>
-              <ChevronUp className="w-4 h-4 text-sidebar-foreground/60 flex-shrink-0" />
+              <div className="text-xs text-sidebar-foreground/60 truncate">
+                {user?.email || 'user@example.com'}
+              </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={signOut}
-              className="w-full justify-start gap-3 px-3 py-2 text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent"
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
             </Button>
           </div>
         ) : (
