@@ -16,6 +16,7 @@ import {
   LogOut,
   Briefcase,
   FileSignature,
+  ChevronUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
@@ -293,23 +295,25 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-3 py-3 space-y-2">
+      <SidebarFooter className="border-t border-sidebar-border px-3 py-3">
         {!collapsed ? (
-          <>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent/50">
-              <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-sidebar-accent/80 hover:bg-sidebar-accent transition-colors cursor-pointer">
+              <Avatar className="h-10 w-10 border-2 border-sidebar-border">
+                <AvatarImage src="" alt={user?.email || 'User'} />
+                <AvatarFallback className="bg-gradient-primary text-white font-semibold">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-sidebar-foreground">
-                  {user?.email || 'Unknown User'}
+                <div className="text-sm font-semibold text-sidebar-foreground">
+                  {user?.email?.split('@')[0] || 'User'}
                 </div>
-                <div className="text-xs text-sidebar-foreground/60 capitalize">
-                  {userRole || 'user'}
+                <div className="text-xs text-sidebar-foreground/60 truncate">
+                  {user?.email || 'user@example.com'}
                 </div>
               </div>
+              <ChevronUp className="w-4 h-4 text-sidebar-foreground/60 flex-shrink-0" />
             </div>
             <Button
               variant="ghost"
@@ -320,14 +324,15 @@ export function AppSidebar() {
               <LogOut className="w-4 h-4" />
               Sign Out
             </Button>
-          </>
+          </div>
         ) : (
           <div className="space-y-2">
-            <div className="w-8 h-8 mx-auto rounded-full bg-gradient-primary flex items-center justify-center">
-              <span className="text-sm font-medium text-white">
+            <Avatar className="h-10 w-10 mx-auto border-2 border-sidebar-border">
+              <AvatarImage src="" alt={user?.email || 'User'} />
+              <AvatarFallback className="bg-gradient-primary text-white font-semibold">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
+              </AvatarFallback>
+            </Avatar>
             <Button
               variant="ghost"
               size="sm"
