@@ -70,23 +70,23 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'personal', setting_type: 'language', setting_key: 'other', setting_value: { value: 'Other' }, display_order: 14, is_active: true },
 
   // Personal Settings - English Proficiency
-  { category: 'personal', setting_type: 'english_proficiency', setting_key: 'native', setting_value: { value: 'Native Speaker' }, display_order: 1, is_active: true },
-  { category: 'personal', setting_type: 'english_proficiency', setting_key: 'fluent', setting_value: { value: 'Fluent' }, display_order: 2, is_active: true },
-  { category: 'personal', setting_type: 'english_proficiency', setting_key: 'intermediate', setting_value: { value: 'Intermediate' }, display_order: 3, is_active: true },
-  { category: 'personal', setting_type: 'english_proficiency', setting_key: 'basic', setting_value: { value: 'Basic' }, display_order: 4, is_active: true },
-  { category: 'personal', setting_type: 'english_proficiency', setting_key: 'learning', setting_value: { value: 'Learning' }, display_order: 5, is_active: true },
+  { category: 'personal', setting_type: 'english_level', setting_key: 'native', setting_value: { value: 'Native Speaker' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'english_level', setting_key: 'fluent', setting_value: { value: 'Fluent' }, display_order: 2, is_active: true },
+  { category: 'personal', setting_type: 'english_level', setting_key: 'intermediate', setting_value: { value: 'Intermediate' }, display_order: 3, is_active: true },
+  { category: 'personal', setting_type: 'english_level', setting_key: 'basic', setting_value: { value: 'Basic' }, display_order: 4, is_active: true },
+  { category: 'personal', setting_type: 'english_level', setting_key: 'learning', setting_value: { value: 'Learning' }, display_order: 5, is_active: true },
 
   // Personal Settings - DBS Options
-  { category: 'personal', setting_type: 'dbs', setting_key: 'enhanced', setting_value: { value: 'Enhanced DBS' }, display_order: 1, is_active: true },
-  { category: 'personal', setting_type: 'dbs', setting_key: 'standard', setting_value: { value: 'Standard DBS' }, display_order: 2, is_active: true },
-  { category: 'personal', setting_type: 'dbs', setting_key: 'basic', setting_value: { value: 'Basic DBS' }, display_order: 3, is_active: true },
-  { category: 'personal', setting_type: 'dbs', setting_key: 'update_service', setting_value: { value: 'DBS Update Service' }, display_order: 4, is_active: true },
-  { category: 'personal', setting_type: 'dbs', setting_key: 'none', setting_value: { value: 'No DBS' }, display_order: 5, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'enhanced', setting_value: { value: 'Enhanced DBS' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'standard', setting_value: { value: 'Standard DBS' }, display_order: 2, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'basic', setting_value: { value: 'Basic DBS' }, display_order: 3, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'update_service', setting_value: { value: 'DBS Update Service' }, display_order: 4, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'none', setting_value: { value: 'No DBS' }, display_order: 5, is_active: true },
 
   // Personal Settings - Personal Care
-  { category: 'personal', setting_type: 'personal_care', setting_key: 'experienced', setting_value: { value: 'Yes - Experienced' }, display_order: 1, is_active: true },
-  { category: 'personal', setting_type: 'personal_care', setting_key: 'willing', setting_value: { value: 'Yes - Willing to Learn' }, display_order: 2, is_active: true },
-  { category: 'personal', setting_type: 'personal_care', setting_key: 'no', setting_value: { value: 'No' }, display_order: 3, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'experienced', setting_value: { value: 'Yes - Experienced' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'willing', setting_value: { value: 'Yes - Willing to Learn' }, display_order: 2, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'no', setting_value: { value: 'No' }, display_order: 3, is_active: true },
 
   // Emergency Settings - Relationships
   { category: 'emergency', setting_type: 'relationship', setting_key: 'parent', setting_value: { value: 'Parent' }, display_order: 1, is_active: true },
