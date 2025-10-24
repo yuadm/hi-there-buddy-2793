@@ -4,10 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit, Plus, Settings, Clock, Flag, User, Phone, Award, FileText } from "lucide-react";
+import { Trash2, Edit, Plus, Settings, Clock, Flag, User, Phone, Award, FileText, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FormRenderer } from './forms/FormRenderer';
+import { seedApplicationSettings } from '@/utils/seedApplicationSettings';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface JobApplicationSetting {
   id: string;
@@ -27,6 +39,7 @@ export function UnifiedJobApplicationSettings() {
   const [activeCategory, setActiveCategory] = useState('personal');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [formData, setFormData] = useState({
     category: 'personal',
     setting_type: '',
@@ -226,6 +239,32 @@ export function UnifiedJobApplicationSettings() {
     }
   };
 
+  const handleResetToDefaults = async () => {
+    setIsResetting(true);
+    try {
+      const result = await seedApplicationSettings();
+      
+      if (result.success) {
+        await fetchSettings();
+        toast({
+          title: "Success",
+          description: `Restored ${result.count} default settings`,
+        });
+      } else {
+        throw new Error(result.error || 'Failed to restore defaults');
+      }
+    } catch (error: any) {
+      console.error('Error resetting to defaults:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset to default settings",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const getCategorySettings = (category: string) => {
     return settings.filter(s => s.category === category);
   };
@@ -269,10 +308,43 @@ export function UnifiedJobApplicationSettings() {
   return (
     <Card className="card-premium animate-fade-in">
       <CardHeader>
-        <CardTitle className="flex items-center gap-3">
-          <Settings className="w-6 h-6 text-primary" />
-          Job Application Settings
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-3">
+            <Settings className="w-6 h-6 text-primary" />
+            Job Application Settings
+          </CardTitle>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Reset to Defaults
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset to Default Settings?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete all current settings and restore the default configuration including:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Personal information options</li>
+                    <li>Emergency contact settings</li>
+                    <li>Shift configurations</li>
+                    <li>Skills and categories</li>
+                    <li>Application statuses</li>
+                    <li>Position settings</li>
+                  </ul>
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetToDefaults} disabled={isResetting}>
+                  {isResetting ? "Resetting..." : "Reset to Defaults"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs value={activeCategory} onValueChange={setActiveCategory} className="space-y-6">
