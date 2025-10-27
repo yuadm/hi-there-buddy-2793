@@ -197,12 +197,13 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'emergency', setting_type: 'hear_about', setting_key: 'other', setting_value: { value: 'Other' }, display_order: 8, is_active: true },
 
   // Shift Settings
-  { category: 'shift', setting_key: 'early_shift', setting_value: { name: 'early_shift', label: 'Early Shift', start_time: '06:00', end_time: '14:00' }, display_order: 1, is_active: true },
-  { category: 'shift', setting_key: 'day_shift', setting_value: { name: 'day_shift', label: 'Day Shift', start_time: '09:00', end_time: '17:00' }, display_order: 2, is_active: true },
-  { category: 'shift', setting_key: 'late_shift', setting_value: { name: 'late_shift', label: 'Late Shift', start_time: '14:00', end_time: '22:00' }, display_order: 3, is_active: true },
-  { category: 'shift', setting_key: 'night_shift', setting_value: { name: 'night_shift', label: 'Night Shift', start_time: '22:00', end_time: '06:00' }, display_order: 4, is_active: true },
-  { category: 'shift', setting_key: 'split_shift', setting_value: { name: 'split_shift', label: 'Split Shift', start_time: '07:00', end_time: '21:00' }, display_order: 5, is_active: true },
-  { category: 'shift', setting_key: 'on_call', setting_value: { name: 'on_call', label: 'On-Call', start_time: '00:00', end_time: '23:59' }, display_order: 6, is_active: true },
+  { category: 'shift', setting_key: 'early_mornings', setting_value: { name: 'early_mornings', label: 'Early Mornings', start_time: '07:00', end_time: '10:00' }, display_order: 1, is_active: true },
+  { category: 'shift', setting_key: 'late_mornings', setting_value: { name: 'late_mornings', label: 'Late Mornings', start_time: '10:00', end_time: '12:00' }, display_order: 2, is_active: true },
+  { category: 'shift', setting_key: 'early_afternoons', setting_value: { name: 'early_afternoons', label: 'Early Afternoons', start_time: '12:00', end_time: '15:00' }, display_order: 3, is_active: true },
+  { category: 'shift', setting_key: 'late_afternoons', setting_value: { name: 'late_afternoons', label: 'Late Afternoons', start_time: '15:00', end_time: '18:00' }, display_order: 4, is_active: true },
+  { category: 'shift', setting_key: 'evenings', setting_value: { name: 'evenings', label: 'Evenings', start_time: '18:00', end_time: '22:00' }, display_order: 5, is_active: true },
+  { category: 'shift', setting_key: 'waking_nights', setting_value: { name: 'waking_nights', label: 'Waking Nights', start_time: '20:00', end_time: '08:00' }, display_order: 6, is_active: true },
+  { category: 'shift', setting_key: 'sleeping_nights', setting_value: { name: 'sleeping_nights', label: 'Sleeping Nights', start_time: '20:00', end_time: '08:00' }, display_order: 7, is_active: true },
 
   // Skills Settings - Category
   { category: 'skills', setting_type: 'category', setting_key: 'care_skills', setting_value: { id: 'care_skills', name: 'Care Skills' }, display_order: 1, is_active: true },
