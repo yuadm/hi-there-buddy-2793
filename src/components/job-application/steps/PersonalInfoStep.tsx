@@ -289,7 +289,30 @@ export function PersonalInfoStep({ data, updateData, onEmailValidationChange }: 
               updateData('dateOfBirth', date ? date.toISOString().split('T')[0] : '');
             }}
             placeholder="Select date of birth"
+            disabled={(date) => {
+              const today = new Date();
+              const minAge = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+              const maxAge = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+              
+              // Disable future dates and dates that make person under 16 or over 100
+              return date > minAge || date < maxAge;
+            }}
           />
+          {data.dateOfBirth && (() => {
+            const birthDate = new Date(data.dateOfBirth);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear() - 
+              (today.getMonth() < birthDate.getMonth() || 
+               (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+            
+            if (age < 16) {
+              return <p className="text-sm text-destructive mt-1">Applicant must be at least 16 years old</p>;
+            }
+            if (age > 100) {
+              return <p className="text-sm text-destructive mt-1">Please enter a valid date of birth</p>;
+            }
+            return null;
+          })()}
         </div>
 
         <div className="sm:col-span-2">

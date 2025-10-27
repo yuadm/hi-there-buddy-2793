@@ -5,8 +5,18 @@ export const validateStep = (currentStep: number, formData: JobApplicationData, 
     case 1: {
       // Personal Info: All required except Street Address Second Line and languages
       const pi = formData.personalInfo;
+      // Calculate age from date of birth
+      const isAgeValid = pi.dateOfBirth && (() => {
+        const birthDate = new Date(pi.dateOfBirth);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear() - 
+          (today.getMonth() < birthDate.getMonth() || 
+           (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+        return age >= 16 && age <= 100;
+      })();
+      
       const basicValidation = !!(pi.title && pi.fullName && pi.email && pi.confirmEmail && 
-               pi.email === pi.confirmEmail && pi.telephone && pi.dateOfBirth && 
+               pi.email === pi.confirmEmail && pi.telephone && isAgeValid && 
                pi.streetAddress && pi.town && pi.borough && pi.postcode && 
                pi.englishProficiency && pi.positionAppliedFor && 
                (pi.positionAppliedFor !== 'Support Worker/Carer' || pi.personalCareWillingness) && 

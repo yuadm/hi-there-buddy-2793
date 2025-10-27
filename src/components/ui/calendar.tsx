@@ -17,9 +17,9 @@ function Calendar({
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
 
-  // Generate year options (50 years in the past to 10 years in the future)
+  // Generate year options (125 years in the past to 10 years in the future)
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 61 }, (_, i) => currentYear - 50 + i);
+  const yearOptions = Array.from({ length: 136 }, (_, i) => currentYear - 125 + i);
 
   // Month names
   const monthNames = [
