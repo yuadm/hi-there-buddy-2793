@@ -250,8 +250,13 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'status', setting_key: 'withdrawn', setting_value: { status_name: 'Withdrawn' }, display_order: 8, is_active: true },
 
   // Position Settings
-  { category: 'position', setting_key: 'carer', setting_value: { title: 'Carer', description: 'Provide direct care and support to service users', department: 'Care Services', location: 'Various Locations' }, display_order: 1, is_active: true },
-  { category: 'position', setting_key: 'support_worker', setting_value: { title: 'Support Worker', description: 'Provide practical and emotional support', department: 'Support Services', location: 'Various Locations' }, display_order: 2, is_active: true },
+  { category: 'position', setting_key: 'care_coordinator', setting_value: { title: 'Care coordinator', description: 'Coordinate care services and support', department: 'Care Services', location: 'Various Locations' }, display_order: 1, is_active: true },
+  { category: 'position', setting_key: 'support_worker_carer', setting_value: { title: 'Support Worker/Carer', description: 'Provide direct care and support to service users', department: 'Care Services', location: 'Various Locations' }, display_order: 2, is_active: true },
+  { category: 'position', setting_key: 'childminder', setting_value: { title: 'Childminder', description: 'Provide childcare services', department: 'Childcare Services', location: 'Various Locations' }, display_order: 3, is_active: true },
+  { category: 'position', setting_key: 'registered_manager', setting_value: { title: 'Registered Manager', description: 'Manage care services and staff', department: 'Management', location: 'Various Locations' }, display_order: 4, is_active: true },
+  { category: 'position', setting_key: 'deputy_manager', setting_value: { title: 'Deputy Manager', description: 'Support management operations', department: 'Management', location: 'Various Locations' }, display_order: 5, is_active: true },
+  { category: 'position', setting_key: 'field_care_supervisor', setting_value: { title: 'Field Care Supervisor', description: 'Supervise care workers in the field', department: 'Care Services', location: 'Various Locations' }, display_order: 6, is_active: true },
+  { category: 'position', setting_key: 'housekeeping_cleaner', setting_value: { title: 'Housekeeping/Cleaner', description: 'Maintain cleanliness and hygiene', department: 'Facilities', location: 'Various Locations' }, display_order: 7, is_active: true },
 ];
 
 export async function seedApplicationSettings(): Promise<{ success: boolean; error?: string; count?: number }> {

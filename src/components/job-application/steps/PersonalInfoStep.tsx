@@ -373,7 +373,7 @@ export function PersonalInfoStep({ data, updateData, onEmailValidationChange }: 
           </Select>
         </div>
 
-        {data.positionAppliedFor && (
+        {data.positionAppliedFor === 'Support Worker/Carer' && (
           <div>
             <Label htmlFor="personalCareWillingness">Which personal care Are you willing to do? *</Label>
             <Select value={data.personalCareWillingness} onValueChange={(value) => updateData('personalCareWillingness', value)}>

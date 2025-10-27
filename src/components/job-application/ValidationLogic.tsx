@@ -9,7 +9,8 @@ export const validateStep = (currentStep: number, formData: JobApplicationData, 
                pi.email === pi.confirmEmail && pi.telephone && pi.dateOfBirth && 
                pi.streetAddress && pi.town && pi.borough && pi.postcode && 
                pi.englishProficiency && pi.positionAppliedFor && 
-               pi.personalCareWillingness && pi.hasDBS && pi.hasCarAndLicense && 
+               (pi.positionAppliedFor !== 'Support Worker/Carer' || pi.personalCareWillingness) && 
+               pi.hasDBS && pi.hasCarAndLicense && 
                pi.nationalInsuranceNumber);
       
       // If emailUsageCount is provided, ensure it's less than 2
