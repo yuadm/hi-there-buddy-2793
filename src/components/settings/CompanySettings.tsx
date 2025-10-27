@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Building2, Save, Upload, X } from "lucide-react";
+import { Building2, Save, Upload, X, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,13 @@ import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailSettings } from "./EmailSettings";
+import { setupStorageBucket } from "@/utils/setupStorageBucket";
 
 export function CompanySettings() {
   const { companySettings, updateCompanySettings, loading } = useCompany();
   const [formData, setFormData] = useState(companySettings);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [isSettingUpBucket, setIsSettingUpBucket] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -242,6 +244,34 @@ export function CompanySettings() {
     localStorage.removeItem('companyFavicon');
   };
 
+  const handleSetupStorageBucket = async () => {
+    setIsSettingUpBucket(true);
+    try {
+      const result = await setupStorageBucket();
+      
+      if (result.success) {
+        toast({
+          title: "Storage Setup Complete",
+          description: "Company assets bucket has been configured successfully. You can now upload files.",
+        });
+      } else {
+        toast({
+          title: "Storage Setup Failed",
+          description: result.error || "Failed to setup storage bucket. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during storage setup.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSettingUpBucket(false);
+    }
+  };
+
   if (loading) {
     return <div>Loading company settings...</div>;
   }
@@ -256,6 +286,27 @@ export function CompanySettings() {
           </CardTitle>
         </CardHeader>
       <CardContent className="space-y-6">
+        {/* Storage Bucket Setup Section */}
+        <div className="border-t pt-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium">Storage Bucket Setup</h3>
+              <p className="text-sm text-muted-foreground">
+                Initialize the company assets storage bucket for file uploads
+              </p>
+            </div>
+            <Button
+              onClick={handleSetupStorageBucket}
+              disabled={isSettingUpBucket}
+              variant="outline"
+              className="gap-2"
+            >
+              <Database className="w-4 h-4" />
+              {isSettingUpBucket ? "Setting up..." : "Setup Storage Bucket"}
+            </Button>
+          </div>
+        </div>
+
         {/* Logo Upload Section */}
         <div className="space-y-4">
           <Label>Company Logo</Label>
