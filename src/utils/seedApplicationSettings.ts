@@ -204,45 +204,34 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'shift', setting_key: 'split_shift', setting_value: { name: 'split_shift', label: 'Split Shift', start_time: '07:00', end_time: '21:00' }, display_order: 5, is_active: true },
   { category: 'shift', setting_key: 'on_call', setting_value: { name: 'on_call', label: 'On-Call', start_time: '00:00', end_time: '23:59' }, display_order: 6, is_active: true },
 
-  // Skills Settings - Categories
-  { category: 'skills', setting_type: 'category', setting_key: 'personal_care', setting_value: { id: 'personal_care', name: 'Personal Care' }, display_order: 1, is_active: true },
-  { category: 'skills', setting_type: 'category', setting_key: 'medical_support', setting_value: { id: 'medical_support', name: 'Medical Support' }, display_order: 2, is_active: true },
-  { category: 'skills', setting_type: 'category', setting_key: 'specialized_care', setting_value: { id: 'specialized_care', name: 'Specialized Care' }, display_order: 3, is_active: true },
-  { category: 'skills', setting_type: 'category', setting_key: 'household', setting_value: { id: 'household', name: 'Household Tasks' }, display_order: 4, is_active: true },
-  { category: 'skills', setting_type: 'category', setting_key: 'additional', setting_value: { id: 'additional', name: 'Additional Skills' }, display_order: 5, is_active: true },
+  // Skills Settings - Category
+  { category: 'skills', setting_type: 'category', setting_key: 'care_skills', setting_value: { id: 'care_skills', name: 'Care Skills' }, display_order: 1, is_active: true },
 
-  // Skills Settings - Personal Care Skills
-  { category: 'skills', setting_type: 'skill', setting_key: 'bathing', setting_value: { name: 'Bathing/Showering', category_id: 'personal_care' }, display_order: 1, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'dressing', setting_value: { name: 'Dressing', category_id: 'personal_care' }, display_order: 2, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'grooming', setting_value: { name: 'Grooming', category_id: 'personal_care' }, display_order: 3, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'toileting', setting_value: { name: 'Toileting', category_id: 'personal_care' }, display_order: 4, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'mobility', setting_value: { name: 'Mobility Assistance', category_id: 'personal_care' }, display_order: 5, is_active: true },
-
-  // Skills Settings - Medical Support Skills
-  { category: 'skills', setting_type: 'skill', setting_key: 'medication', setting_value: { name: 'Medication Administration', category_id: 'medical_support' }, display_order: 6, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'catheter', setting_value: { name: 'Catheter Care', category_id: 'medical_support' }, display_order: 7, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'peg_feeding', setting_value: { name: 'PEG Feeding', category_id: 'medical_support' }, display_order: 8, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'stoma', setting_value: { name: 'Stoma Care', category_id: 'medical_support' }, display_order: 9, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'wound_care', setting_value: { name: 'Wound Care', category_id: 'medical_support' }, display_order: 10, is_active: true },
-
-  // Skills Settings - Specialized Care Skills
-  { category: 'skills', setting_type: 'skill', setting_key: 'dementia', setting_value: { name: 'Dementia Care', category_id: 'specialized_care' }, display_order: 11, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'learning_disabilities', setting_value: { name: 'Learning Disabilities', category_id: 'specialized_care' }, display_order: 12, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'mental_health', setting_value: { name: 'Mental Health Support', category_id: 'specialized_care' }, display_order: 13, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'palliative', setting_value: { name: 'Palliative Care', category_id: 'specialized_care' }, display_order: 14, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'autism', setting_value: { name: 'Autism Support', category_id: 'specialized_care' }, display_order: 15, is_active: true },
-
-  // Skills Settings - Household Tasks Skills
-  { category: 'skills', setting_type: 'skill', setting_key: 'meal_prep', setting_value: { name: 'Meal Preparation', category_id: 'household' }, display_order: 16, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'housekeeping', setting_value: { name: 'Light Housekeeping', category_id: 'household' }, display_order: 17, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'laundry', setting_value: { name: 'Laundry', category_id: 'household' }, display_order: 18, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'shopping', setting_value: { name: 'Shopping', category_id: 'household' }, display_order: 19, is_active: true },
-
-  // Skills Settings - Additional Skills
-  { category: 'skills', setting_type: 'skill', setting_key: 'first_aid', setting_value: { name: 'First Aid', category_id: 'additional' }, display_order: 20, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'manual_handling', setting_value: { name: 'Manual Handling', category_id: 'additional' }, display_order: 21, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'infection_control', setting_value: { name: 'Infection Control', category_id: 'additional' }, display_order: 22, is_active: true },
-  { category: 'skills', setting_type: 'skill', setting_key: 'record_keeping', setting_value: { name: 'Record Keeping', category_id: 'additional' }, display_order: 23, is_active: true },
+  // Skills Settings - Care Skills
+  { category: 'skills', setting_type: 'skill', setting_key: 'adhd', setting_value: { name: 'ADHD', category_id: 'care_skills' }, display_order: 1, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'administration_of_medicine', setting_value: { name: 'Administration of medicine', category_id: 'care_skills' }, display_order: 2, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'alzheimers', setting_value: { name: 'Alzheimers', category_id: 'care_skills' }, display_order: 3, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'assisting_with_immobility', setting_value: { name: 'Assisting with immobility', category_id: 'care_skills' }, display_order: 4, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'autism', setting_value: { name: 'Autism', category_id: 'care_skills' }, display_order: 5, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'cancer_care', setting_value: { name: 'Cancer care', category_id: 'care_skills' }, display_order: 6, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'catheter_care', setting_value: { name: 'Catheter care', category_id: 'care_skills' }, display_order: 7, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'cerebral_palsy', setting_value: { name: 'Cerebral Palsy', category_id: 'care_skills' }, display_order: 8, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'challenging_behaviour', setting_value: { name: 'Challenging behaviour', category_id: 'care_skills' }, display_order: 9, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'dementia_care', setting_value: { name: 'Dementia care', category_id: 'care_skills' }, display_order: 10, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'diabetes', setting_value: { name: 'Diabetes', category_id: 'care_skills' }, display_order: 11, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'downs_syndrome', setting_value: { name: "Down's syndrome", category_id: 'care_skills' }, display_order: 12, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'frail_elderly', setting_value: { name: 'Frail elderly', category_id: 'care_skills' }, display_order: 13, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'hoists', setting_value: { name: 'Hoists', category_id: 'care_skills' }, display_order: 14, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'incontinence', setting_value: { name: 'Incontinence', category_id: 'care_skills' }, display_order: 15, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'learning_disabilities', setting_value: { name: 'Learning disabilities', category_id: 'care_skills' }, display_order: 16, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'lewy_body_dementia', setting_value: { name: 'Lewy-Body dementia', category_id: 'care_skills' }, display_order: 17, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'mental_health', setting_value: { name: 'Mental health', category_id: 'care_skills' }, display_order: 18, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'multiple_sclerosis', setting_value: { name: 'Multiple sclerosis', category_id: 'care_skills' }, display_order: 19, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'parkinsons_disease', setting_value: { name: "Parkinson's disease", category_id: 'care_skills' }, display_order: 20, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'special_need_children', setting_value: { name: 'Special need children', category_id: 'care_skills' }, display_order: 21, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'stroke_care', setting_value: { name: 'Stroke care', category_id: 'care_skills' }, display_order: 22, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'terminally_ill', setting_value: { name: 'Terminally III', category_id: 'care_skills' }, display_order: 23, is_active: true },
+  { category: 'skills', setting_type: 'skill', setting_key: 'tube_feeding', setting_value: { name: 'Tube feeding', category_id: 'care_skills' }, display_order: 24, is_active: true },
 
   // Status Settings
   { category: 'status', setting_key: 'new', setting_value: { status_name: 'New' }, display_order: 1, is_active: true },
