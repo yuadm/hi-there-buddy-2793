@@ -410,8 +410,9 @@ export function PersonalInfoStep({ data, updateData, onEmailValidationChange }: 
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yes">Yes</SelectItem>
-              <SelectItem value="no">No</SelectItem>
+              {getSettingsByType('car_licence').map(option => (
+                <SelectItem key={option.toLowerCase()} value={option.toLowerCase()}>{option}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

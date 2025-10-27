@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUnifiedJobApplicationSettings, transformShiftSettings } from '@/hooks/queries/useUnifiedJobApplicationSettings';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AvailabilityStepProps {
   data: Availability;
@@ -20,14 +22,43 @@ interface TimeSlot {
   is_active: boolean;
 }
 
+interface RightToWorkSetting {
+  id: string;
+  setting_type: string;
+  setting_value: { value: string };
+  is_active: boolean;
+}
+
 const DAYS_OF_WEEK = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
 ];
 
 export function AvailabilityStep({ data, updateData }: AvailabilityStepProps) {
   const { data: shiftSettings, isLoading } = useUnifiedJobApplicationSettings('shift');
+  const [rightToWorkOptions, setRightToWorkOptions] = useState<string[]>([]);
   
   const timeSlots = shiftSettings ? transformShiftSettings(shiftSettings) : [];
+
+  useEffect(() => {
+    fetchRightToWorkSettings();
+  }, []);
+
+  const fetchRightToWorkSettings = async () => {
+    const { data: settings } = await supabase
+      .from('job_application_settings')
+      .select('*')
+      .eq('category', 'personal')
+      .eq('setting_type', 'right_to_work')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true });
+
+    if (settings) {
+      setRightToWorkOptions(settings.map(s => {
+        const value = s.setting_value as { value: string };
+        return value.value;
+      }));
+    }
+  };
 
   const handleDayToggle = (timeSlotId: string, day: string, checked: boolean) => {
     const currentTimeSlots = data.timeSlots || {};
@@ -121,9 +152,9 @@ export function AvailabilityStep({ data, updateData }: AvailabilityStepProps) {
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yes">Yes</SelectItem>
-              <SelectItem value="no">No</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              {rightToWorkOptions.map(option => (
+                <SelectItem key={option.toLowerCase()} value={option.toLowerCase()}>{option}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

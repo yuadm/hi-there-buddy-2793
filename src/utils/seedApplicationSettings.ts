@@ -166,16 +166,21 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'personal', setting_type: 'english_level', setting_key: 'weak', setting_value: { value: 'Weak' }, display_order: 4, is_active: true },
 
   // Personal Settings - DBS Options
-  { category: 'personal', setting_type: 'dbs_option', setting_key: 'enhanced', setting_value: { value: 'Enhanced DBS' }, display_order: 1, is_active: true },
-  { category: 'personal', setting_type: 'dbs_option', setting_key: 'standard', setting_value: { value: 'Standard DBS' }, display_order: 2, is_active: true },
-  { category: 'personal', setting_type: 'dbs_option', setting_key: 'basic', setting_value: { value: 'Basic DBS' }, display_order: 3, is_active: true },
-  { category: 'personal', setting_type: 'dbs_option', setting_key: 'update_service', setting_value: { value: 'DBS Update Service' }, display_order: 4, is_active: true },
-  { category: 'personal', setting_type: 'dbs_option', setting_key: 'none', setting_value: { value: 'No DBS' }, display_order: 5, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'yes', setting_value: { value: 'Yes' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'dbs_option', setting_key: 'no', setting_value: { value: 'No' }, display_order: 2, is_active: true },
+
+  // Personal Settings - Car and Licence
+  { category: 'personal', setting_type: 'car_licence', setting_key: 'yes', setting_value: { value: 'Yes' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'car_licence', setting_key: 'no', setting_value: { value: 'No' }, display_order: 2, is_active: true },
+
+  // Personal Settings - Right to Work
+  { category: 'personal', setting_type: 'right_to_work', setting_key: 'yes', setting_value: { value: 'Yes' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'right_to_work', setting_key: 'no', setting_value: { value: 'No' }, display_order: 2, is_active: true },
 
   // Personal Settings - Personal Care
-  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'experienced', setting_value: { value: 'Yes - Experienced' }, display_order: 1, is_active: true },
-  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'willing', setting_value: { value: 'Yes - Willing to Learn' }, display_order: 2, is_active: true },
-  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'no', setting_value: { value: 'No' }, display_order: 3, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'male', setting_value: { value: 'Male' }, display_order: 1, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'female', setting_value: { value: 'Female' }, display_order: 2, is_active: true },
+  { category: 'personal', setting_type: 'personal_care_option', setting_key: 'both', setting_value: { value: 'Both' }, display_order: 3, is_active: true },
 
   // Emergency Settings - Relationships
   { category: 'emergency', setting_type: 'relationship', setting_key: 'parent', setting_value: { value: 'Parent' }, display_order: 1, is_active: true },
@@ -245,12 +250,8 @@ export const getDefaultSettings = (): DefaultSetting[] => [
   { category: 'status', setting_key: 'withdrawn', setting_value: { status_name: 'Withdrawn' }, display_order: 8, is_active: true },
 
   // Position Settings
-  { category: 'position', setting_key: 'care_worker', setting_value: { title: 'Care Worker', description: 'Provide direct care and support to service users', department: 'Care Services', location: 'Various Locations' }, display_order: 1, is_active: true },
-  { category: 'position', setting_key: 'senior_care_worker', setting_value: { title: 'Senior Care Worker', description: 'Lead care delivery and support junior staff', department: 'Care Services', location: 'Various Locations' }, display_order: 2, is_active: true },
-  { category: 'position', setting_key: 'team_leader', setting_value: { title: 'Team Leader', description: 'Manage care teams and ensure quality service delivery', department: 'Care Services', location: 'Various Locations' }, display_order: 3, is_active: true },
-  { category: 'position', setting_key: 'care_coordinator', setting_value: { title: 'Care Coordinator', description: 'Coordinate care plans and manage schedules', department: 'Care Services', location: 'Office Based' }, display_order: 4, is_active: true },
-  { category: 'position', setting_key: 'support_worker', setting_value: { title: 'Support Worker', description: 'Provide practical and emotional support', department: 'Support Services', location: 'Various Locations' }, display_order: 5, is_active: true },
-  { category: 'position', setting_key: 'healthcare_assistant', setting_value: { title: 'Healthcare Assistant', description: 'Assist with medical and personal care needs', department: 'Healthcare', location: 'Various Locations' }, display_order: 6, is_active: true },
+  { category: 'position', setting_key: 'carer', setting_value: { title: 'Carer', description: 'Provide direct care and support to service users', department: 'Care Services', location: 'Various Locations' }, display_order: 1, is_active: true },
+  { category: 'position', setting_key: 'support_worker', setting_value: { title: 'Support Worker', description: 'Provide practical and emotional support', department: 'Support Services', location: 'Various Locations' }, display_order: 2, is_active: true },
 ];
 
 export async function seedApplicationSettings(): Promise<{ success: boolean; error?: string; count?: number }> {
