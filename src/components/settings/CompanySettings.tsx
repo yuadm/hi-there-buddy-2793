@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Building2, Save, Upload, X, Database } from "lucide-react";
+import { Building2, Save, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,11 @@ import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailSettings } from "./EmailSettings";
-import { setupStorageBucket } from "@/utils/setupStorageBucket";
 
 export function CompanySettings() {
   const { companySettings, updateCompanySettings, loading } = useCompany();
   const [formData, setFormData] = useState(companySettings);
   const [logoUploading, setLogoUploading] = useState(false);
-  const [isSettingUpBucket, setIsSettingUpBucket] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -244,40 +242,6 @@ export function CompanySettings() {
     localStorage.removeItem('companyFavicon');
   };
 
-  const handleSetupStorageBucket = async () => {
-    setIsSettingUpBucket(true);
-    try {
-      const result = await setupStorageBucket();
-      
-      if (result.success) {
-        toast({
-          title: "Storage Already Configured ✓",
-          description: "Company assets bucket is ready for uploads.",
-        });
-      } else if (result.needsMigration) {
-        toast({
-          title: "Migration Required",
-          description: "Please run the SQL migration in Cloud → Database → Run SQL. Copy and paste the migration from: supabase/migrations/20250115000000_setup_storage_bucket_and_policies.sql",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Storage Check Failed",
-          description: result.error || "Failed to verify storage bucket. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred during storage verification.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSettingUpBucket(false);
-    }
-  };
-
   if (loading) {
     return <div>Loading company settings...</div>;
   }
@@ -292,27 +256,6 @@ export function CompanySettings() {
           </CardTitle>
         </CardHeader>
       <CardContent className="space-y-6">
-        {/* Storage Bucket Setup Section */}
-        <div className="border-t pt-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="text-sm font-medium">Storage Bucket Verification</h3>
-              <p className="text-sm text-muted-foreground">
-                Check if the company assets storage bucket is configured (requires SQL migration if not found)
-              </p>
-            </div>
-            <Button
-              onClick={handleSetupStorageBucket}
-              disabled={isSettingUpBucket}
-              variant="outline"
-              className="gap-2"
-            >
-              <Database className="w-4 h-4" />
-              {isSettingUpBucket ? "Checking..." : "Verify Storage Bucket"}
-            </Button>
-          </div>
-        </div>
-
         {/* Logo Upload Section */}
         <div className="space-y-4">
           <Label>Company Logo</Label>
