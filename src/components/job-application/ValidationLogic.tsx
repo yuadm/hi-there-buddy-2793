@@ -1,5 +1,51 @@
 import { JobApplicationData, Declaration } from './types';
 
+// Helper function to validate employment dates
+const validateEmploymentDates = (employer: any): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+  
+  if (!employer.from || !employer.to) {
+    return { valid: false, errors: ['From and To dates are required'] };
+  }
+  
+  const fromDate = new Date(employer.from);
+  const toDate = new Date(employer.to);
+  
+  // Check 1: From date should not be in the future
+  if (fromDate > today) {
+    errors.push('Start date cannot be in the future');
+  }
+  
+  // Check 2: To date should not be in the future
+  if (toDate > today) {
+    errors.push('End date cannot be in the future');
+  }
+  
+  // Check 3: From date should be before To date
+  if (fromDate >= toDate) {
+    errors.push('Start date must be before end date');
+  }
+  
+  // Check 4: Employment duration should be reasonable (not more than 60 years)
+  const diffYears = (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+  if (diffYears > 60) {
+    errors.push('Employment duration seems unrealistic (more than 60 years)');
+  }
+  
+  // Check 5: If leaving date exists, validate it
+  if (employer.leavingDate) {
+    const leavingDate = new Date(employer.leavingDate);
+    
+    if (leavingDate < toDate) {
+      errors.push('Leaving date should be on or after the end date');
+    }
+  }
+  
+  return { valid: errors.length === 0, errors };
+};
+
 export const validateStep = (currentStep: number, formData: JobApplicationData, emailUsageCount?: number): boolean => {
   switch (currentStep) {
     case 1: {
@@ -41,19 +87,32 @@ export const validateStep = (currentStep: number, formData: JobApplicationData, 
       // Employment History: If previously employed = yes, must complete Most Recent Employer and all Previous Employers
       if (formData.employmentHistory.previouslyEmployed === 'yes') {
         const re = formData.employmentHistory.recentEmployer;
+        
+        // Basic field validation
         const recentEmployerValid = !!(re && re.company && re.name && re.email && re.position && 
                  re.address && re.town && re.postcode && re.telephone && 
                  re.from && re.to && re.reasonForLeaving);
         
         if (!recentEmployerValid) return false;
         
-        // Validate all additional previous employers if they exist
+        // Date validation for recent employer
+        const recentDateValidation = validateEmploymentDates(re);
+        if (!recentDateValidation.valid) return false;
+        
+        // Validate all previous employers
         const prevEmployers = formData.employmentHistory.previousEmployers || [];
-        const allPreviousEmployersValid = prevEmployers.every(emp => 
-          emp.company && emp.name && emp.email && emp.position && 
-          emp.address && emp.town && emp.postcode && emp.telephone && 
-          emp.from && emp.to && emp.reasonForLeaving
-        );
+        const allPreviousEmployersValid = prevEmployers.every(emp => {
+          // Basic fields
+          const basicValid = emp.company && emp.name && emp.email && emp.position && 
+            emp.address && emp.town && emp.postcode && emp.telephone && 
+            emp.from && emp.to && emp.reasonForLeaving;
+          
+          if (!basicValid) return false;
+          
+          // Date validation
+          const dateValidation = validateEmploymentDates(emp);
+          return dateValidation.valid;
+        });
         
         return allPreviousEmployersValid;
       }

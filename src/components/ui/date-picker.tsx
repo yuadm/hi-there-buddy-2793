@@ -18,6 +18,8 @@ interface DatePickerProps {
   placeholder?: string
   disabled?: (date: Date) => boolean
   className?: string
+  maxDate?: Date
+  minDate?: Date
   // Legacy props for backward compatibility
   date?: Date
   onDateChange?: (date: Date) => void
@@ -29,6 +31,8 @@ export function DatePicker({
   placeholder = "Pick a date", 
   disabled,
   className,
+  maxDate,
+  minDate,
   // Legacy props
   date,
   onDateChange
@@ -57,7 +61,12 @@ export function DatePicker({
           mode="single"
           selected={dateValue}
           onSelect={handleChange}
-          disabled={disabled || ((date) => date < new Date("1900-01-01"))}
+          disabled={disabled || ((date) => {
+            if (maxDate && date > maxDate) return true;
+            if (minDate && date < minDate) return true;
+            if (date < new Date("1900-01-01")) return true;
+            return false;
+          })}
           initialFocus
           className={cn("p-3 pointer-events-auto")}
         />

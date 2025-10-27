@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { EmploymentHistory } from '../types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -5,8 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, AlertCircle } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EmploymentHistoryStepProps {
   data: EmploymentHistory;
@@ -31,6 +33,63 @@ const emptyEmployer = {
 };
 
 export function EmploymentHistoryStep({ data, updateData }: EmploymentHistoryStepProps) {
+  const [dateErrors, setDateErrors] = useState<{[key: string]: string[]}>({});
+
+  // Helper function to validate employer dates
+  const validateEmployerDates = (employer: any, key: string) => {
+    const errors: string[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (employer.from && employer.to) {
+      const fromDate = new Date(employer.from);
+      const toDate = new Date(employer.to);
+      
+      if (fromDate > today) {
+        errors.push('Start date cannot be in the future');
+      }
+      
+      if (toDate > today) {
+        errors.push('End date cannot be in the future');
+      }
+      
+      if (fromDate >= toDate) {
+        errors.push('Start date must be before end date');
+      }
+      
+      const diffYears = (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+      if (diffYears > 60) {
+        errors.push('Employment duration seems unrealistic (more than 60 years)');
+      }
+      
+      if (employer.leavingDate) {
+        const leavingDate = new Date(employer.leavingDate);
+        if (leavingDate < toDate) {
+          errors.push('Leaving date should be on or after end date');
+        }
+      }
+    }
+    
+    setDateErrors(prev => ({
+      ...prev,
+      [key]: errors
+    }));
+  };
+
+  // Validate recent employer dates when they change
+  useEffect(() => {
+    if (data.recentEmployer) {
+      validateEmployerDates(data.recentEmployer, 'recent');
+    }
+  }, [data.recentEmployer?.from, data.recentEmployer?.to, data.recentEmployer?.leavingDate]);
+
+  // Validate previous employers dates when they change
+  useEffect(() => {
+    data.previousEmployers?.forEach((emp, index) => {
+      validateEmployerDates(emp, `prev-${index}`);
+    });
+  }, [data.previousEmployers]);
+
   const addPreviousEmployer = () => {
     const currentEmployers = data.previousEmployers || [];
     updateData('previousEmployers', [...currentEmployers, { ...emptyEmployer }]);
@@ -174,7 +233,9 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                       }
                     }}
                     placeholder="Select start date"
+                    maxDate={new Date()}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">When did you start this position?</p>
                 </div>
                 <div>
                   <Label>To *</Label>
@@ -192,7 +253,10 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                       }
                     }}
                     placeholder="Select end date"
+                    maxDate={new Date()}
+                    minDate={data.recentEmployer?.from ? new Date(data.recentEmployer.from) : undefined}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">When did you leave or are you still working here?</p>
                 </div>
                 <div>
                   <Label>Leaving date or notice (if relevant)</Label>
@@ -210,9 +274,23 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                       }
                     }}
                     placeholder="Select leaving date"
+                    minDate={data.recentEmployer?.to ? new Date(data.recentEmployer.to) : undefined}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">If you're serving notice, when is your last day?</p>
                 </div>
               </div>
+              {dateErrors['recent'] && dateErrors['recent'].length > 0 && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1">
+                      {dateErrors['recent'].map((error, i) => (
+                        <li key={i}>{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
               <div>
                 <Label>Key Tasks/Responsibilities</Label>
                 <Textarea
@@ -351,7 +429,9 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                           }
                         }}
                         placeholder="Select start date"
+                        maxDate={new Date()}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">When did you start this position?</p>
                     </div>
                     <div>
                       <Label>To *</Label>
@@ -369,7 +449,10 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                           }
                         }}
                         placeholder="Select end date"
+                        maxDate={new Date()}
+                        minDate={employer.from ? new Date(employer.from) : undefined}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">When did you leave this position?</p>
                     </div>
                     <div>
                       <Label>Leaving date or notice (if relevant)</Label>
@@ -387,9 +470,23 @@ export function EmploymentHistoryStep({ data, updateData }: EmploymentHistorySte
                           }
                         }}
                         placeholder="Select leaving date"
+                        minDate={employer.to ? new Date(employer.to) : undefined}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">If you served notice, when was your last day?</p>
                     </div>
                   </div>
+                  {dateErrors[`prev-${index}`] && dateErrors[`prev-${index}`].length > 0 && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <ul className="list-disc list-inside space-y-1">
+                          {dateErrors[`prev-${index}`].map((error, i) => (
+                            <li key={i}>{error}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   <div>
                     <Label>Key Tasks/Responsibilities</Label>
                     <Textarea
