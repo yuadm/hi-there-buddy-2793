@@ -1,40 +1,38 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export async function setupStorageBucket(): Promise<{ success: boolean; error?: string }> {
+export async function setupStorageBucket(): Promise<{ success: boolean; error?: string; needsMigration?: boolean }> {
   try {
-    // Create bucket with configuration
-    const { data: bucketData, error: bucketError } = await supabase
+    // Check if bucket exists by listing buckets
+    const { data: buckets, error: listError } = await supabase
       .storage
-      .createBucket('company-assets', {
-        public: true,
-        fileSizeLimit: 52428800, // 50MB
-        allowedMimeTypes: [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-          'application/pdf',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ]
-      });
+      .listBuckets();
 
-    // Bucket might already exist, which is fine
-    if (bucketError && !bucketError.message.includes('already exists')) {
-      throw bucketError;
+    if (listError) {
+      throw listError;
     }
 
-    // Note: RLS policies are handled by SQL migration
-    // This function creates the bucket if it doesn't exist
+    // Check if company-assets bucket exists
+    const bucketExists = buckets?.some(bucket => bucket.id === 'company-assets');
+
+    if (bucketExists) {
+      return { 
+        success: true,
+        needsMigration: false 
+      };
+    }
+
+    // Bucket doesn't exist - needs SQL migration
+    return { 
+      success: false,
+      needsMigration: true,
+      error: 'Storage bucket not found. Please run the SQL migration to create it.'
+    };
     
-    return { success: true };
   } catch (error: any) {
-    console.error('Error setting up storage bucket:', error);
+    console.error('Error checking storage bucket:', error);
     return { 
       success: false, 
-      error: error.message || 'Failed to setup storage bucket' 
+      error: error.message || 'Failed to check storage bucket status' 
     };
   }
 }

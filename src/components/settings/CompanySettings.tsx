@@ -251,20 +251,26 @@ export function CompanySettings() {
       
       if (result.success) {
         toast({
-          title: "Storage Setup Complete",
-          description: "Company assets bucket has been configured successfully. You can now upload files.",
+          title: "Storage Already Configured ✓",
+          description: "Company assets bucket is ready for uploads.",
+        });
+      } else if (result.needsMigration) {
+        toast({
+          title: "Migration Required",
+          description: "Please run the SQL migration in Cloud → Database → Run SQL. Copy and paste the migration from: supabase/migrations/20250115000000_setup_storage_bucket_and_policies.sql",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Storage Setup Failed",
-          description: result.error || "Failed to setup storage bucket. Please try again.",
+          title: "Storage Check Failed",
+          description: result.error || "Failed to verify storage bucket. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred during storage setup.",
+        description: "An unexpected error occurred during storage verification.",
         variant: "destructive",
       });
     } finally {
@@ -290,9 +296,9 @@ export function CompanySettings() {
         <div className="border-t pt-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h3 className="text-sm font-medium">Storage Bucket Setup</h3>
+              <h3 className="text-sm font-medium">Storage Bucket Verification</h3>
               <p className="text-sm text-muted-foreground">
-                Initialize the company assets storage bucket for file uploads
+                Check if the company assets storage bucket is configured (requires SQL migration if not found)
               </p>
             </div>
             <Button
@@ -302,7 +308,7 @@ export function CompanySettings() {
               className="gap-2"
             >
               <Database className="w-4 h-4" />
-              {isSettingUpBucket ? "Setting up..." : "Setup Storage Bucket"}
+              {isSettingUpBucket ? "Checking..." : "Verify Storage Bucket"}
             </Button>
           </div>
         </div>
