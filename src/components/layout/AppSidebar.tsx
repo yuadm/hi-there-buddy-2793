@@ -1,7 +1,5 @@
 
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   Users,
@@ -17,9 +15,6 @@ import {
   LogOut,
   Briefcase,
   FileSignature,
-  ChevronUp,
-  Sun,
-  Moon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navigationItems = [
   {
@@ -126,7 +122,6 @@ const settingsItems = [
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
-  const { theme, setTheme } = useTheme();
   const { companySettings } = useCompany();
   const { user, userRole, signOut } = useAuth();
   const { hasPageAccess, loading: permissionsLoading, error } = usePermissions();
@@ -196,21 +191,10 @@ export function AppSidebar() {
             </div>
           )}
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className={cn(
-                "w-8 h-8 p-0 hover:bg-sidebar-accent",
-                collapsed && "mx-auto"
-              )}
-            >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
-            </Button>
+            <ThemeToggle className={cn(
+              "w-8 h-8 border-0 hover:bg-sidebar-accent",
+              collapsed && "mx-auto"
+            )} />
             {!collapsed && (
               <Button
                 variant="ghost"

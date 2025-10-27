@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, User, Shield, Lock, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 function UnifiedAuthContent() {
   const [email, setEmail] = useState('');
@@ -266,6 +267,9 @@ function UnifiedAuthContent() {
         <ArrowLeft className="w-4 h-4" />
         Back to Home
       </Button>
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md shadow-glow">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">

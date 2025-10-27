@@ -13,6 +13,7 @@ import { ComplianceOverview } from '@/components/employee/ComplianceOverview';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { CareWorkerStatementForm } from '@/components/compliance/CareWorkerStatementForm';
 import { format } from 'date-fns';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 interface LeaveRequest {
   id: string;
   start_date: string;
@@ -174,6 +175,7 @@ function EmployeeDashboardContent() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <ThemeToggle className="flex-shrink-0" />
               <Button 
                 onClick={handleSignOut} 
                 className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md hover:shadow-lg transition-all duration-200 text-xs sm:text-sm px-3 sm:px-4"
