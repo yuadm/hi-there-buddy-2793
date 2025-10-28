@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserCog, Plus, Shield, Users, Trash2, RotateCcw } from "lucide-react";
+import { UserCog, Plus, Shield, Users, Trash2, RotateCcw, Mail, Key, AlertCircle, Building, Info, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -401,123 +402,271 @@ export function UserManagementContent() {
           {canCreateUsers() && userRole === 'admin' && (
             <Dialog open={createUserOpen} onOpenChange={setCreateUserOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-primary hover:opacity-90">
+              <Button className="bg-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transition-all">
                 <Plus className="w-4 h-4 mr-2" />
                 Add User
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Add a new user to the system and assign their role.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
+            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden">
+              {/* Header with gradient background */}
+              <div className="bg-gradient-to-br from-primary/10 via-purple-500/5 to-background p-6 border-b">
+                <DialogHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg">
+                      <UserCog className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-2xl">Create New User</DialogTitle>
+                      <DialogDescription className="text-base mt-1">
+                        Add a new user and configure their access permissions
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              {/* Form content */}
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                {/* Email field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-semibold flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-primary" />
+                    Email Address
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="user@example.com"
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
+                    className="h-11"
                   />
                 </div>
+
+                {/* Password field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-semibold flex items-center gap-2">
+                    <Key className="w-4 h-4 text-primary" />
+                    Password
+                  </Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Enter secure password"
                     value={newUserPassword}
                     onChange={(e) => setNewUserPassword(e.target.value)}
+                    className="h-11"
                   />
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Minimum 6 characters
+                  </p>
                 </div>
+
+                {/* Role selection */}
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role" className="text-sm font-semibold flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    User Role
+                  </Label>
                   <Select value={newUserRole} onValueChange={setNewUserRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select user role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user" className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-green-600" />
+                          <div>
+                            <div className="font-medium">User</div>
+                            <div className="text-xs text-muted-foreground">Standard access level</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="admin" className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-red-600" />
+                          <div>
+                            <div className="font-medium">Admin</div>
+                            <div className="text-xs text-muted-foreground">Full system access</div>
+                          </div>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
+                {/* User role options */}
                 {newUserRole === 'user' && (
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="branches">Branch Assignment</Label>
-                      <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
-                        {branches.map((branch) => (
-                          <div key={branch.id} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id={`branch-${branch.id}`}
-                              checked={selectedBranches.includes(branch.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedBranches([...selectedBranches, branch.id]);
-                                } else {
-                                  setSelectedBranches(selectedBranches.filter(id => id !== branch.id));
-                                }
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <label
-                              htmlFor={`branch-${branch.id}`}
-                              className="text-sm font-medium leading-none cursor-pointer"
-                            >
-                              {branch.name}
-                            </label>
+                  <div className="space-y-4 animate-fade-in">
+                    {/* Branch assignment */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <Building className="w-4 h-4 text-primary" />
+                        Branch Access
+                      </Label>
+                      <Card className="border-2">
+                        <CardContent className="p-4">
+                          <div className="space-y-3 max-h-48 overflow-y-auto">
+                            {branches.length === 0 ? (
+                              <div className="text-center py-4 text-sm text-muted-foreground">
+                                <Building className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                No branches available
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-center gap-2 pb-2 border-b">
+                                  <Checkbox
+                                    id="select-all-branches"
+                                    checked={selectedBranches.length === branches.length}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedBranches(branches.map(b => b.id));
+                                      } else {
+                                        setSelectedBranches([]);
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor="select-all-branches"
+                                    className="text-sm font-medium cursor-pointer"
+                                  >
+                                    Select All Branches
+                                  </label>
+                                </div>
+                                {branches.map((branch) => (
+                                  <div
+                                    key={branch.id}
+                                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                                  >
+                                    <Checkbox
+                                      id={`branch-${branch.id}`}
+                                      checked={selectedBranches.includes(branch.id)}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setSelectedBranches([...selectedBranches, branch.id]);
+                                        } else {
+                                          setSelectedBranches(selectedBranches.filter(id => id !== branch.id));
+                                        }
+                                      }}
+                                    />
+                                    <label
+                                      htmlFor={`branch-${branch.id}`}
+                                      className="text-sm font-medium cursor-pointer flex-1"
+                                    >
+                                      {branch.name}
+                                    </label>
+                                    <Badge variant="outline" className="text-xs">
+                                      {selectedBranches.includes(branch.id) ? 'Assigned' : 'Available'}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Select branches this user can access. Leave empty for all branches.
+                        </CardContent>
+                      </Card>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 pl-1">
+                        <Info className="w-3.5 h-3.5" />
+                        Leave empty to grant access to all branches
                       </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant={applyLimitedRole ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setApplyLimitedRole(!applyLimitedRole)}
-                      className="w-full"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      {applyLimitedRole ? "✓ Limited Access Enabled" : "Apply Limited Access"}
-                    </Button>
-                    
-                    {applyLimitedRole && (
-                      <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg border">
-                        <p className="font-semibold mb-2">Limited access will restrict:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>Documents</li>
-                          <li>Document Signing</li>
-                          <li>Reports</li>
-                          <li>Settings</li>
-                          <li>User Management</li>
-                        </ul>
-                      </div>
-                    )}
+                    {/* Limited access toggle */}
+                    <div className="space-y-3">
+                      <Button
+                        type="button"
+                        variant={applyLimitedRole ? "default" : "outline"}
+                        size="lg"
+                        onClick={() => setApplyLimitedRole(!applyLimitedRole)}
+                        className="w-full transition-all"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        {applyLimitedRole ? (
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Limited Access Enabled
+                          </>
+                        ) : (
+                          'Apply Limited Access'
+                        )}
+                      </Button>
+                      
+                      {applyLimitedRole && (
+                        <Card className="border-destructive/20 bg-destructive/5 animate-scale-in">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="w-4 h-4 text-destructive" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <p className="text-sm font-semibold text-foreground">Restricted Pages</p>
+                                <ul className="text-xs text-muted-foreground space-y-1.5">
+                                  <li className="flex items-center gap-2">
+                                    <X className="w-3 h-3 text-destructive" />
+                                    Documents
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <X className="w-3 h-3 text-destructive" />
+                                    Document Signing
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <X className="w-3 h-3 text-destructive" />
+                                    Reports
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <X className="w-3 h-3 text-destructive" />
+                                    Settings
+                                  </li>
+                                  <li className="flex items-center gap-2">
+                                    <X className="w-3 h-3 text-destructive" />
+                                    User Management
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
                   </div>
                 )}
+              </div>
 
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCreateUserOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={createUser} disabled={creating}>
-                    {creating ? "Creating..." : "Create User"}
-                  </Button>
-                </div>
+              {/* Footer with actions */}
+              <div className="border-t bg-muted/20 p-6 flex items-center justify-between gap-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setCreateUserOpen(false);
+                    setNewUserEmail("");
+                    setNewUserPassword("");
+                    setNewUserRole("user");
+                    setSelectedBranches([]);
+                    setApplyLimitedRole(false);
+                  }}
+                  className="hover:bg-muted"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={createUser} 
+                  disabled={creating || !newUserEmail || !newUserPassword}
+                  className="bg-gradient-primary hover:opacity-90 shadow-lg min-w-[140px]"
+                >
+                  {creating ? (
+                    <>
+                      <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create User
+                    </>
+                  )}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
