@@ -408,47 +408,47 @@ export function UserManagementContent() {
                 Add User
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold">Create New User</DialogTitle>
-                <DialogDescription className="text-base">
+                <DialogTitle className="text-xl font-bold">Create New User</DialogTitle>
+                <DialogDescription className="text-sm">
                   Add a new user to the system and assign their role and permissions.
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-6 py-4">
+              <div className="space-y-4 py-3">
                 {/* Account Credentials Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <UserCog className="w-4 h-4 text-primary" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-1.5 border-b">
+                    <div className="p-1.5 bg-primary/10 rounded-md">
+                      <UserCog className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-sm">Account Credentials</h3>
+                    <h3 className="font-semibold text-xs">Account Credentials</h3>
                   </div>
                   
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                  <div className="grid gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="text-xs font-medium">Email Address</Label>
                       <Input
                         id="email"
                         type="email"
                         placeholder="user@example.com"
                         value={newUserEmail}
                         onChange={(e) => setNewUserEmail(e.target.value)}
-                        className="h-11"
+                        className="h-9"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password" className="text-xs font-medium">Password</Label>
                       <Input
                         id="password"
                         type="password"
                         placeholder="Enter secure password"
                         value={newUserPassword}
                         onChange={(e) => setNewUserPassword(e.target.value)}
-                        className="h-11"
+                        className="h-9"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground">
                         Password must be at least 6 characters long
                       </p>
                     </div>
@@ -456,30 +456,30 @@ export function UserManagementContent() {
                 </div>
 
                 {/* Role Selection Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b">
-                    <div className="p-2 bg-purple-500/10 rounded-lg">
-                      <Shield className="w-4 h-4 text-purple-600" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-1.5 border-b">
+                    <div className="p-1.5 bg-purple-500/10 rounded-md">
+                      <Shield className="w-3.5 h-3.5 text-purple-600" />
                     </div>
-                    <h3 className="font-semibold text-sm">Role & Permissions</h3>
+                    <h3 className="font-semibold text-xs">Role & Permissions</h3>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="text-sm font-medium">User Role</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="role" className="text-xs font-medium">User Role</Label>
                     <Select value={newUserRole} onValueChange={setNewUserRole}>
-                      <SelectTrigger className="h-11">
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="user">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                             <span>User</span>
                           </div>
                         </SelectItem>
                         <SelectItem value="admin">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
                             <span>Admin</span>
                           </div>
                         </SelectItem>
@@ -490,21 +490,21 @@ export function UserManagementContent() {
 
                 {/* Branch Assignment Section - Only for Users */}
                 {newUserRole === 'user' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b">
-                      <div className="p-2 bg-blue-500/10 rounded-lg">
-                        <Building className="w-4 h-4 text-blue-600" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 pb-1.5 border-b">
+                      <div className="p-1.5 bg-blue-500/10 rounded-md">
+                        <Building className="w-3.5 h-3.5 text-blue-600" />
                       </div>
-                      <h3 className="font-semibold text-sm">Branch Access</h3>
+                      <h3 className="font-semibold text-xs">Branch Access</h3>
                     </div>
                     
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Select Accessible Branches</Label>
-                        <div className="border rounded-lg p-4 max-h-48 overflow-y-auto bg-muted/30 space-y-3">
+                    <div className="space-y-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium">Select Accessible Branches</Label>
+                        <div className="border rounded-md p-2.5 max-h-40 overflow-y-auto bg-muted/30 space-y-2">
                           {branches.length > 0 ? (
                             branches.map((branch) => (
-                              <div key={branch.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                              <div key={branch.id} className="flex items-center space-x-2 p-1.5 rounded hover:bg-accent/50 transition-colors">
                                 <Checkbox
                                   id={`branch-${branch.id}`}
                                   checked={selectedBranches.includes(branch.id)}
@@ -518,59 +518,59 @@ export function UserManagementContent() {
                                 />
                                 <label
                                   htmlFor={`branch-${branch.id}`}
-                                  className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                  className="text-xs font-medium leading-none cursor-pointer flex-1"
                                 >
                                   {branch.name}
                                 </label>
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">No branches available</p>
+                            <p className="text-xs text-muted-foreground text-center py-2">No branches available</p>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                           <span className="text-amber-500">ℹ️</span>
                           Leave empty to grant access to all branches
                         </p>
                       </div>
 
                       {/* Limited Access Toggle */}
-                      <div className="space-y-3 pt-2">
+                      <div className="space-y-2 pt-1">
                         <Button
                           type="button"
                           variant={applyLimitedRole ? "default" : "outline"}
-                          size="default"
+                          size="sm"
                           onClick={() => setApplyLimitedRole(!applyLimitedRole)}
-                          className="w-full h-11 font-medium"
+                          className="w-full h-9 text-xs font-medium"
                         >
-                          <Shield className="w-4 h-4 mr-2" />
+                          <Shield className="w-3.5 h-3.5 mr-1.5" />
                           {applyLimitedRole ? "✓ Limited Access Enabled" : "Enable Limited Access"}
                         </Button>
                         
                         {applyLimitedRole && (
-                          <div className="text-sm p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                            <p className="font-semibold mb-2 flex items-center gap-2">
-                              <Shield className="w-4 h-4" />
+                          <div className="text-xs p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                            <p className="font-semibold mb-1.5 flex items-center gap-1.5">
+                              <Shield className="w-3 h-3" />
                               Limited Access Restrictions
                             </p>
-                            <ul className="space-y-1.5 text-muted-foreground">
-                              <li className="flex items-center gap-2">
+                            <ul className="space-y-1 text-muted-foreground">
+                              <li className="flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Documents
                               </li>
-                              <li className="flex items-center gap-2">
+                              <li className="flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Document Signing
                               </li>
-                              <li className="flex items-center gap-2">
+                              <li className="flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Reports
                               </li>
-                              <li className="flex items-center gap-2">
+                              <li className="flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 Settings
                               </li>
-                              <li className="flex items-center gap-2">
+                              <li className="flex items-center gap-1.5">
                                 <span className="w-1 h-1 rounded-full bg-current"></span>
                                 User Management
                               </li>
@@ -584,7 +584,7 @@ export function UserManagementContent() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-2 pt-3 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -595,14 +595,14 @@ export function UserManagementContent() {
                     setSelectedBranches([]);
                     setApplyLimitedRole(false);
                   }}
-                  className="h-11 px-6"
+                  className="h-9 px-4 text-xs"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={createUser} 
                   disabled={creating}
-                  className="h-11 px-6 bg-gradient-primary hover:opacity-90"
+                  className="h-9 px-4 text-xs bg-gradient-primary hover:opacity-90"
                 >
                   {creating ? (
                     <>
