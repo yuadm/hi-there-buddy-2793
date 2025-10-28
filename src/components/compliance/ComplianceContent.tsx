@@ -25,7 +25,7 @@ interface ComplianceType {
 }
 
 export function ComplianceContent() {
-  const { complianceTypes, loading, refetchData } = useComplianceData();
+  const { complianceTypes, loading } = useComplianceData();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { hasPageAccess } = usePermissions();
@@ -49,12 +49,6 @@ export function ComplianceContent() {
   // REMOVED old useEffect and fetchComplianceTypes - now using React Query hooks
 
   // REMOVED fetchComplianceTypes function - now using React Query hooks in useComplianceData
-  
-  // Force refresh function - now uses React Query refetch
-  const handleRefresh = () => {
-    console.log('Manual refresh triggered');
-    refetchData();
-  };
 
   const getFrequencyIcon = (frequency: string) => {
     switch (frequency.toLowerCase()) {
@@ -127,12 +121,6 @@ export function ComplianceContent() {
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <Shield className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
       </div>
 
       <Tabs defaultValue={canViewComplianceTypes() ? "compliance-types" : "care-worker-statements"} className="space-y-6">
