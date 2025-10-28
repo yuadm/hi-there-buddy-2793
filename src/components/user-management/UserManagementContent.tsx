@@ -25,13 +25,20 @@ interface UserWithRole {
   role: string;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+}
+
 export function UserManagementContent() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState("user");
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [applyLimitedRole, setApplyLimitedRole] = useState(false);
   const [creating, setCreating] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
@@ -45,7 +52,22 @@ export function UserManagementContent() {
 
   useEffect(() => {
     fetchUsers();
+    fetchBranches();
   }, []);
+
+  const fetchBranches = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setBranches(data || []);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -114,7 +136,30 @@ export function UserManagementContent() {
               description: "User has restricted access to sensitive pages",
             });
           }
-        } else {
+        }
+
+        // Assign branches if role is user and branches are selected
+        if (newUserRole === 'user' && selectedBranches.length > 0 && data?.user_id) {
+          const branchAssignments = selectedBranches.map(branchId => ({
+            user_id: data.user_id,
+            branch_id: branchId
+          }));
+
+          const { error: branchError } = await supabase
+            .from('user_branch_access')
+            .insert(branchAssignments);
+
+          if (branchError) {
+            console.error('Error assigning branches:', branchError);
+            toast({
+              title: "Warning",
+              description: "User created but branch assignment failed",
+              variant: "destructive",
+            });
+          }
+        }
+
+        if (!applyLimitedRole) {
           toast({
             title: "User created successfully",
             description: `${newUserEmail} has been added with ${newUserRole} role`,
@@ -125,6 +170,7 @@ export function UserManagementContent() {
         setNewUserEmail("");
         setNewUserPassword("");
         setNewUserRole("user");
+        setSelectedBranches([]);
         setApplyLimitedRole(false);
         fetchUsers();
       } else {
@@ -403,6 +449,38 @@ export function UserManagementContent() {
 
                 {newUserRole === 'user' && (
                   <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="branches">Branch Assignment</Label>
+                      <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                        {branches.map((branch) => (
+                          <div key={branch.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`branch-${branch.id}`}
+                              checked={selectedBranches.includes(branch.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedBranches([...selectedBranches, branch.id]);
+                                } else {
+                                  setSelectedBranches(selectedBranches.filter(id => id !== branch.id));
+                                }
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <label
+                              htmlFor={`branch-${branch.id}`}
+                              className="text-sm font-medium leading-none cursor-pointer"
+                            >
+                              {branch.name}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Select branches this user can access. Leave empty for all branches.
+                      </p>
+                    </div>
+
                     <Button
                       type="button"
                       variant={applyLimitedRole ? "default" : "outline"}
