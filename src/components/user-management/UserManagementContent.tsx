@@ -34,6 +34,7 @@ export function UserManagementContent() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -531,16 +532,25 @@ export function UserManagementContent() {
           totalUsers={users.length}
           adminCount={users.filter(u => u.role === 'admin').length}
           userCount={users.filter(u => u.role === 'user').length}
+          activeFilter={roleFilter}
+          onFilterChange={setRoleFilter}
         />
       </div>
 
       {/* Users Grid */}
       <div className="space-y-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Active Users
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            {roleFilter ? `${roleFilter === 'admin' ? 'Administrators' : 'Standard Users'}` : 'Active Users'}
+          </h2>
+          {roleFilter && (
+            <Button variant="ghost" size="sm" onClick={() => setRoleFilter(null)}>
+              Clear Filter
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {users.map((user, index) => (
+          {users.filter(user => !roleFilter || user.role === roleFilter).map((user, index) => (
             <Card 
               key={user.id} 
               className="card-premium group hover:shadow-xl transition-all hover:scale-[1.02] animate-fade-in"

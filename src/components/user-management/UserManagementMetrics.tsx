@@ -5,12 +5,16 @@ interface UserManagementMetricsProps {
   totalUsers: number;
   adminCount: number;
   userCount: number;
+  activeFilter: string | null;
+  onFilterChange: (filter: string | null) => void;
 }
 
 export function UserManagementMetrics({ 
   totalUsers, 
   adminCount,
-  userCount
+  userCount,
+  activeFilter,
+  onFilterChange
 }: UserManagementMetricsProps) {
   const metrics = [
     {
@@ -19,7 +23,8 @@ export function UserManagementMetrics({
       icon: Users,
       color: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-500/10",
-      textColor: "text-blue-600"
+      textColor: "text-blue-600",
+      filterValue: null
     },
     {
       label: "Administrators",
@@ -27,7 +32,8 @@ export function UserManagementMetrics({
       icon: Shield,
       color: "from-red-500 to-pink-500",
       bgColor: "bg-red-500/10",
-      textColor: "text-red-600"
+      textColor: "text-red-600",
+      filterValue: "admin"
     },
     {
       label: "Standard Users",
@@ -35,14 +41,21 @@ export function UserManagementMetrics({
       icon: Users,
       color: "from-green-500 to-emerald-500",
       bgColor: "bg-green-500/10",
-      textColor: "text-green-600"
+      textColor: "text-green-600",
+      filterValue: "user"
     },
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {metrics.map((metric, index) => (
-        <MetricCard key={index} {...metric} index={index} />
+        <MetricCard 
+          key={index} 
+          {...metric} 
+          index={index} 
+          isActive={activeFilter === metric.filterValue}
+          onClick={() => onFilterChange(activeFilter === metric.filterValue ? null : metric.filterValue)}
+        />
       ))}
     </div>
   );
@@ -56,6 +69,9 @@ interface MetricCardProps {
   bgColor: string;
   textColor: string;
   index: number;
+  filterValue: string | null;
+  isActive: boolean;
+  onClick: () => void;
 }
 
 function MetricCard({
@@ -65,7 +81,9 @@ function MetricCard({
   color,
   bgColor,
   textColor,
-  index
+  index,
+  isActive,
+  onClick
 }: MetricCardProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -98,10 +116,17 @@ function MetricCard({
   }, [value, index]);
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-card border border-border p-6 hover:shadow-lg transition-all hover:scale-[1.02] animate-fade-in" 
-         style={{ animationDelay: `${index * 100}ms` }}>
+    <button 
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-2xl bg-card border p-6 hover:shadow-lg transition-all hover:scale-[1.02] animate-fade-in text-left w-full ${
+        isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+      }`}
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       {/* Background gradient */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+      <div className={`absolute inset-0 bg-gradient-to-br ${color} transition-opacity ${
+        isActive ? 'opacity-10' : 'opacity-0 group-hover:opacity-5'
+      }`}></div>
       
       {/* Progress bar at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
@@ -139,7 +164,14 @@ function MetricCard({
             points="0,20 20,15 40,18 60,10 80,12 100,8"
           />
         </svg>
+
+        {/* Active indicator */}
+        {isActive && (
+          <div className="mt-2 text-xs font-medium text-primary">
+            ✓ Filtered
+          </div>
+        )}
       </div>
-    </div>
+    </button>
   );
 }
