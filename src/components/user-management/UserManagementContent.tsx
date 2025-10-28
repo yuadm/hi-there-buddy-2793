@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserCog, Plus, Shield, Users, Trash2, RotateCcw } from "lucide-react";
+import { UserCog, Plus, Shield, Users, Trash2, RotateCcw, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -407,118 +408,214 @@ export function UserManagementContent() {
                 Add User
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Add a new user to the system and assign their role.
+                <DialogTitle className="text-2xl font-bold">Create New User</DialogTitle>
+                <DialogDescription className="text-base">
+                  Add a new user to the system and assign their role and permissions.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="user@example.com"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={newUserPassword}
-                    onChange={(e) => setNewUserPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={newUserRole} onValueChange={setNewUserRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {newUserRole === 'user' && (
-                  <div className="space-y-3">
+              
+              <div className="space-y-6 py-4">
+                {/* Account Credentials Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <UserCog className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-sm">Account Credentials</h3>
+                  </div>
+                  
+                  <div className="grid gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="branches">Branch Assignment</Label>
-                      <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
-                        {branches.map((branch) => (
-                          <div key={branch.id} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id={`branch-${branch.id}`}
-                              checked={selectedBranches.includes(branch.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedBranches([...selectedBranches, branch.id]);
-                                } else {
-                                  setSelectedBranches(selectedBranches.filter(id => id !== branch.id));
-                                }
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <label
-                              htmlFor={`branch-${branch.id}`}
-                              className="text-sm font-medium leading-none cursor-pointer"
-                            >
-                              {branch.name}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
+                      <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter secure password"
+                        value={newUserPassword}
+                        onChange={(e) => setNewUserPassword(e.target.value)}
+                        className="h-11"
+                      />
                       <p className="text-xs text-muted-foreground">
-                        Select branches this user can access. Leave empty for all branches.
+                        Password must be at least 6 characters long
                       </p>
                     </div>
+                  </div>
+                </div>
 
-                    <Button
-                      type="button"
-                      variant={applyLimitedRole ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setApplyLimitedRole(!applyLimitedRole)}
-                      className="w-full"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      {applyLimitedRole ? "✓ Limited Access Enabled" : "Apply Limited Access"}
-                    </Button>
-                    
-                    {applyLimitedRole && (
-                      <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg border">
-                        <p className="font-semibold mb-2">Limited access will restrict:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>Documents</li>
-                          <li>Document Signing</li>
-                          <li>Reports</li>
-                          <li>Settings</li>
-                          <li>User Management</li>
-                        </ul>
+                {/* Role Selection Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <div className="p-2 bg-purple-500/10 rounded-lg">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <h3 className="font-semibold text-sm">Role & Permissions</h3>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="role" className="text-sm font-medium">User Role</Label>
+                    <Select value={newUserRole} onValueChange={setNewUserRole}>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span>User</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                            <span>Admin</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Branch Assignment Section - Only for Users */}
+                {newUserRole === 'user' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <div className="p-2 bg-blue-500/10 rounded-lg">
+                        <Building className="w-4 h-4 text-blue-600" />
                       </div>
-                    )}
+                      <h3 className="font-semibold text-sm">Branch Access</h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Select Accessible Branches</Label>
+                        <div className="border rounded-lg p-4 max-h-48 overflow-y-auto bg-muted/30 space-y-3">
+                          {branches.length > 0 ? (
+                            branches.map((branch) => (
+                              <div key={branch.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                                <Checkbox
+                                  id={`branch-${branch.id}`}
+                                  checked={selectedBranches.includes(branch.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedBranches([...selectedBranches, branch.id]);
+                                    } else {
+                                      setSelectedBranches(selectedBranches.filter(id => id !== branch.id));
+                                    }
+                                  }}
+                                />
+                                <label
+                                  htmlFor={`branch-${branch.id}`}
+                                  className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                >
+                                  {branch.name}
+                                </label>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No branches available</p>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="text-amber-500">ℹ️</span>
+                          Leave empty to grant access to all branches
+                        </p>
+                      </div>
+
+                      {/* Limited Access Toggle */}
+                      <div className="space-y-3 pt-2">
+                        <Button
+                          type="button"
+                          variant={applyLimitedRole ? "default" : "outline"}
+                          size="default"
+                          onClick={() => setApplyLimitedRole(!applyLimitedRole)}
+                          className="w-full h-11 font-medium"
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          {applyLimitedRole ? "✓ Limited Access Enabled" : "Enable Limited Access"}
+                        </Button>
+                        
+                        {applyLimitedRole && (
+                          <div className="text-sm p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <p className="font-semibold mb-2 flex items-center gap-2">
+                              <Shield className="w-4 h-4" />
+                              Limited Access Restrictions
+                            </p>
+                            <ul className="space-y-1.5 text-muted-foreground">
+                              <li className="flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Documents
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Document Signing
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Reports
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                Settings
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-current"></span>
+                                User Management
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
+              </div>
 
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCreateUserOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={createUser} disabled={creating}>
-                    {creating ? "Creating..." : "Create User"}
-                  </Button>
-                </div>
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCreateUserOpen(false);
+                    setNewUserEmail("");
+                    setNewUserPassword("");
+                    setNewUserRole("user");
+                    setSelectedBranches([]);
+                    setApplyLimitedRole(false);
+                  }}
+                  className="h-11 px-6"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={createUser} 
+                  disabled={creating}
+                  className="h-11 px-6 bg-gradient-primary hover:opacity-90"
+                >
+                  {creating ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create User
+                    </>
+                  )}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
