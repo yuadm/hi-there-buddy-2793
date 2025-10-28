@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   Users,
@@ -17,6 +18,8 @@ import {
   Briefcase,
   FileSignature,
   ChevronUp,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -123,6 +126,7 @@ const settingsItems = [
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
+  const { theme, setTheme } = useTheme();
   const { companySettings } = useCompany();
   const { user, userRole, signOut } = useAuth();
   const { hasPageAccess, loading: permissionsLoading, error } = usePermissions();
@@ -191,21 +195,43 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleSidebar}
-            className={cn(
-              "w-8 h-8 p-0 hover:bg-sidebar-accent",
-              collapsed && "mx-auto"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className={cn(
+                "w-8 h-8 p-0 hover:bg-sidebar-accent",
+                collapsed && "mx-auto"
+              )}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
+            {!collapsed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebar}
+                className="w-8 h-8 p-0 hover:bg-sidebar-accent"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
             )}
-          >
-            {collapsed ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
+            {collapsed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebar}
+                className="w-8 h-8 p-0 hover:bg-sidebar-accent mx-auto"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       </SidebarHeader>
 

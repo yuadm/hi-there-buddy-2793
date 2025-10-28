@@ -3,17 +3,12 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { NotificationPopover } from "./NotificationPopover";
-import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
-import { useTheme } from "next-themes";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { theme, setTheme } = useTheme();
-  
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-gradient-subtle">
@@ -30,20 +25,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               <div className="flex items-center gap-2">
                 {/* Notifications */}
                 <NotificationPopover />
-
-                {/* Theme Toggle */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="w-9 h-9 p-0"
-                >
-                  {theme === "dark" ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
 
                 {/* Profile */}
                 <ProfileDropdown />
