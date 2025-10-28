@@ -1157,7 +1157,7 @@ export function EmployeesContent() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-slide-up">
+      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-slide-up">
         <Card className="card-premium">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -1213,7 +1213,7 @@ export function EmployeesContent() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Employees Table */}
       <Card className="card-premium animate-fade-in">
