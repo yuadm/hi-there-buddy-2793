@@ -127,12 +127,12 @@ export function ComplianceContent() {
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={handleRefresh}>
             <Shield className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-        </div>
+        </div> */}
       </div>
 
       <Tabs defaultValue={canViewComplianceTypes() ? "compliance-types" : "care-worker-statements"} className="space-y-6">
