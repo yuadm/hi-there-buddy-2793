@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, ArrowRight, CheckCircle, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield } from 'lucide-react';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { JobApplicationData, PersonalInfo, Availability, EmergencyContact, EmploymentHistory, References, SkillsExperience, Declaration, TermsPolicy } from './types';
 import { PersonalInfoStep } from './steps/PersonalInfoStep';
@@ -16,6 +16,7 @@ import { DeclarationStep } from './steps/DeclarationStep';
 import { TermsPolicyStep } from './steps/TermsPolicyStep';
 import { generateJobApplicationPdf } from '@/lib/job-application-pdf';
 import { validateStep } from './ValidationLogic';
+import { StepNavigationCards } from './StepNavigationCards';
 
 const initialFormData: JobApplicationData = {
   personalInfo: {
@@ -77,6 +78,7 @@ const [currentStep, setCurrentStep] = useState(1);
   const [startTime] = useState(Date.now());
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [emailUsageCount, setEmailUsageCount] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const { companySettings } = useCompany();
   const { toast } = useToast();
 
@@ -179,15 +181,27 @@ const handleDownloadPdf = async () => {
   };
 
   const nextStep = () => {
-    if (currentStep < totalSteps) {
+    if (currentStep < totalSteps && canProceed()) {
+      // Mark current step as completed
+      if (!completedSteps.includes(currentStep)) {
+        setCompletedSteps(prev => [...prev, currentStep]);
+      }
       setCurrentStep(prev => prev + 1);
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+  const goToStep = (step: number) => {
+    // Can only go to completed steps or the next step after the last completed
+    const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
+    if (step <= maxAccessibleStep && step <= totalSteps) {
+      setCurrentStep(step);
     }
+  };
+
+  const canAccessStep = (step: number) => {
+    // Can access completed steps or the next step after the last completed
+    const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
+    return step <= maxAccessibleStep;
   };
 
   const handleSubmit = async () => {
@@ -390,16 +404,17 @@ const handleDownloadPdf = async () => {
           
           <div className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">Job Application</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Step {currentStep} of {totalSteps}: {getStepTitle()}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Complete all steps to submit your application</p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-secondary/20 rounded-full h-3 sm:h-2 mb-6 sm:mb-8">
-            <div 
-              className="bg-primary h-3 sm:h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            />
-          </div>
+          {/* Step Navigation Cards */}
+          <StepNavigationCards
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            completedSteps={completedSteps}
+            onStepClick={goToStep}
+            canAccessStep={canAccessStep}
+          />
         </div>
 
         <Card className="shadow-lg">
@@ -423,37 +438,28 @@ const handleDownloadPdf = async () => {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sm:mt-8">
-              <Button
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className="w-full sm:w-auto min-h-[44px]"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-              <div className="flex gap-2">
-                {currentStep === totalSteps ? (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!canProceed() || isSubmitting}
-                    className="w-full sm:w-auto min-h-[44px]"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                    <CheckCircle className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={nextStep}
-                    disabled={!canProceed()}
-                    className="w-full sm:w-auto min-h-[44px]"
-                  >
-                    Next
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                )}
-              </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-8">
+              {currentStep === totalSteps ? (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!canProceed() || isSubmitting}
+                  className="w-full sm:w-auto min-h-[44px]"
+                  size="lg"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  <CheckCircle className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={nextStep}
+                  disabled={!canProceed()}
+                  className="w-full sm:w-auto min-h-[44px]"
+                  size="lg"
+                >
+                  Continue to Next Step
+                  <CheckCircle className="w-4 h-4 ml-2" />
+                </Button>
+              )}
             </div>
 
           </CardContent>
