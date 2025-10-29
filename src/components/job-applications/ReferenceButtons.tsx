@@ -20,7 +20,6 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
   const { companySettings } = useCompany();
   const [sending, setSending] = useState<string | null>(null);
   const [completedReferences, setCompletedReferences] = useState<any[]>([]);
-  const [sentReferences, setSentReferences] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = usePermissions();
   const { 
@@ -35,23 +34,16 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
 
   const fetchCompletedReferences = async () => {
     try {
-      // Fetch all reference requests for this application
       const { data, error } = await supabase
         .from('reference_requests')
         .select('*')
         .eq('application_id', application.id)
-        .order('sent_at', { ascending: false });
+        .eq('status', 'completed');
 
       if (error) throw error;
-      
-      // Separate completed and sent references
-      const completed = data?.filter(ref => ref.status === 'completed') || [];
-      const sent = data?.filter(ref => ref.status === 'sent') || [];
-      
-      setCompletedReferences(completed);
-      setSentReferences(sent);
+      setCompletedReferences(data || []);
     } catch (error) {
-      console.error('Error fetching reference requests:', error);
+      console.error('Error fetching completed references:', error);
     } finally {
       setLoading(false);
     }
@@ -258,11 +250,6 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     return completedReferences.find(ref => ref.reference_email === email);
   };
 
-  const getSentReferenceForEmail = (email: string) => {
-    // Get the most recent sent request for this email
-    return sentReferences.find(ref => ref.reference_email === email);
-  };
-
   const generateBlankPDF = async (referenceKey: string, reference: any) => {
     try {
       const personalInfo = application.personal_info || {};
@@ -350,7 +337,6 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       {/* Reference 1 */}
       {references.reference1 && (() => {
         const completedRef = getCompletedReferenceForEmail(references.reference1.email);
-        const sentRef = getSentReferenceForEmail(references.reference1.email);
         return (
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="flex-1">
@@ -360,18 +346,13 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
               </div>
               <div className="text-sm text-muted-foreground">{references.reference1.company}</div>
               <div className="text-sm text-muted-foreground">{references.reference1.email}</div>
-              <div className="flex flex-wrap gap-2 mt-1">
+              <div className="flex gap-2 mt-1">
                 <Badge variant="outline">
                   {referenceTypeForKey(application, 'reference1') === 'employer' ? 'Employer Reference' : 'Character Reference'}
                 </Badge>
                 {completedRef && (
                   <Badge variant="default" className="bg-green-100 text-green-800">
                     Completed on {new Date(completedRef.completed_at).toLocaleDateString()}
-                  </Badge>
-                )}
-                {sentRef && !completedRef && (
-                  <Badge variant="secondary" className="text-xs">
-                    Last sent: {new Date(sentRef.sent_at).toLocaleDateString()} at {new Date(sentRef.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Badge>
                 )}
               </div>
@@ -441,7 +422,6 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       {/* Reference 2 */}
       {references.reference2 && (() => {
         const completedRef = getCompletedReferenceForEmail(references.reference2.email);
-        const sentRef = getSentReferenceForEmail(references.reference2.email);
         return (
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="flex-1">
@@ -451,18 +431,13 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
               </div>
               <div className="text-sm text-muted-foreground">{references.reference2.company}</div>
               <div className="text-sm text-muted-foreground">{references.reference2.email}</div>
-              <div className="flex flex-wrap gap-2 mt-1">
+              <div className="flex gap-2 mt-1">
                 <Badge variant="outline">
                   {referenceTypeForKey(application, 'reference2') === 'employer' ? 'Employer Reference' : 'Character Reference'}
                 </Badge>
                 {completedRef && (
                   <Badge variant="default" className="bg-green-100 text-green-800">
                     Completed on {new Date(completedRef.completed_at).toLocaleDateString()}
-                  </Badge>
-                )}
-                {sentRef && !completedRef && (
-                  <Badge variant="secondary" className="text-xs">
-                    Last sent: {new Date(sentRef.sent_at).toLocaleDateString()} at {new Date(sentRef.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Badge>
                 )}
               </div>
