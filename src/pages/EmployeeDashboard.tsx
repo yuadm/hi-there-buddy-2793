@@ -13,6 +13,7 @@ import { ComplianceOverview } from '@/components/employee/ComplianceOverview';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { CareWorkerStatementForm } from '@/components/compliance/CareWorkerStatementForm';
 import { format } from 'date-fns';
+import { useTheme } from 'next-themes';
 interface LeaveRequest {
   id: string;
   start_date: string;
@@ -34,12 +35,19 @@ function EmployeeDashboardContent() {
     companySettings
   } = useCompany();
   const navigate = useNavigate();
+  const { setTheme } = useTheme();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [statements, setStatements] = useState([]);
   const [selectedStatement, setSelectedStatement] = useState(null);
   const [isStatementFormOpen, setIsStatementFormOpen] = useState(false);
+  
+  useEffect(() => {
+    // Force light mode on this page
+    setTheme('light');
+  }, [setTheme]);
+  
   useEffect(() => {
     if (!loading && !employee) {
       navigate('/employee-login');
