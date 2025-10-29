@@ -427,6 +427,29 @@ Please complete and return this reference as soon as possible.`;
 
   return (
     <div className="p-6 space-y-6">
+      {/* Company Settings Warning */}
+      {(!companySettings.name || companySettings.name.trim().length === 0) && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-5 h-5 text-yellow-600 dark:text-yellow-400">⚠️</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">Company Settings Required</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                Your company name is not configured. This is required for sending reference emails.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => window.location.href = '/settings'}
+              >
+                Go to Settings
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Job Applications</h1>

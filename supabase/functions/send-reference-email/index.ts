@@ -58,10 +58,15 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: emailSettings, error: settingsError } = await supabase.rpc('get_email_settings');
     if (settingsError) {
       console.error("Error fetching email settings:", settingsError);
+      throw new Error("Failed to fetch email settings. Please configure email settings in the admin panel.");
     }
 
-    const senderEmail = emailSettings?.sender_email || "noreply@yourcompany.com";
-    const senderName = emailSettings?.sender_name || "HR Team";
+    if (!emailSettings?.sender_email || !emailSettings?.sender_name) {
+      throw new Error("Email sender settings are not configured. Please set sender email and name in the admin panel.");
+    }
+
+    const senderEmail = emailSettings.sender_email;
+    const senderName = emailSettings.sender_name;
 
     // Get company settings from database if not provided
     let finalCompanyName = companyName && companyName.trim().length > 0 ? companyName : null;
@@ -75,10 +80,15 @@ const handler = async (req: Request): Promise<Response> => {
       
       if (companyError) {
         console.error("Error fetching company settings:", companyError);
+        throw new Error("Failed to fetch company settings. Please configure your company name in Settings.");
       }
       
-      finalCompanyName = companySettings?.name || 'Your Company';
-      companyLogo = companySettings?.logo;
+      if (!companySettings?.name || companySettings.name.trim().length === 0) {
+        throw new Error("Company name is not configured. Please set your company name in Settings → Company Settings.");
+      }
+      
+      finalCompanyName = companySettings.name;
+      companyLogo = companySettings.logo;
     } else {
       // If company name was provided, still fetch the logo
       const { data: companySettings, error: companyError } = await supabase
@@ -87,14 +97,19 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
       
       if (!companyError) {
-        companyLogo = companySettings?.logo;
+        companyLogo = companySettings.logo;
       }
     }
 
     // Derive site origin from request for building public URL
     const siteOrigin = req.headers.get("origin") || `${new URL(req.url).protocol}//${new URL(req.url).host}`;
     const referenceToken = crypto.randomUUID();
-    const roleTitle = positionAppliedFor && positionAppliedFor.trim().length > 0 ? positionAppliedFor : 'Support Worker/Carer';
+    
+    if (!positionAppliedFor || positionAppliedFor.trim().length === 0) {
+      throw new Error("Position applied for is not specified. Please ensure the applicant has filled in the position field.");
+    }
+    
+    const roleTitle = positionAppliedFor.trim();
     const referenceLink = `${siteOrigin}/reference?token=${referenceToken}`;
 
     console.log("Sending reference email to:", referenceEmail, "for applicant:", applicantName);

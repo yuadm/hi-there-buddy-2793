@@ -147,18 +147,37 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       const referenceType = referenceTypeForKey(application, referenceKey as 'reference1' | 'reference2');
       const personalInfo = application.personal_info || {};
       
+      // Validate required company settings
+      if (!companySettings.name || companySettings.name.trim().length === 0) {
+        toast({
+          title: "Configuration Required",
+          description: "Please configure your company name in Settings before sending reference emails.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!personalInfo.positionAppliedFor || personalInfo.positionAppliedFor.trim().length === 0) {
+        toast({
+          title: "Missing Information",
+          description: "The position applied for is not specified in the application.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const emailData = {
         applicationId: application.id,
         applicantName: personalInfo.fullName || 'Unknown Applicant',
         applicantFirstName: personalInfo.fullName?.split(' ')[0] || 'Applicant',
         applicantAddress: `${personalInfo.streetAddress || ''}, ${personalInfo.town || ''}`,
         applicantPostcode: personalInfo.postcode || '',
-        positionAppliedFor: personalInfo.positionAppliedFor || 'Support Worker',
+        positionAppliedFor: personalInfo.positionAppliedFor,
         referenceEmail: reference.email,
         referenceName: reference.name,
         referenceCompany: reference.company,
         referenceAddress: `${reference.address || ''}, ${reference.town || ''}`,
-        companyName: companySettings.name || 'Daryel Cared',
+        companyName: companySettings.name,
         referenceType: referenceType,
         employmentDetails: application.employment_history?.recentEmployer
       };
@@ -167,7 +186,16 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
         body: emailData
       });
 
-      if (error) throw error;
+      if (error) {
+        // Parse error message for user-friendly display
+        const errorMessage = error.message || "Failed to send reference email";
+        toast({
+          title: "Error Sending Reference",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Reference Email Sent",
@@ -175,11 +203,12 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       });
 
       onUpdate?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending reference email:', error);
+      const errorMessage = error.message || "Failed to send reference email. Please check your settings.";
       toast({
         title: "Error",
-        description: "Failed to send reference email",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
