@@ -6,7 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
-import { Send, Download, Loader2, CheckCircle2 } from 'lucide-react';
+import { Send, Download, Loader2, CheckCircle2, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { generateReferencePDF, generateManualReferencePDF } from '@/lib/reference-pdf';
 
 interface ReferenceButtonsProps {
@@ -20,6 +21,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
   const { companySettings } = useCompany();
   const [sending, setSending] = useState<string | null>(null);
   const [completedReferences, setCompletedReferences] = useState<any[]>([]);
+  const [pendingReferences, setPendingReferences] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = usePermissions();
   const { 
@@ -38,12 +40,17 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
         .from('reference_requests')
         .select('*')
         .eq('application_id', application.id)
-        .eq('status', 'completed');
+        .order('sent_at', { ascending: false });
 
       if (error) throw error;
-      setCompletedReferences(data || []);
+      
+      const completed = (data || []).filter(ref => ref.status === 'completed');
+      const pending = (data || []).filter(ref => ref.status === 'pending');
+      
+      setCompletedReferences(completed);
+      setPendingReferences(pending);
     } catch (error) {
-      console.error('Error fetching completed references:', error);
+      console.error('Error fetching references:', error);
     } finally {
       setLoading(false);
     }
@@ -250,6 +257,10 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     return completedReferences.find(ref => ref.reference_email === email);
   };
 
+  const getPendingReferenceForEmail = (email: string) => {
+    return pendingReferences.find(ref => ref.reference_email === email);
+  };
+
   const generateBlankPDF = async (referenceKey: string, reference: any) => {
     try {
       const personalInfo = application.personal_info || {};
@@ -337,6 +348,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       {/* Reference 1 */}
       {references.reference1 && (() => {
         const completedRef = getCompletedReferenceForEmail(references.reference1.email);
+        const pendingRef = getPendingReferenceForEmail(references.reference1.email);
         return (
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="flex-1">
@@ -356,6 +368,12 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
                   </Badge>
                 )}
               </div>
+              {pendingRef && !completedRef && pendingRef.sent_at && (
+                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  <span>Last sent: {formatDistanceToNow(new Date(pendingRef.sent_at), { addSuffix: true })}</span>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               {completedRef ? (
@@ -422,6 +440,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       {/* Reference 2 */}
       {references.reference2 && (() => {
         const completedRef = getCompletedReferenceForEmail(references.reference2.email);
+        const pendingRef = getPendingReferenceForEmail(references.reference2.email);
         return (
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="flex-1">
@@ -441,6 +460,12 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
                   </Badge>
                 )}
               </div>
+              {pendingRef && !completedRef && pendingRef.sent_at && (
+                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  <span>Last sent: {formatDistanceToNow(new Date(pendingRef.sent_at), { addSuffix: true })}</span>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               {completedRef ? (
