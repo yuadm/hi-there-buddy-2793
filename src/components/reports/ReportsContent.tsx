@@ -590,12 +590,7 @@ export function ReportsContent() {
                 `)
                 .order('completion_date', { ascending: false });
 
-              if (selectedBranch !== "all") {
-                const branchId = branches.find(b => b.name === selectedBranch)?.id;
-                if (branchId) {
-                  employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
-                }
-              }
+              // Apply branch filter (will be done in memory after fetching data)
 
               if (selectedComplianceType !== "all") {
                 employeeComplianceQuery = employeeComplianceQuery.eq('compliance_type_id', selectedComplianceType);
@@ -617,7 +612,16 @@ export function ReportsContent() {
             const { data: employeeComplianceData, error: employeeComplianceError } = await employeeComplianceQuery;
             
             if (!employeeComplianceError && employeeComplianceData) {
-              const transformedEmployeeData = employeeComplianceData.map(record => {
+              // Apply branch filter in memory if needed
+              let filteredEmployeeData = employeeComplianceData;
+              if (selectedBranch !== "all") {
+                filteredEmployeeData = employeeComplianceData.filter(record => {
+                  const empBranchName = (record.employees as any)?.branches?.name;
+                  return empBranchName === selectedBranch;
+                });
+              }
+
+              const transformedEmployeeData = filteredEmployeeData.map(record => {
                 let notes = record.notes || '';
                 // Extract freeTextNotes from JSON if present
                 if (notes) {
@@ -665,9 +669,7 @@ export function ReportsContent() {
                 `)
                 .order('completion_date', { ascending: false });
 
-              if (selectedBranch !== "all") {
-                clientComplianceQuery = clientComplianceQuery.eq('clients.branches.name', selectedBranch);
-              }
+              // Apply branch filter (will be done in memory after fetching data)
 
               // Apply compliance type filter for client records
               if (selectedComplianceType !== "all" && isClientComplianceType) {
@@ -690,7 +692,16 @@ export function ReportsContent() {
               const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
               
               if (!clientComplianceError && clientComplianceData) {
-                const transformedClientData = clientComplianceData.map(record => {
+                // Apply branch filter in memory if needed
+                let filteredClientData = clientComplianceData;
+                if (selectedBranch !== "all") {
+                  filteredClientData = clientComplianceData.filter(record => {
+                    const clientBranchName = record.clients?.branches?.name;
+                    return clientBranchName === selectedBranch;
+                  });
+                }
+
+                const transformedClientData = filteredClientData.map(record => {
                   return {
                     'Type': 'Client Compliance',
                     'Task Name': record.client_compliance_types?.name || '',
