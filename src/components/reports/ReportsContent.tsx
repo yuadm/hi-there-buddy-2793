@@ -30,6 +30,7 @@ interface ComplianceType {
   id: string;
   name: string;
   frequency: string;
+  isClientType?: boolean;
 }
 
 export function ReportsContent() {
@@ -120,13 +121,29 @@ export function ReportsContent() {
 
   const fetchComplianceTypes = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch employee compliance types
+      const { data: employeeTypes, error: employeeError } = await supabase
         .from('compliance_types')
         .select('id, name, frequency')
         .order('name');
 
-      if (error) throw error;
-      setComplianceTypes(data || []);
+      if (employeeError) throw employeeError;
+
+      // Fetch client compliance types
+      const { data: clientTypes, error: clientError } = await supabase
+        .from('client_compliance_types')
+        .select('id, name, frequency')
+        .order('name');
+
+      if (clientError) throw clientError;
+
+      // Combine both, marking client types
+      const allTypes: ComplianceType[] = [
+        ...(employeeTypes || []).map(t => ({ ...t, isClientType: false })),
+        ...(clientTypes || []).map(t => ({ ...t, isClientType: true }))
+      ];
+
+      setComplianceTypes(allTypes);
     } catch (error) {
       console.error('Error fetching compliance types:', error);
       toast({
@@ -556,20 +573,12 @@ export function ReportsContent() {
 
           // Check what type of compliance is selected
           if (selectedComplianceType !== "all") {
-            // Check if it's an employee compliance type
-            const employeeType = complianceTypes.find(ct => ct.id === selectedComplianceType);
-            if (employeeType) {
-              isEmployeeComplianceType = true;
-            } else {
-              // If not found in employee compliance types, check client compliance types
-              const { data: clientTypes } = await supabase
-                .from('client_compliance_types')
-                .select('id')
-                .eq('id', selectedComplianceType)
-                .single();
-              
-              if (clientTypes) {
+            const selectedType = complianceTypes.find(ct => ct.id === selectedComplianceType);
+            if (selectedType) {
+              if (selectedType.isClientType) {
                 isClientComplianceType = true;
+              } else {
+                isEmployeeComplianceType = true;
               }
             }
           }
