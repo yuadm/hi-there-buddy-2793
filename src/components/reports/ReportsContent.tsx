@@ -30,6 +30,7 @@ interface ComplianceType {
   id: string;
   name: string;
   frequency: string;
+  target_table?: string;
   isClientType?: boolean;
 }
 
@@ -121,10 +122,10 @@ export function ReportsContent() {
 
   const fetchComplianceTypes = async () => {
     try {
-      // Fetch employee compliance types
+      // Fetch employee compliance types with target_table
       const { data: employeeTypes, error: employeeError } = await supabase
         .from('compliance_types')
-        .select('id, name, frequency')
+        .select('id, name, frequency, target_table')
         .order('name');
 
       if (employeeError) throw employeeError;
@@ -138,9 +139,17 @@ export function ReportsContent() {
       if (clientError) throw clientError;
 
       // Combine both, marking client types
+      // For employee compliance types, check target_table to determine if it's actually for clients
       const allTypes: ComplianceType[] = [
-        ...(employeeTypes || []).map(t => ({ ...t, isClientType: false })),
-        ...(clientTypes || []).map(t => ({ ...t, isClientType: true }))
+        ...(employeeTypes || []).map(t => ({ 
+          ...t, 
+          isClientType: t.target_table === 'clients' 
+        })),
+        ...(clientTypes || []).map(t => ({ 
+          ...t, 
+          target_table: 'clients',
+          isClientType: true 
+        }))
       ];
 
       setComplianceTypes(allTypes);
@@ -630,32 +639,39 @@ export function ReportsContent() {
                 });
               }
 
-              const transformedEmployeeData = filteredEmployeeData.map(record => {
-                let notes = record.notes || '';
-                // Extract freeTextNotes from JSON if present
-                if (notes) {
-                  try {
-                    const parsedNotes = JSON.parse(notes);
-                    notes = parsedNotes.freeTextNotes || '';
-                  } catch {
-                    // Not JSON, keep the original notes
+              const transformedEmployeeData = filteredEmployeeData
+                .filter(record => {
+                  // Filter out records for compliance types that have target_table = 'clients'
+                  // These should only appear in the client compliance section
+                  const complianceType = complianceTypes.find(ct => ct.name === record.compliance_types?.name);
+                  return complianceType?.target_table !== 'clients';
+                })
+                .map(record => {
+                  let notes = record.notes || '';
+                  // Extract freeTextNotes from JSON if present
+                  if (notes) {
+                    try {
+                      const parsedNotes = JSON.parse(notes);
+                      notes = parsedNotes.freeTextNotes || '';
+                    } catch {
+                      // Not JSON, keep the original notes
+                    }
                   }
-                }
-                
-                return {
-                  'Type': 'Employee Compliance',
-                  'Task Name': record.compliance_types?.name || '',
-                  'Employee/Client': record.employees?.name || '',
-                  'Branch': (record.employees as any)?.branches?.name || '',
-                  'Period': record.period_identifier || '',
-                  'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
-                    ? new Date(record.completion_date).toLocaleDateString('en-GB') 
-                    : record.completion_date || '',
-                  'Status': record.status || '',
-                  'Notes': notes,
-                  'Frequency': record.compliance_types?.frequency || ''
-                };
-              });
+                  
+                  return {
+                    'Type': 'Employee Compliance',
+                    'Task Name': record.compliance_types?.name || '',
+                    'Employee/Client': record.employees?.name || '',
+                    'Branch': (record.employees as any)?.branches?.name || '',
+                    'Period': record.period_identifier || '',
+                    'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
+                      ? new Date(record.completion_date).toLocaleDateString('en-GB') 
+                      : record.completion_date || '',
+                    'Status': record.status || '',
+                    'Notes': notes,
+                    'Frequency': record.compliance_types?.frequency || ''
+                  };
+                });
                 allComplianceData = [...allComplianceData, ...transformedEmployeeData];
               }
             } catch (error) {
