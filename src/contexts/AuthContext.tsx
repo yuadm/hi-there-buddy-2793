@@ -22,10 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string): Promise<string> => {
     try {
-      // Add timeout to prevent hanging (random 3-6 seconds)
-      const randomTimeout = Math.random() * 3000 + 3000;
+      // Add timeout to prevent hanging (10 seconds as safety net)
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Role fetch timeout')), randomTimeout);
+        setTimeout(() => reject(new Error('Role fetch timeout')), 10000);
       });
 
       const fetchPromise = supabase
