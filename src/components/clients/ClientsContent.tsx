@@ -523,6 +523,16 @@ export function ClientsContent() {
               Import
             </Button>
           )}
+          {selectedClients.length > 0 && hasPageAction('clients', 'delete') && (
+            <Button
+              variant="destructive"
+              onClick={() => setBatchDeleteDialogOpen(true)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Selected ({selectedClients.length})
+            </Button>
+          )}
           {hasPageAction('clients', 'create') && (
             <Button onClick={() => setDialogOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
@@ -532,28 +542,6 @@ export function ClientsContent() {
         </div>
       </div>
 
-      {/* Batch Actions Toolbar */}
-      {selectedClients.length > 0 && hasPageAction('clients', 'delete') && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                <span className="font-medium">{selectedClients.length} client(s) selected</span>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setBatchDeleteDialogOpen(true)}
-                className="gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Selected
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Search and Filter Controls */}
       <Card>
