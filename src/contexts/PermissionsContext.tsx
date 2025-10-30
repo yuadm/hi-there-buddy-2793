@@ -17,14 +17,11 @@ interface PermissionsContextType {
 const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined);
 
 export function PermissionsProvider({ children }: { children: ReactNode }) {
-  const { userRole, loading: authLoading } = useAuth();
-  const { hasPageAccess, hasFeatureAccess, hasPageAction, getAccessibleBranches, loading: permissionsLoading, error } = useUserPermissions();
+  const { userRole } = useAuth();
+  const { hasPageAccess, hasFeatureAccess, hasPageAction, getAccessibleBranches, loading, error } = useUserPermissions();
   const [allBranches, setAllBranches] = useState<string[]>([]);
   
   const isAdmin = userRole === 'admin';
-  
-  // Keep loading true if auth is still loading OR permissions are loading
-  const loading = authLoading || permissionsLoading;
 
   // Fetch all branches for admin users
   useEffect(() => {

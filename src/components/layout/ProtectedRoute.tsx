@@ -21,8 +21,7 @@ export function ProtectedRoute({
   const { hasPageAccess, loading: permissionsLoading, error, isAdmin } = usePermissions();
   const location = useLocation();
 
-  // PRIORITY 1: Show loading state while auth OR permissions are loading
-  // This prevents any flash of error/restricted screens during initial load
+  // Show loading state while auth or permissions are loading
   if (authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
@@ -36,12 +35,12 @@ export function ProtectedRoute({
     );
   }
 
-  // PRIORITY 2: Redirect to login if not authenticated
+  // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // PRIORITY 3: Prevent employees from accessing admin routes
+  // Prevent employees from accessing admin routes
   if (user.user_metadata?.role === 'employee') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
@@ -61,7 +60,7 @@ export function ProtectedRoute({
     );
   }
 
-  // PRIORITY 4: Show error state if there's a permissions error (only for non-admins)
+  // Show error state if there's a permissions error
   if (error && !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
@@ -81,9 +80,8 @@ export function ProtectedRoute({
     );
   }
 
-  // PRIORITY 5: Check page access permission (admins bypass this check)
-  // Only show "Access Restricted" if we're certain: loading is done, user exists, not admin, and explicitly lacks permission
-  if (requiredPage && !isAdmin && !authLoading && !permissionsLoading && !hasPageAccess(requiredPage)) {
+  // Check page access permission (admins bypass this check)
+  if (requiredPage && !isAdmin && !hasPageAccess(requiredPage)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
         <Card className="w-96">
