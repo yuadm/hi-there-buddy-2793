@@ -594,7 +594,7 @@ export function ClientsContent() {
       {/* Clients Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Clients ({filteredAndSortedClients.length} total, showing {paginatedClients.length})</CardTitle>
+          <CardTitle>Clients ({filteredAndSortedClients.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
