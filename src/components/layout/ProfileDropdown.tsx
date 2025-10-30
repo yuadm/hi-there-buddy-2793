@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { User, Key, LogOut, ChevronDown } from "lucide-react";
+import { User, Key, LogOut, ChevronDown, Layout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { LayoutToggle } from "./LayoutToggle";
 
 export function ProfileDropdown() {
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -117,10 +118,19 @@ export function ProfileDropdown() {
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-64">
           <div className="px-2 py-1.5">
             <p className="text-sm font-medium">{username}</p>
             <p className="text-xs text-muted-foreground">{userEmail}</p>
+          </div>
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            Navigation Style
+          </DropdownMenuLabel>
+          <div className="px-2 py-2">
+            <LayoutToggle />
           </div>
           
           <DropdownMenuSeparator />

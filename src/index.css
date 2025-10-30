@@ -203,6 +203,38 @@ All colors MUST be HSL. This creates a sophisticated, modern design with subtle 
     border: 1px solid hsl(var(--border) / 0.2);
   }
   
+  /* Floating navigation bar */
+  .floating-nav {
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-smooth);
+  }
+  
+  .floating-nav:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.1);
+  }
+  
+  /* Navigation item transitions */
+  .nav-item {
+    position: relative;
+    transition: all var(--duration-normal) var(--ease-smooth);
+  }
+  
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity var(--duration-normal) var(--ease-smooth);
+    z-index: -1;
+  }
+  
+  .nav-item:hover::before {
+    opacity: 0.1;
+  }
+  
   /* Map glass effect with subtle depth */
   .map-glass {
     backdrop-filter: blur(8px) saturate(120%);
