@@ -27,11 +27,12 @@ function PublicHomeContent() {
 
   // Add timeout protection to prevent infinite loading
   useEffect(() => {
+    const randomTimeout = Math.random() * 3000 + 3000; // Random 3-6 seconds
     const timeout = setTimeout(() => {
       if (loading || (user && userRole === null)) {
         setLoadingTimeout(true);
       }
-    }, 10000); // 10 second timeout
+    }, randomTimeout);
 
     return () => clearTimeout(timeout);
   }, [loading, user, userRole]);
