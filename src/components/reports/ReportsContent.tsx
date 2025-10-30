@@ -694,12 +694,7 @@ export function ReportsContent() {
                 `)
                 .order('completion_date', { ascending: false });
 
-              // Apply branch filter (will be done in memory after fetching data)
-
-              // Apply compliance type filter for client records
-              if (selectedComplianceType !== "all" && isClientComplianceType) {
-                clientComplianceQuery = clientComplianceQuery.eq('client_compliance_type_id', selectedComplianceType);
-              }
+              // Note: We'll filter by compliance type name in memory since the type exists in both tables
 
             const currentComplianceTypeForClient = getCurrentComplianceType();
             if (currentComplianceTypeForClient) {
@@ -717,10 +712,21 @@ export function ReportsContent() {
               const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
               
               if (!clientComplianceError && clientComplianceData) {
-                // Apply branch filter in memory if needed
+                // Apply compliance type filter in memory (matching by name)
                 let filteredClientData = clientComplianceData;
+                
+                if (selectedComplianceType !== "all" && isClientComplianceType) {
+                  const selectedTypeData = complianceTypes.find(ct => ct.id === selectedComplianceType);
+                  if (selectedTypeData) {
+                    filteredClientData = clientComplianceData.filter(record => 
+                      record.client_compliance_types?.name === selectedTypeData.name
+                    );
+                  }
+                }
+                
+                // Apply branch filter in memory if needed
                 if (selectedBranch !== "all") {
-                  filteredClientData = clientComplianceData.filter(record => {
+                  filteredClientData = filteredClientData.filter(record => {
                     const clientBranchName = record.clients?.branches?.name;
                     return clientBranchName === selectedBranch;
                   });
