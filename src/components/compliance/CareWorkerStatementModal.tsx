@@ -20,6 +20,9 @@ interface Employee {
   id: string;
   name: string;
   branch_id?: string;
+  branches?: {
+    name: string;
+  };
 }
 
 interface Client {
@@ -117,7 +120,7 @@ export function CareWorkerStatementModal({
       
       const { data, error } = await supabase
         .from('employees')
-        .select('id, name, branch_id')
+        .select('id, name, branch_id, branches(name)')
         .eq('is_active', true)
         .order('name');
 
@@ -327,7 +330,10 @@ export function CareWorkerStatementModal({
                     )}
                   >
                     {formData.assigned_employee_id
-                      ? employees.find((employee) => employee.id === formData.assigned_employee_id)?.name
+                      ? (() => {
+                          const emp = employees.find((employee) => employee.id === formData.assigned_employee_id);
+                          return emp ? `${emp.name}${emp.branches?.name ? ` (${emp.branches.name})` : ''}` : "Select employee...";
+                        })()
                       : "Select employee..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -354,6 +360,11 @@ export function CareWorkerStatementModal({
                               )}
                             />
                             {employee.name}
+                            {employee.branches?.name && (
+                              <span className="ml-2 text-muted-foreground">
+                                ({employee.branches.name})
+                              </span>
+                            )}
                           </CommandItem>
                         ))}
                       </CommandGroup>
