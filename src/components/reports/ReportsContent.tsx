@@ -549,34 +549,57 @@ export function ReportsContent() {
           break;
 
         case "compliance":
-          // First, let's see what compliance type is selected and determine if it's for clients or employees
+          // First, determine if the selected compliance type is for employees or clients
           let allComplianceData: any[] = [];
+          let isEmployeeComplianceType = false;
+          let isClientComplianceType = false;
 
-          // Fetch employee compliance records
-          try {
-            let employeeComplianceQuery = supabase
-              .from('compliance_period_records')
-              .select(`
-                *,
-                employees!compliance_period_records_employee_id_fkey (
-                  name, 
-                  branch_id,
-                  branches!employees_branch_id_fkey(id, name)
-                ),
-                compliance_types (name, frequency)
-              `)
-              .order('completion_date', { ascending: false });
-
-            if (selectedBranch !== "all") {
-              const branchId = branches.find(b => b.name === selectedBranch)?.id;
-              if (branchId) {
-                employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
+          // Check what type of compliance is selected
+          if (selectedComplianceType !== "all") {
+            // Check if it's an employee compliance type
+            const employeeType = complianceTypes.find(ct => ct.id === selectedComplianceType);
+            if (employeeType) {
+              isEmployeeComplianceType = true;
+            } else {
+              // If not found in employee compliance types, check client compliance types
+              const { data: clientTypes } = await supabase
+                .from('client_compliance_types')
+                .select('id')
+                .eq('id', selectedComplianceType)
+                .single();
+              
+              if (clientTypes) {
+                isClientComplianceType = true;
               }
             }
+          }
 
-            if (selectedComplianceType !== "all") {
-              employeeComplianceQuery = employeeComplianceQuery.eq('compliance_type_id', selectedComplianceType);
-            }
+          // Fetch employee compliance records (only if "all" or employee compliance type selected)
+          if (selectedComplianceType === "all" || isEmployeeComplianceType) {
+            try {
+              let employeeComplianceQuery = supabase
+                .from('compliance_period_records')
+                .select(`
+                  *,
+                  employees!compliance_period_records_employee_id_fkey (
+                    name, 
+                    branch_id,
+                    branches!employees_branch_id_fkey(id, name)
+                  ),
+                  compliance_types (name, frequency)
+                `)
+                .order('completion_date', { ascending: false });
+
+              if (selectedBranch !== "all") {
+                const branchId = branches.find(b => b.name === selectedBranch)?.id;
+                if (branchId) {
+                  employeeComplianceQuery = employeeComplianceQuery.eq('employees.branch_id', branchId);
+                }
+              }
+
+              if (selectedComplianceType !== "all") {
+                employeeComplianceQuery = employeeComplianceQuery.eq('compliance_type_id', selectedComplianceType);
+              }
 
             const currentComplianceType = getCurrentComplianceType();
             if (currentComplianceType) {
@@ -620,42 +643,36 @@ export function ReportsContent() {
                   'Frequency': record.compliance_types?.frequency || ''
                 };
               });
-              allComplianceData = [...allComplianceData, ...transformedEmployeeData];
+                allComplianceData = [...allComplianceData, ...transformedEmployeeData];
+              }
+            } catch (error) {
+              console.error('Error fetching employee compliance data:', error);
             }
-          } catch (error) {
-            console.error('Error fetching employee compliance data:', error);
           }
 
-          // Fetch client compliance records
-          try {
-            let clientComplianceQuery = supabase
-              .from('client_compliance_period_records')
-              .select(`
-                *,
-                clients!client_compliance_period_records_client_id_fkey (
-                  name,
-                  branches!clients_branch_id_fkey (name)
-                ),
-                client_compliance_types!client_compliance_period_records_client_compliance_type_id_fkey (name, frequency)
-              `)
-              .order('completion_date', { ascending: false });
+          // Fetch client compliance records (only if "all" or client compliance type selected)
+          if (selectedComplianceType === "all" || isClientComplianceType) {
+            try {
+              let clientComplianceQuery = supabase
+                .from('client_compliance_period_records')
+                .select(`
+                  *,
+                  clients!client_compliance_period_records_client_id_fkey (
+                    name,
+                    branches!clients_branch_id_fkey (name)
+                  ),
+                  client_compliance_types!client_compliance_period_records_client_compliance_type_id_fkey (name, frequency)
+                `)
+                .order('completion_date', { ascending: false });
 
-            if (selectedBranch !== "all") {
-              clientComplianceQuery = clientComplianceQuery.eq('clients.branches.name', selectedBranch);
-            }
+              if (selectedBranch !== "all") {
+                clientComplianceQuery = clientComplianceQuery.eq('clients.branches.name', selectedBranch);
+              }
 
-            // For client compliance, we need to check if the selected compliance type exists in client_compliance_types
-            if (selectedComplianceType !== "all") {
-              // First check if this is a client compliance type
-              const { data: clientComplianceTypes } = await supabase
-                .from('client_compliance_types')
-                .select('id, name')
-                .eq('id', selectedComplianceType);
-              
-              if (clientComplianceTypes && clientComplianceTypes.length > 0) {
+              // Apply compliance type filter for client records
+              if (selectedComplianceType !== "all" && isClientComplianceType) {
                 clientComplianceQuery = clientComplianceQuery.eq('client_compliance_type_id', selectedComplianceType);
               }
-            }
 
             const currentComplianceTypeForClient = getCurrentComplianceType();
             if (currentComplianceTypeForClient) {
@@ -670,28 +687,29 @@ export function ReportsContent() {
               }
             }
 
-            const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
-            
-            if (!clientComplianceError && clientComplianceData) {
-              const transformedClientData = clientComplianceData.map(record => {
-                return {
-                  'Type': 'Client Compliance',
-                  'Task Name': record.client_compliance_types?.name || '',
-                  'Employee/Client': record.clients?.name || '',
-                  'Branch': record.clients?.branches?.name || '',
-                  'Period': record.period_identifier || '',
-                  'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
-                    ? new Date(record.completion_date).toLocaleDateString('en-GB') 
-                    : record.completion_date || '',
-                  'Status': record.status || '',
-                  'Notes': record.notes || '',
-                  'Frequency': record.client_compliance_types?.frequency || ''
-                };
-              });
-              allComplianceData = [...allComplianceData, ...transformedClientData];
+              const { data: clientComplianceData, error: clientComplianceError } = await clientComplianceQuery;
+              
+              if (!clientComplianceError && clientComplianceData) {
+                const transformedClientData = clientComplianceData.map(record => {
+                  return {
+                    'Type': 'Client Compliance',
+                    'Task Name': record.client_compliance_types?.name || '',
+                    'Employee/Client': record.clients?.name || '',
+                    'Branch': record.clients?.branches?.name || '',
+                    'Period': record.period_identifier || '',
+                    'Completion Date': record.completion_date && record.completion_date.match(/^\d{4}-\d{2}-\d{2}/) 
+                      ? new Date(record.completion_date).toLocaleDateString('en-GB') 
+                      : record.completion_date || '',
+                    'Status': record.status || '',
+                    'Notes': record.notes || '',
+                    'Frequency': record.client_compliance_types?.frequency || ''
+                  };
+                });
+                allComplianceData = [...allComplianceData, ...transformedClientData];
+              }
+            } catch (error) {
+              console.error('Error fetching client compliance data:', error);
             }
-          } catch (error) {
-            console.error('Error fetching client compliance data:', error);
           }
 
           // If no data found, create a message
