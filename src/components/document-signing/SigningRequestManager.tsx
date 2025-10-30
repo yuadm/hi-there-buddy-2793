@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, Plus, Eye, RefreshCw, X } from "lucide-react";
+import { FileSignature, Plus, Eye, RefreshCw, X, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 export function SigningRequestManager() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [viewRequestId, setViewRequestId] = useState<string | null>(null);
   const [createData, setCreateData] = useState({
     templateId: "",
     title: "",
@@ -144,6 +146,60 @@ export function SigningRequestManager() {
       )
     }));
   };
+
+  // Resend signing request mutation
+  const resendRequestMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const { data: request, error: requestError } = await supabase
+        .from("signing_requests")
+        .select(`
+          *,
+          signing_request_recipients(*)
+        `)
+        .eq("id", requestId)
+        .single();
+
+      if (requestError) throw requestError;
+
+      // Resend emails to pending recipients
+      const pendingRecipients = request.signing_request_recipients?.filter(
+        (r: any) => r.status === "pending"
+      ) || [];
+
+      for (const recipient of pendingRecipients) {
+        try {
+          await supabase.functions.invoke("send-signing-request", {
+            body: {
+              recipientEmail: recipient.recipient_email,
+              recipientName: recipient.recipient_name,
+              documentTitle: request.title,
+              signingUrl: `${window.location.origin}/sign/${request.signing_token}`,
+              message: request.message
+            }
+          });
+        } catch (emailError) {
+          console.error("Failed to resend email to", recipient.recipient_email, emailError);
+        }
+      }
+
+      return pendingRecipients.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["signing-requests"] });
+      toast.success(`Resent signing request to ${count} recipient(s)`);
+    },
+    onError: (error) => {
+      toast.error("Failed to resend signing request: " + error.message);
+    }
+  });
+
+  const copySigningLink = (token: string) => {
+    const url = `${window.location.origin}/sign/${token}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Signing link copied to clipboard");
+  };
+
+  const viewRequest = signingRequests?.find(r => r.id === viewRequestId);
 
   if (isLoading) {
     return <div className="text-center p-8">Loading signing requests...</div>;
@@ -291,12 +347,21 @@ export function SigningRequestManager() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setViewRequestId(request.id)}
+                    >
                       <Eye className="w-4 h-4 mr-1" />
                       View
                     </Button>
                     {request.status !== "completed" && (
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => resendRequestMutation.mutate(request.id)}
+                        disabled={resendRequestMutation.isPending}
+                      >
                         <RefreshCw className="w-4 h-4 mr-1" />
                         Resend
                       </Button>
@@ -318,6 +383,104 @@ export function SigningRequestManager() {
           </CardContent>
         </Card>
       )}
+
+      {/* View Request Dialog */}
+      <Dialog open={viewRequestId !== null} onOpenChange={(open) => !open && setViewRequestId(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Signing Request Details</DialogTitle>
+            <DialogDescription>
+              View details and track the status of this signing request
+            </DialogDescription>
+          </DialogHeader>
+          {viewRequest && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs text-muted-foreground">Document Title</Label>
+                <p className="font-medium">{viewRequest.title}</p>
+              </div>
+
+              {viewRequest.message && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Message</Label>
+                  <p className="text-sm">{viewRequest.message}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Template</Label>
+                  <p className="text-sm">{viewRequest.document_templates?.name}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <div className="mt-1">
+                    <Badge variant={viewRequest.status === "completed" ? "default" : "secondary"}>
+                      {viewRequest.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Created</Label>
+                <p className="text-sm">{new Date(viewRequest.created_at).toLocaleString()}</p>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Signing Link</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={`${window.location.origin}/sign/${viewRequest.signing_token}`} 
+                    readOnly 
+                    className="text-xs"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => copySigningLink(viewRequest.signing_token!)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Recipients ({viewRequest.signing_request_recipients?.length || 0})
+                </Label>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {viewRequest.signing_request_recipients?.map((recipient: any) => (
+                    <Card key={recipient.id}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{recipient.recipient_name}</p>
+                            <p className="text-xs text-muted-foreground">{recipient.recipient_email}</p>
+                            {recipient.signed_at && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Signed: {new Date(recipient.signed_at).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                          <Badge 
+                            variant={recipient.status === "signed" ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {recipient.status}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
