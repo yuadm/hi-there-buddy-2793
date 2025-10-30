@@ -1,16 +1,17 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Badge, Building, User, KeyRound } from 'lucide-react';
+import { Briefcase, Badge, Building, User, KeyRound, AlertTriangle } from 'lucide-react';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 
 function PublicHomeContent() {
-  const { user, userRole, loading } = useAuth();
+  const { user, userRole, loading, signOut } = useAuth();
   const { companySettings, loading: companyLoading } = useCompany();
   const navigate = useNavigate();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   useEffect(() => {
     if (!loading && user && userRole !== null) {
@@ -24,10 +25,61 @@ function PublicHomeContent() {
     }
   }, [user, userRole, loading, navigate]);
 
+  // Add timeout protection to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading || (user && userRole === null)) {
+        setLoadingTimeout(true);
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [loading, user, userRole]);
+
+  // Handle loading timeout - show error UI
+  if (loadingTimeout) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-6">
+        <Card className="w-96">
+          <CardContent className="flex flex-col items-center justify-center py-8 space-y-4">
+            <AlertTriangle className="w-12 h-12 text-yellow-500" />
+            <h3 className="text-lg font-semibold">Loading Timeout</h3>
+            <p className="text-sm text-muted-foreground text-center">
+              We're having trouble loading your session. This might be due to a network issue or an expired session.
+            </p>
+            <div className="flex gap-2 w-full">
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                className="flex-1"
+              >
+                Retry
+              </Button>
+              <Button 
+                onClick={async () => {
+                  await signOut();
+                  window.location.reload();
+                }}
+                className="flex-1"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading || (user && userRole === null)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Card className="w-80">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-sm text-muted-foreground">Checking authentication...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
