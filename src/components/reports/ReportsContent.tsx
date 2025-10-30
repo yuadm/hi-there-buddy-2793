@@ -619,11 +619,11 @@ export function ReportsContent() {
             if (!employeeComplianceError && employeeComplianceData) {
               const transformedEmployeeData = employeeComplianceData.map(record => {
                 let notes = record.notes || '';
-                const taskName = record.compliance_types?.name;
-                if ((taskName === 'Annual Appraisal' || taskName === 'Supervision') && notes) {
+                // Extract freeTextNotes from JSON if present
+                if (notes) {
                   try {
-                    JSON.parse(notes);
-                    notes = '';
+                    const parsedNotes = JSON.parse(notes);
+                    notes = parsedNotes.freeTextNotes || '';
                   } catch {
                     // Not JSON, keep the original notes
                   }
