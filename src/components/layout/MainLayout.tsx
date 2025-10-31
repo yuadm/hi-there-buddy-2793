@@ -30,7 +30,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     return (
       <div className="min-h-screen w-full bg-gradient-subtle">
         <FloatingNavBar />
-        <main className="px-6 pb-6 pt-2">
+        <main className="px-6 pb-6 pt-20">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
