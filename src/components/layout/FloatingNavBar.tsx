@@ -143,7 +143,10 @@ export function FloatingNavBar() {
           <div className="flex items-center gap-3">
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden",
+                companySettings.logo ? "" : "bg-gradient-primary"
+              )}>
                 {companySettings.logo ? (
                   <img
                     src={companySettings.logo}
@@ -207,7 +210,10 @@ export function FloatingNavBar() {
         <SheetContent side="left" className="w-80">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center",
+                companySettings.logo ? "" : "bg-gradient-primary"
+              )}>
                 {companySettings.logo ? (
                   <img src={companySettings.logo} alt="Logo" className="w-full h-full object-contain" />
                 ) : (
