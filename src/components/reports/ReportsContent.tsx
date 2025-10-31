@@ -138,10 +138,11 @@ export function ReportsContent() {
 
       if (clientError) throw clientError;
 
-      // Only include employee types that are NOT client-targeted (to avoid duplicates)
-      const filteredEmployeeTypes = (employeeTypes || [])
-        .filter(t => t.target_table !== 'clients')
-        .map(t => ({ ...t, isClientType: false }));
+      // Map employee types and mark them based on target_table
+      const mappedEmployeeTypes = (employeeTypes || []).map(t => ({ 
+        ...t, 
+        isClientType: t.target_table === 'clients'
+      }));
       
       // All client types are client-targeted
       const mappedClientTypes = (clientTypes || []).map(t => ({ 
@@ -150,8 +151,24 @@ export function ReportsContent() {
         isClientType: true 
       }));
 
-      const allTypes: ComplianceType[] = [...filteredEmployeeTypes, ...mappedClientTypes];
+      // Deduplicate by name using Map, prioritizing client_compliance_types for client types
+      const allTypesMap = new Map<string, ComplianceType>();
+      
+      // Add employee types first
+      mappedEmployeeTypes.forEach(t => {
+        allTypesMap.set(t.name, t);
+      });
+      
+      // Client types from client_compliance_types table override if same name exists
+      mappedClientTypes.forEach(t => {
+        const existing = allTypesMap.get(t.name);
+        // Override if no existing entry OR if existing entry is also for clients
+        if (!existing || existing.target_table === 'clients') {
+          allTypesMap.set(t.name, t);
+        }
+      });
 
+      const allTypes: ComplianceType[] = Array.from(allTypesMap.values());
       setComplianceTypes(allTypes);
     } catch (error) {
       console.error('Error fetching compliance types:', error);
