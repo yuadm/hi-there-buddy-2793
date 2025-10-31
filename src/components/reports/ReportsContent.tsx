@@ -795,7 +795,7 @@ export function ReportsContent() {
           const formattedBranch = selectedBranch === 'all' 
             ? 'allbranches' 
             : (() => {
-                const branch = branches.find(b => b.id === selectedBranch);
+                const branch = branches.find(b => b.name === selectedBranch);
                 return branch ? formatNameForFilename(branch.name) : 'UnknownBranch';
               })();
 
