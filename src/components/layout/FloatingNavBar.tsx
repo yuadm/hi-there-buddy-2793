@@ -134,12 +134,13 @@ export function FloatingNavBar() {
     <>
       <nav 
         className={cn(
-          "sticky top-4 z-50 mx-auto max-w-[95%] transition-transform duration-300",
+          "sticky top-4 z-50 mx-auto transition-transform duration-300",
           isVisible ? "translate-y-0" : "-translate-y-32"
         )}
+        style={{ maxWidth: "fit-content" }}
       >
         <div className="floating-nav backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-lg px-3 py-2">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
@@ -161,7 +162,7 @@ export function FloatingNavBar() {
             </NavLink>
 
             {/* Desktop Navigation - Show ALL items */}
-            <div className="hidden lg:flex items-center justify-center flex-1 gap-1">
+            <div className="hidden lg:flex items-center gap-1">
               {accessibleNavigationItems.map((item) => (
                 <NavLink
                   key={item.title}
