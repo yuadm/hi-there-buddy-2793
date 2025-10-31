@@ -52,8 +52,15 @@ export default function BodyDiagramModal({
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [markers, setMarkers] = useState<BodyMarker[]>(initialMarkers);
 
+  // Update markers when initialMarkers change
   useEffect(() => {
-    if (!canvasRef.current || !open) return;
+    setMarkers(initialMarkers);
+  }, [initialMarkers]);
+
+  useEffect(() => {
+    if (!canvasRef.current || !open) {
+      return;
+    }
 
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 400,
@@ -145,8 +152,9 @@ export default function BodyDiagramModal({
 
     return () => {
       canvas.dispose();
+      setFabricCanvas(null);
     };
-  }, [open]);
+  }, [open, initialMarkers]);
 
   const getBodyPartAtPosition = (x: number, y: number): string | null => {
     for (const part of BODY_PARTS) {
