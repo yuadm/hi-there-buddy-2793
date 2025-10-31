@@ -58,53 +58,54 @@ export default function BodyDiagramModal({
     const canvas = new FabricCanvas(canvasRef.current, {
       width: 400,
       height: 550,
-      backgroundColor: "#ffffff",
+      backgroundColor: "#f5f5f5",
+      selection: false,
     });
 
     // Load the body diagram image
     const loadBodyDiagram = async () => {
       try {
-        const imgElement = document.createElement('img');
-        imgElement.crossOrigin = 'anonymous';
-        imgElement.src = '/body-diagram.png';
-        
-        imgElement.onload = () => {
-          FabricImage.fromURL('/body-diagram.png').then((img) => {
-            // Scale the image to fit the canvas while maintaining aspect ratio
-            const scaleX = canvas.width! / img.width!;
-            const scaleY = canvas.height! / img.height!;
-            const scale = Math.min(scaleX, scaleY);
-            
-            img.set({
-              scaleX: scale,
-              scaleY: scale,
-              left: (canvas.width! - img.width! * scale) / 2,
-              top: (canvas.height! - img.height! * scale) / 2,
-              selectable: false,
-              evented: false,
-            });
-            
-            canvas.add(img);
-            canvas.sendObjectToBack(img);
-            canvas.renderAll();
-            
-            // Add initial markers after the image is loaded
-            initialMarkers.forEach(marker => {
-              addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
-            });
+        // Use FabricImage.fromURL directly with better error handling
+        FabricImage.fromURL('/body-diagram.png', {
+          crossOrigin: 'anonymous'
+        }).then((img) => {
+          if (!img) {
+            throw new Error('Image failed to load');
+          }
+          
+          // Scale the image to fit the canvas while maintaining aspect ratio
+          const scaleX = canvas.width! / img.width!;
+          const scaleY = canvas.height! / img.height!;
+          const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original size
+          
+          img.set({
+            scaleX: scale,
+            scaleY: scale,
+            left: (canvas.width! - img.width! * scale) / 2,
+            top: (canvas.height! - img.height! * scale) / 2,
+            selectable: false,
+            evented: false,
+            opacity: 1,
           });
-        };
-        
-        imgElement.onerror = () => {
+          
+          canvas.add(img);
+          canvas.sendObjectToBack(img);
+          canvas.renderAll();
+          
+          // Add initial markers after the image is loaded
+          initialMarkers.forEach(marker => {
+            addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
+          });
+        }).catch((error) => {
+          console.error('FabricImage.fromURL error:', error);
           console.log('Failed to load body diagram, using fallback shapes');
-          // Fallback to basic shapes if image fails to load
           drawFallbackBodyOutline(canvas);
           
           // Add initial markers
           initialMarkers.forEach(marker => {
             addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
           });
-        };
+        });
       } catch (error) {
         console.error('Error loading body diagram:', error);
         drawFallbackBodyOutline(canvas);
@@ -243,7 +244,7 @@ export default function BodyDiagramModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -253,10 +254,10 @@ export default function BodyDiagramModal({
             Click on the body diagram to mark locations. Click again to remove a marker.
           </p>
           
-          <div className="flex justify-center border rounded-lg p-4 bg-muted/5">
+          <div className="flex justify-center border rounded-lg p-4 bg-background">
             <canvas 
               ref={canvasRef}
-              className="border border-border rounded"
+              className="border border-border rounded shadow-sm"
             />
           </div>
           
