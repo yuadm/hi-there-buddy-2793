@@ -122,53 +122,20 @@ export function ReportsContent() {
 
   const fetchComplianceTypes = async () => {
     try {
-      // Fetch employee compliance types with target_table
-      const { data: employeeTypes, error: employeeError } = await supabase
+      // Fetch only from compliance_types to match Compliance page behavior
+      const { data: complianceTypesData, error } = await supabase
         .from('compliance_types')
         .select('id, name, frequency, target_table')
         .order('name');
 
-      if (employeeError) throw employeeError;
+      if (error) throw error;
 
-      // Fetch client compliance types
-      const { data: clientTypes, error: clientError } = await supabase
-        .from('client_compliance_types')
-        .select('id, name, frequency')
-        .order('name');
-
-      if (clientError) throw clientError;
-
-      // Map employee types and mark them based on target_table
-      const mappedEmployeeTypes = (employeeTypes || []).map(t => ({ 
+      // Map types and mark client types based on target_table
+      const allTypes: ComplianceType[] = (complianceTypesData || []).map(t => ({ 
         ...t, 
         isClientType: t.target_table === 'clients'
       }));
-      
-      // All client types are client-targeted
-      const mappedClientTypes = (clientTypes || []).map(t => ({ 
-        ...t, 
-        target_table: 'clients',
-        isClientType: true 
-      }));
 
-      // Deduplicate by name using Map, prioritizing client_compliance_types for client types
-      const allTypesMap = new Map<string, ComplianceType>();
-      
-      // Add employee types first
-      mappedEmployeeTypes.forEach(t => {
-        allTypesMap.set(t.name, t);
-      });
-      
-      // Client types from client_compliance_types table override if same name exists
-      mappedClientTypes.forEach(t => {
-        const existing = allTypesMap.get(t.name);
-        // Override if no existing entry OR if existing entry is also for clients
-        if (!existing || existing.target_table === 'clients') {
-          allTypesMap.set(t.name, t);
-        }
-      });
-
-      const allTypes: ComplianceType[] = Array.from(allTypesMap.values());
       setComplianceTypes(allTypes);
     } catch (error) {
       console.error('Error fetching compliance types:', error);
