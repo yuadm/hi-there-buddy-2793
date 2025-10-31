@@ -156,7 +156,7 @@ function EmployeeLoginContent() {
       </Button>
       <Card className="w-full max-w-md shadow-glow">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
+          <div className={`mx-auto w-16 h-16 rounded-lg flex items-center justify-center ${companySettings.logo ? '' : 'bg-primary/10'}`}>
             {companySettings.logo ? (
               <img
                 src={companySettings.logo}
