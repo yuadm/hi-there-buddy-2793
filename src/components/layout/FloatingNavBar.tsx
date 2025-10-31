@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -94,9 +94,30 @@ const navigationItems = [
 
 export function FloatingNavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const location = useLocation();
   const { companySettings } = useCompany();
   const { hasPageAccess, loading: permissionsLoading } = usePermissions();
+
+  // Handle scroll behavior - hide on scroll down, show on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show if scrolling up or at top, hide if scrolling down
+      if (currentScrollY < lastScrollY.current || currentScrollY < 10) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsVisible(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -111,12 +132,17 @@ export function FloatingNavBar() {
 
   return (
     <>
-      <nav className="sticky top-4 z-50 mx-auto max-w-[95%] animate-fade-in">
-        <div className="floating-nav backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-lg px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+      <nav 
+        className={cn(
+          "sticky top-4 z-50 mx-auto max-w-[95%] transition-transform duration-300",
+          isVisible ? "translate-y-0" : "-translate-y-32"
+        )}
+      >
+        <div className="floating-nav backdrop-blur-xl bg-card/80 border border-border/50 rounded-2xl shadow-lg px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
             {/* Logo */}
-            <NavLink to="/" className="flex items-center gap-3 flex-shrink-0">
-              <div className="w-9 h-9 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
+            <NavLink to="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
                 {companySettings.logo ? (
                   <img
                     src={companySettings.logo}
@@ -124,32 +150,32 @@ export function FloatingNavBar() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Shield className="w-5 h-5 text-white" />
+                  <Shield className="w-4 h-4 text-white" />
                 )}
               </div>
               <div className="hidden md:block">
-                <h1 className="text-base font-bold text-foreground truncate">
+                <h1 className="text-sm font-bold text-foreground truncate">
                   {companySettings.name}
                 </h1>
               </div>
             </NavLink>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Show ALL items */}
             <div className="hidden lg:flex items-center justify-center flex-1 gap-1">
-              {accessibleNavigationItems.slice(0, 7).map((item) => (
+              {accessibleNavigationItems.map((item) => (
                 <NavLink
                   key={item.title}
                   to={item.url}
                   className={cn(
-                    "nav-item px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    "nav-item px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
                     "hover:bg-primary/10 hover:text-primary hover:scale-105",
                     isActive(item.url)
                       ? "bg-gradient-primary text-primary-foreground shadow-md"
                       : "text-muted-foreground"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <item.icon className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5">
+                    <item.icon className="w-3.5 h-3.5" />
                     <span className="hidden xl:inline">{item.title}</span>
                   </div>
                 </NavLink>
@@ -165,10 +191,10 @@ export function FloatingNavBar() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden w-9 h-9 p-0"
+                className="lg:hidden w-8 h-8 p-0"
                 onClick={() => setMobileMenuOpen(true)}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4 h-4" />
               </Button>
             </div>
           </div>
