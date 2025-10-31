@@ -138,19 +138,19 @@ export function ReportsContent() {
 
       if (clientError) throw clientError;
 
-      // Combine both, marking client types
-      // For employee compliance types, check target_table to determine if it's actually for clients
-      const allTypes: ComplianceType[] = [
-        ...(employeeTypes || []).map(t => ({ 
-          ...t, 
-          isClientType: t.target_table === 'clients' 
-        })),
-        ...(clientTypes || []).map(t => ({ 
-          ...t, 
-          target_table: 'clients',
-          isClientType: true 
-        }))
-      ];
+      // Only include employee types that are NOT client-targeted (to avoid duplicates)
+      const filteredEmployeeTypes = (employeeTypes || [])
+        .filter(t => t.target_table !== 'clients')
+        .map(t => ({ ...t, isClientType: false }));
+      
+      // All client types are client-targeted
+      const mappedClientTypes = (clientTypes || []).map(t => ({ 
+        ...t, 
+        target_table: 'clients',
+        isClientType: true 
+      }));
+
+      const allTypes: ComplianceType[] = [...filteredEmployeeTypes, ...mappedClientTypes];
 
       setComplianceTypes(allTypes);
     } catch (error) {
