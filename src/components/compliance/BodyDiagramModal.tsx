@@ -69,6 +69,75 @@ export default function BodyDiagramModal({
       selection: false,
     });
 
+    const drawFallbackBodyOutline = (canvas: FabricCanvas) => {
+      // Fallback basic body outline
+      // Head (circle)
+      canvas.add(new Circle({ left: 185, top: 45, radius: 25, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+      // Body (rectangle)
+      canvas.add(new Rect({ left: 175, top: 100, width: 50, height: 100, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+      // Arms
+      canvas.add(new Rect({ left: 130, top: 120, width: 40, height: 15, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+      canvas.add(new Rect({ left: 230, top: 120, width: 40, height: 15, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+      // Legs
+      canvas.add(new Rect({ left: 180, top: 210, width: 15, height: 80, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+      canvas.add(new Rect({ left: 205, top: 210, width: 15, height: 80, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
+    };
+
+    const addInitialMarkerToCanvas = (canvas: FabricCanvas, x: number, y: number, bodyPart: string) => {
+      // Find the body part region
+      const bodyPartData = BODY_PARTS.find(part => part.name === bodyPart);
+      
+      if (bodyPartData) {
+        const { region } = bodyPartData;
+        
+        // Add semi-transparent red rectangle to highlight the region
+        const highlight = new Rect({
+          left: region.minX,
+          top: region.minY,
+          width: region.maxX - region.minX,
+          height: region.maxY - region.minY,
+          fill: "rgba(220, 38, 38, 0.4)", // Semi-transparent red
+          stroke: "#dc2626",
+          strokeWidth: 2,
+          selectable: false,
+          evented: false,
+          data: { bodyPart, type: 'highlight' }
+        });
+        
+        canvas.add(highlight);
+      }
+
+      // Red circle marker at click position
+      const marker = new Circle({
+        left: x - 8,
+        top: y - 8,
+        radius: 8,
+        fill: "#dc2626",
+        stroke: "#ffffff",
+        strokeWidth: 2,
+        selectable: false,
+        hasControls: false,
+        hasBorders: false,
+        data: { bodyPart, type: 'marker' }
+      });
+
+      // Body part label
+      const label = new FabricText(bodyPart, {
+        left: x + 15,
+        top: y - 10,
+        fontSize: 12,
+        fill: "#1f2937",
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        selectable: false,
+        hasControls: false,
+        hasBorders: false,
+        data: { bodyPart, type: 'label' }
+      });
+
+      canvas.add(marker, label);
+      canvas.renderAll();
+    };
+
     // Load the body diagram image
     const loadBodyDiagram = async () => {
       try {
@@ -101,7 +170,7 @@ export default function BodyDiagramModal({
           
           // Add initial markers after the image is loaded
           initialMarkers.forEach(marker => {
-            addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
+            addInitialMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
           });
         }).catch((error) => {
           console.error('FabricImage.fromURL error:', error);
@@ -110,7 +179,7 @@ export default function BodyDiagramModal({
           
           // Add initial markers
           initialMarkers.forEach(marker => {
-            addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
+            addInitialMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
           });
         });
       } catch (error) {
@@ -119,23 +188,9 @@ export default function BodyDiagramModal({
         
         // Add initial markers
         initialMarkers.forEach(marker => {
-          addMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
+          addInitialMarkerToCanvas(canvas, marker.x, marker.y, marker.bodyPart);
         });
       }
-    };
-
-    const drawFallbackBodyOutline = (canvas: FabricCanvas) => {
-      // Fallback basic body outline
-      // Head (circle)
-      canvas.add(new Circle({ left: 185, top: 45, radius: 25, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
-      // Body (rectangle)
-      canvas.add(new Rect({ left: 175, top: 100, width: 50, height: 100, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
-      // Arms
-      canvas.add(new Rect({ left: 130, top: 120, width: 40, height: 15, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
-      canvas.add(new Rect({ left: 230, top: 120, width: 40, height: 15, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
-      // Legs
-      canvas.add(new Rect({ left: 180, top: 210, width: 15, height: 80, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
-      canvas.add(new Rect({ left: 205, top: 210, width: 15, height: 80, fill: "transparent", stroke: "#333", strokeWidth: 2, selectable: false }));
     };
 
     canvas.on('mouse:down', (e) => {
@@ -154,7 +209,7 @@ export default function BodyDiagramModal({
       canvas.dispose();
       setFabricCanvas(null);
     };
-  }, [open, initialMarkers]);
+  }, [open]);
 
   const getBodyPartAtPosition = (x: number, y: number): string | null => {
     for (const part of BODY_PARTS) {
