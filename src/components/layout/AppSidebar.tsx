@@ -170,7 +170,10 @@ export function AppSidebar() {
         <div className="flex items-center justify-between gap-2">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center overflow-hidden">
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden",
+                companySettings.logo ? "" : "bg-gradient-primary"
+              )}>
                 {companySettings.logo ? (
                   <img
                     src={companySettings.logo}
