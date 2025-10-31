@@ -204,7 +204,7 @@ export function FloatingNavBar() {
 
       {/* Mobile Drawer */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="right" className="w-80">
+        <SheetContent side="left" className="w-80">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
