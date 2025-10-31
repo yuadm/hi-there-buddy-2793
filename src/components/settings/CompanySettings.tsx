@@ -182,19 +182,15 @@ export function CompanySettings() {
         .from('company-assets')
         .getPublicUrl(fileName);
 
-      // Update form data AND save to database immediately
-      const updatedFormData = { ...formData, logo: publicUrl };
-      setFormData(updatedFormData);
-
-      // Save to database immediately
-      await updateCompanySettings({ logo: publicUrl });
+      // Update form data only
+      setFormData(prev => ({ ...prev, logo: publicUrl }));
 
       // Update favicon
       updateFavicon(publicUrl);
 
       toast({
         title: "Logo uploaded successfully",
-        description: "Your company logo has been updated",
+        description: "Click 'Save Company Settings' to save changes",
       });
 
     } catch (error) {
