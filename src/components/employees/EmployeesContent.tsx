@@ -1,6 +1,6 @@
 
 import { useState, useRef } from "react";
-import { Plus, Search, Filter, Mail, Phone, MapPin, Calendar, Users, Building, Clock, User, Upload, Download, X, FileSpreadsheet, AlertCircle, Eye, Edit3, Trash2, Check, Square, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Key, CalendarIcon } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, MapPin, Calendar, Users, Building, Clock, User, Upload, Download, X, FileSpreadsheet, AlertCircle, Eye, Edit3, Trash2, Check, Square, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Key, CalendarIcon, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DatePicker } from "@/components/ui/date-picker";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,7 @@ interface Employee {
   password_hash?: string;
   must_change_password?: boolean;
   failed_login_attempts?: number;
+  last_login?: string | null;
   created_at?: string;
   branches?: {
     id: string;
@@ -131,6 +133,63 @@ export function EmployeesContent() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const { toast } = useToast();
+
+  // Helper function to format last login timestamp
+  const formatLastLogin = (lastLogin: string | null | undefined) => {
+    if (!lastLogin) return "Never logged in";
+    
+    const loginDate = new Date(lastLogin);
+    const now = new Date();
+    const diffMs = now.getTime() - loginDate.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 5) return "Just now";
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return format(loginDate, "MMM dd, yyyy 'at' HH:mm");
+  };
+
+  // Helper function to get activity status
+  const getActivityStatus = (lastLogin: string | null | undefined): {
+    color: string;
+    label: string;
+    bgColor: string;
+  } => {
+    if (!lastLogin) {
+      return {
+        color: "text-muted-foreground",
+        label: "Inactive",
+        bgColor: "bg-muted-foreground"
+      };
+    }
+    
+    const diffMs = new Date().getTime() - new Date(lastLogin).getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 7) {
+      return {
+        color: "text-green-600",
+        label: "Active",
+        bgColor: "bg-green-500"
+      };
+    }
+    if (diffDays <= 30) {
+      return {
+        color: "text-yellow-600",
+        label: "Recently Active",
+        bgColor: "bg-yellow-500"
+      };
+    }
+    return {
+      color: "text-muted-foreground",
+      label: "Inactive",
+      bgColor: "bg-muted-foreground"
+    };
+  };
 
   // Remove old useEffect and fetchData - now handled by React Query
   // const fetchData = async () => { ... } // REMOVED - using React Query hooks
@@ -1311,7 +1370,61 @@ export function EmployeesContent() {
                           />
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{employee.name}</div>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <div className="font-medium cursor-pointer hover:text-primary transition-colors">
+                                {employee.name}
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80" side="right">
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="text-sm font-semibold">{employee.name}</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                      {employee.employee_code}
+                                    </p>
+                                  </div>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={cn("text-xs", getActivityStatus(employee.last_login).color)}
+                                  >
+                                    <div 
+                                      className={cn(
+                                        "w-2 h-2 rounded-full mr-1.5",
+                                        getActivityStatus(employee.last_login).bgColor
+                                      )} 
+                                    />
+                                    {getActivityStatus(employee.last_login).label}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Clock className="w-4 h-4 text-muted-foreground" />
+                                    <div>
+                                      <p className="text-xs text-muted-foreground">Last Login</p>
+                                      <p className="font-medium">{formatLastLogin(employee.last_login)}</p>
+                                    </div>
+                                  </div>
+                                  
+                                  {employee.email && (
+                                    <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                                      <Mail className="w-4 h-4 text-muted-foreground" />
+                                      <span className="text-xs">{employee.email}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {employee.job_title && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <User className="w-4 h-4 text-muted-foreground" />
+                                      <span className="text-xs">{employee.job_title}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
                         </TableCell>
                         <TableCell>
                           <div className="font-mono text-sm">

@@ -21,6 +21,7 @@ interface Employee {
   password_hash?: string;
   must_change_password?: boolean;
   failed_login_attempts?: number;
+  last_login?: string | null;
   created_at?: string;
   branches?: {
     id: string;
