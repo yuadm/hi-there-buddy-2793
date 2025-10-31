@@ -15,6 +15,7 @@ export function CompanySettings() {
   const { companySettings, updateCompanySettings, loading } = useCompany();
   const [formData, setFormData] = useState(companySettings);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [logoRemoving, setLogoRemoving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -225,21 +226,43 @@ export function CompanySettings() {
     localStorage.setItem('companyFavicon', logoUrl);
   };
 
-  const removeLogo = () => {
-    setFormData(prev => ({ ...prev, logo: undefined }));
-    
-    // Reset favicon to default
-    const existingLinks = document.querySelectorAll('link[rel*="icon"]');
-    existingLinks.forEach(link => link.remove());
-    
-    const link = document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/x-icon';
-    link.href = '/favicon.ico';
-    document.head.appendChild(link);
-    
-    // Remove from localStorage
-    localStorage.removeItem('companyFavicon');
+  const removeLogo = async () => {
+    try {
+      setLogoRemoving(true);
+      
+      // Update local state
+      setFormData(prev => ({ ...prev, logo: undefined }));
+      
+      // Save to database immediately
+      await updateCompanySettings({ logo: '' });
+      
+      // Reset favicon to default
+      const existingLinks = document.querySelectorAll('link[rel*="icon"]');
+      existingLinks.forEach(link => link.remove());
+      
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/x-icon';
+      link.href = '/favicon.ico';
+      document.head.appendChild(link);
+      
+      // Remove from localStorage
+      localStorage.removeItem('companyFavicon');
+      
+      toast({
+        title: "Logo removed",
+        description: "Your company logo has been removed successfully",
+      });
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      toast({
+        title: "Failed to remove logo",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setLogoRemoving(false);
+    }
   };
 
   if (loading) {
@@ -272,6 +295,7 @@ export function CompanySettings() {
                   size="sm"
                   className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
                   onClick={removeLogo}
+                  disabled={logoRemoving}
                 >
                   <X className="w-3 h-3" />
                 </Button>
