@@ -159,7 +159,30 @@ export default function BodyDiagramModal({
   };
 
   const addMarkerToCanvas = (canvas: FabricCanvas, x: number, y: number, bodyPart: string) => {
-    // Red circle marker
+    // Find the body part region
+    const bodyPartData = BODY_PARTS.find(part => part.name === bodyPart);
+    
+    if (bodyPartData) {
+      const { region } = bodyPartData;
+      
+      // Add semi-transparent red rectangle to highlight the region
+      const highlight = new Rect({
+        left: region.minX,
+        top: region.minY,
+        width: region.maxX - region.minX,
+        height: region.maxY - region.minY,
+        fill: "rgba(220, 38, 38, 0.4)", // Semi-transparent red
+        stroke: "#dc2626",
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        data: { bodyPart, type: 'highlight' }
+      });
+      
+      canvas.add(highlight);
+    }
+
+    // Red circle marker at click position
     const marker = new Circle({
       left: x - 8,
       top: y - 8,
@@ -167,9 +190,10 @@ export default function BodyDiagramModal({
       fill: "#dc2626",
       stroke: "#ffffff",
       strokeWidth: 2,
-      selectable: true,
+      selectable: false,
       hasControls: false,
       hasBorders: false,
+      data: { bodyPart, type: 'marker' }
     });
 
     // Body part label
@@ -177,10 +201,12 @@ export default function BodyDiagramModal({
       left: x + 15,
       top: y - 10,
       fontSize: 12,
-      fill: "#333",
-      selectable: true,
+      fill: "#1f2937",
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      selectable: false,
       hasControls: false,
       hasBorders: false,
+      data: { bodyPart, type: 'label' }
     });
 
     canvas.add(marker, label);
@@ -198,27 +224,27 @@ export default function BodyDiagramModal({
       // Remove existing marker from canvas
       if (fabricCanvas) {
         const objects = fabricCanvas.getObjects();
-        const toRemove = objects.filter(obj => 
-          (obj.type === 'circle' && obj.fill === '#dc2626') || // markers
-          obj.type === 'text' // labels
-        );
+        const toRemove = objects.filter(obj => {
+          const data = (obj as any).data;
+          return data?.bodyPart === bodyPart && ['highlight', 'marker', 'label'].includes(data?.type);
+        });
         
         toRemove.forEach(obj => fabricCanvas.remove(obj));
         fabricCanvas.renderAll();
         
-        // Redraw all markers except the one being replaced
+        // Redraw all other markers
         markers.filter((_, i) => i !== existingIndex).forEach(marker => {
           addMarkerToCanvas(fabricCanvas, marker.x, marker.y, marker.bodyPart);
         });
       }
-    }
-
-    // Add new marker
-    const newMarker = { x, y, bodyPart };
-    setMarkers(prev => [...prev.filter(m => m.bodyPart !== bodyPart), newMarker]);
-    
-    if (fabricCanvas) {
-      addMarkerToCanvas(fabricCanvas, x, y, bodyPart);
+    } else {
+      // Add new marker
+      const newMarker = { x, y, bodyPart };
+      setMarkers(prev => [...prev, newMarker]);
+      
+      if (fabricCanvas) {
+        addMarkerToCanvas(fabricCanvas, x, y, bodyPart);
+      }
     }
   };
 
@@ -230,12 +256,12 @@ export default function BodyDiagramModal({
   const handleClear = () => {
     setMarkers([]);
     if (fabricCanvas) {
-      // Remove only markers and labels, keep the body diagram
+      // Remove all markers, highlights, and labels, keep the body diagram
       const objects = fabricCanvas.getObjects();
-      const toRemove = objects.filter(obj => 
-        obj.type === 'circle' && obj.fill === '#dc2626' || // markers
-        obj.type === 'text' // labels
-      );
+      const toRemove = objects.filter(obj => {
+        const data = (obj as any).data;
+        return data?.type && ['highlight', 'marker', 'label'].includes(data.type);
+      });
       
       toRemove.forEach(obj => fabricCanvas.remove(obj));
       fabricCanvas.renderAll();
