@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cacheConfig } from '@/lib/query-client';
+import { useEffect } from 'react';
 
 interface Employee {
   id: string;
@@ -74,11 +75,39 @@ async function fetchEmployeeBranches(): Promise<Branch[]> {
 
 // React Query hooks
 export function useEmployees() {
-  return useQuery({
+  const queryClient = useQueryClient();
+  
+  const query = useQuery({
     queryKey: employeeQueryKeys.lists(),
     queryFn: fetchEmployees,
     ...cacheConfig.realtime, // Real-time updates for employees
   });
+
+  // Set up real-time subscription for employees table
+  useEffect(() => {
+    const channel = supabase
+      .channel('employees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'employees'
+        },
+        (payload) => {
+          console.log('Employee updated:', payload);
+          // Invalidate and refetch employees query when any employee is updated
+          queryClient.invalidateQueries({ queryKey: employeeQueryKeys.lists() });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return query;
 }
 
 export function useEmployeeBranches() {
