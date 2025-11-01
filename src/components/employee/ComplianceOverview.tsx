@@ -100,30 +100,30 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
       <CardHeader className="pb-3 sm:pb-4">
         <div className="space-y-4">
           <CardTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <div className="h-8 w-8 sm:h-10 sm:w-10 bg-primary rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
             <span className="truncate">Compliance Status</span>
           </CardTitle>
           
           {/* Overall Progress */}
           {totalItems > 0 && (
-            <div className="space-y-3 p-3 sm:p-4 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg sm:rounded-xl border border-slate-100">
+            <div className="space-y-3 p-3 sm:p-4 bg-secondary rounded-lg sm:rounded-xl border border-border">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-semibold text-gray-700 truncate">Overall Compliance</span>
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-success flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-semibold text-foreground truncate">Overall Compliance</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xl sm:text-2xl font-bold text-gray-900">{completionRate}%</span>
-                  <div className={`h-2 w-2 rounded-full ${completionRate === 100 ? 'bg-green-500' : completionRate >= 70 ? 'bg-orange-500' : 'bg-red-500'} animate-pulse`} />
+                  <span className="text-xl sm:text-2xl font-bold text-foreground">{completionRate}%</span>
+                  <div className={`h-2 w-2 rounded-full ${completionRate === 100 ? 'bg-success' : completionRate >= 70 ? 'bg-warning' : 'bg-destructive'} animate-pulse`} />
                 </div>
               </div>
               <Progress value={completionRate} className="h-2 sm:h-3" />
-              <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
                 <span className="truncate">{completedItems.length} of {totalItems} completed</span>
                 {dueItems.length > 0 && (
-                  <span className="text-orange-600 font-medium flex-shrink-0 ml-2">{dueItems.length} pending</span>
+                  <span className="text-warning font-medium flex-shrink-0 ml-2">{dueItems.length} pending</span>
                 )}
               </div>
             </div>
@@ -136,11 +136,11 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
         {dueItems.length > 0 && (
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-orange-500 rounded-full animate-pulse" />
-              <h4 className="font-semibold text-sm sm:text-base text-gray-900">
+              <div className="h-2 w-2 bg-warning rounded-full animate-pulse" />
+              <h4 className="font-semibold text-sm sm:text-base text-foreground">
                 Action Required
               </h4>
-              <Badge className="bg-orange-500 text-white border-0 text-xs ml-auto flex-shrink-0">
+              <Badge className="bg-warning text-white border-0 text-xs ml-auto flex-shrink-0">
                 {dueItems.length}
               </Badge>
             </div>
@@ -149,28 +149,25 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
               {dueItems.map((item, index) => (
                 <div 
                   key={`${item.id}-${item.period}`} 
-                  className="group relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-orange-100 bg-gradient-to-br from-orange-50/80 via-white to-red-50/40 hover:border-orange-200 hover:shadow-lg transition-all duration-300"
+                  className="group rounded-xl sm:rounded-2xl border-l-4 border-warning bg-card hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500" />
-                  
                   <div className="p-3 sm:p-4">
                     <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0">
+                      <div className={`h-10 w-10 sm:h-12 sm:w-12 ${item.isOverdue ? 'bg-destructive' : 'bg-warning'} rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
                         {getStatusIcon(item.status, item.isOverdue)}
-                        <div className="absolute inset-0 bg-white/20 rounded-lg sm:rounded-xl" />
                       </div>
                       
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
-                          <span className="font-bold text-sm sm:text-base text-gray-900 break-words">{item.name}</span>
+                          <span className="font-bold text-sm sm:text-base text-foreground break-words">{item.name}</span>
                           <Badge 
-                            className={`${item.isOverdue ? 'bg-red-500' : 'bg-orange-500'} text-white border-0 text-xs flex-shrink-0`}
+                            className={`${item.isOverdue ? 'bg-destructive' : 'bg-warning'} text-white border-0 text-xs flex-shrink-0`}
                           >
                             {item.isOverdue ? 'Overdue' : 'Due Soon'}
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                           <span className="truncate">{formatPeriod(item.period)} • {formatFrequency(item.frequency)}</span>
                         </div>
@@ -231,11 +228,11 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
         {completedItems.length > 0 && (
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full" />
-              <h4 className="font-semibold text-sm sm:text-base text-gray-900">
+              <div className="h-2 w-2 bg-success rounded-full" />
+              <h4 className="font-semibold text-sm sm:text-base text-foreground">
                 Completed
               </h4>
-              <Badge className="bg-green-500 text-white border-0 text-xs ml-auto flex-shrink-0">
+              <Badge className="bg-success text-white border-0 text-xs ml-auto flex-shrink-0">
                 {completedItems.length}
               </Badge>
             </div>
@@ -244,26 +241,23 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
               {completedItems.map((item, index) => (
                 <div 
                   key={`${item.id}-${item.period}`} 
-                  className="group relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-green-100 bg-gradient-to-br from-green-50/80 via-white to-emerald-50/40 hover:border-green-200 hover:shadow-lg transition-all duration-300"
+                  className="group rounded-xl sm:rounded-2xl border-l-4 border-success bg-card hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
-                  
                   <div className="p-3 sm:p-4">
                     <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0">
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-success rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
                         <CheckCircle className="w-4 h-4 text-white" />
-                        <div className="absolute inset-0 bg-white/20 rounded-lg sm:rounded-xl" />
                       </div>
                       
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
-                          <span className="font-bold text-sm sm:text-base text-gray-900 break-words">{item.name}</span>
-                          <Badge className="bg-green-500 text-white border-0 text-xs flex-shrink-0">
+                          <span className="font-bold text-sm sm:text-base text-foreground break-words">{item.name}</span>
+                          <Badge className="bg-success text-white border-0 text-xs flex-shrink-0">
                             Completed
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                           <FileCheck className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                           <span className="truncate">{formatPeriod(item.period)} • {formatFrequency(item.frequency)}</span>
                         </div>
@@ -323,24 +317,24 @@ export function ComplianceOverview({ employeeId }: ComplianceOverviewProps) {
         {/* All Up to Date */}
         {dueItems.length === 0 && completedItems.length === 0 && (
           <div className="text-center py-8 sm:py-12">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+            <div className="h-14 w-14 sm:h-16 sm:w-16 bg-success rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <CheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">All Caught Up!</h3>
-            <p className="text-sm sm:text-base text-gray-500">No pending compliance items at this time</p>
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">All Caught Up!</h3>
+            <p className="text-sm sm:text-base text-muted-foreground">No pending compliance items at this time</p>
           </div>
         )}
 
         {/* Summary Footer */}
         {(dueItems.length > 0 || completedItems.length > 0) && (
-          <div className="pt-3 sm:pt-4 border-t border-gray-100">
+          <div className="pt-3 sm:pt-4 border-t border-border">
             <div className="flex items-center justify-between gap-2 text-xs sm:text-sm">
-              <span className="text-gray-600 truncate">
+              <span className="text-muted-foreground truncate">
                 {dueItems.length > 0 ? `${dueItems.length} item${dueItems.length === 1 ? '' : 's'} need attention` : 'All items up to date'}
               </span>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <div className={`h-2 w-2 rounded-full ${dueItems.length > 0 ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
-                <span className={`font-semibold ${dueItems.length > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                <div className={`h-2 w-2 rounded-full ${dueItems.length > 0 ? 'bg-warning animate-pulse' : 'bg-success'}`} />
+                <span className={`font-semibold ${dueItems.length > 0 ? 'text-warning' : 'text-success'}`}>
                   {dueItems.length > 0 ? 'Action Required' : 'Compliant'}
                 </span>
               </div>

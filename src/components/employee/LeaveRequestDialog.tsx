@@ -271,13 +271,13 @@ export function LeaveRequestDialog({ open, onOpenChange, employeeId, onSuccess }
 
             {/* Duration Display */}
             {form.watch('start_date') && form.watch('end_date') && (
-              <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+              <div className="p-3 bg-secondary rounded-lg border border-border">
                 <p className="text-sm text-muted-foreground">
                   Duration: <span className={`font-medium ${(() => {
                     const startDate = form.watch('start_date');
                     const endDate = form.watch('end_date');
                     if (startDate && endDate) {
-                      return endDate < startDate ? 'text-red-600' : 'text-green-600';
+                      return endDate < startDate ? 'text-destructive' : 'text-success';
                     }
                     return '';
                   })()}`}>
@@ -296,7 +296,7 @@ export function LeaveRequestDialog({ open, onOpenChange, employeeId, onSuccess }
                     })()}
                   </span>
                 </p>
-                <div className="text-xs text-blue-700 mt-1">
+                <div className="text-xs text-primary mt-1">
                   {form.watch('start_date') && form.watch('end_date') && (
                     <>From {form.watch('start_date')?.toLocaleDateString()} to {form.watch('end_date')?.toLocaleDateString()}</>
                   )}
@@ -349,11 +349,11 @@ export function LeaveRequestDialog({ open, onOpenChange, employeeId, onSuccess }
         <AlertDialogHeader>
           <AlertDialogTitle>Leave Request Submitted</AlertDialogTitle>
           <AlertDialogDescription className="space-y-3 text-sm">
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="font-medium text-yellow-800 mb-2">
+            <div className="p-3 bg-warning-soft border border-warning rounded-lg">
+              <p className="font-medium text-warning mb-2">
                 <strong>Important:</strong> Submitting this form does not guarantee approval. You must call the office to have your leave/holiday officially approved.
               </p>
-              <p className="font-medium text-yellow-800 text-sm">
+              <p className="font-medium text-warning text-sm">
                 <strong>Muhiim:</strong><br />
                 Soo gudbinta fasaxan macnaheedu maaha in la ansixiyay fasaxa<br />
                 Waa inaad so wacdaa xafiiska si aad fasaxaaga si rasmi ah loogu ogolaado.
