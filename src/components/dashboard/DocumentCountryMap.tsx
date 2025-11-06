@@ -112,19 +112,19 @@ export function DocumentCountryMap() {
     return Object.values(counts).reduce((a, b) => Math.max(a, b), 0) || 0;
   }, [counts]);
 
-  // Multi-color heatmap gradient: green → yellow → orange → red
+  // Multi-color heatmap gradient: red → orange → yellow → green
   const getFill = (value: number) => {
     if (value <= 0) return "hsl(var(--muted) / 0.3)";
     const ratio = value / Math.max(1, max);
     
-    // Very High (75-100%): Red
-    if (ratio > 0.75) return "hsl(0, 75%, 55%)";
-    // High (50-75%): Orange
-    if (ratio > 0.5) return "hsl(30, 85%, 55%)";
-    // Medium (25-50%): Yellow
-    if (ratio > 0.25) return "hsl(43, 90%, 60%)";
-    // Low (0-25%): Green
-    return "hsl(142, 70%, 50%)";
+    // Very High (75-100%): Green
+    if (ratio > 0.75) return "hsl(142, 70%, 50%)";
+    // High (50-75%): Yellow
+    if (ratio > 0.5) return "hsl(43, 90%, 60%)";
+    // Medium (25-50%): Orange
+    if (ratio > 0.25) return "hsl(30, 85%, 55%)";
+    // Low (0-25%): Red
+    return "hsl(0, 75%, 55%)";
   };
 
   const handleZoomIn = () => {
@@ -324,7 +324,7 @@ export function DocumentCountryMap() {
           {topCountries.map((item, index) => {
             const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : null;
             const ratio = item.count / Math.max(1, max);
-            let barColor = "hsl(0, 75%, 55%)"; // Red (low ratio)
+            let barColor = "hsl(0, 75%, 55%)"; // Red (low)
             if (ratio > 0.75) barColor = "hsl(142, 70%, 50%)"; // Green (very high)
             else if (ratio > 0.5) barColor = "hsl(43, 90%, 60%)"; // Yellow (high)
             else if (ratio > 0.25) barColor = "hsl(30, 85%, 55%)"; // Orange (medium)
