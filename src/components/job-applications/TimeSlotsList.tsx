@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getTimeSlotMappings, mapTimeSlotIds } from '@/utils/timeSlotUtils';
+import { getTimeSlotMappings, mapTimeSlotIds, TimeSlotMapping } from '@/utils/timeSlotUtils';
 
 interface Props {
   timeSlots: Record<string, any>;
 }
 
 export function TimeSlotsList({ timeSlots }: Props) {
-  const [timeSlotMappings, setTimeSlotMappings] = useState<Record<string, string>>({});
+  const [timeSlotMappings, setTimeSlotMappings] = useState<Record<string, TimeSlotMapping>>({});
 
   useEffect(() => {
     getTimeSlotMappings().then(setTimeSlotMappings);

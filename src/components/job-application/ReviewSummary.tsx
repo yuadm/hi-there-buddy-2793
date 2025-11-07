@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { JobApplicationData } from './types';
-import { getTimeSlotMappings, mapTimeSlotIds } from '@/utils/timeSlotUtils';
+import { getTimeSlotMappings, mapTimeSlotIds, TimeSlotMapping } from '@/utils/timeSlotUtils';
 import { EnhancedSkillsSection } from './EnhancedSkillsSection';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function ReviewSummary({ data }: Props) {
-  const [timeSlotMappings, setTimeSlotMappings] = useState<Record<string, string>>({});
+  const [timeSlotMappings, setTimeSlotMappings] = useState<Record<string, TimeSlotMapping>>({});
 
   useEffect(() => {
     getTimeSlotMappings().then(setTimeSlotMappings);

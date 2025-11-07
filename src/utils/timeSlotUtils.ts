@@ -1,9 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Cache for time slot mappings
-let timeSlotCache: Record<string, string> | null = null;
+export interface TimeSlotMapping {
+  label: string;
+  timeRange: string;
+}
 
-export async function getTimeSlotMappings(): Promise<Record<string, string>> {
+// Cache for time slot mappings
+let timeSlotCache: Record<string, TimeSlotMapping> | null = null;
+
+export async function getTimeSlotMappings(): Promise<Record<string, TimeSlotMapping>> {
   if (timeSlotCache) {
     return timeSlotCache;
   }
@@ -20,17 +25,30 @@ export async function getTimeSlotMappings(): Promise<Record<string, string>> {
     timeSlotCache = {};
     data?.forEach(slot => {
       if (timeSlotCache) {
-        let label;
+        let label, startTime, endTime;
         try {
           const shiftValue = typeof slot.setting_value === 'string' 
             ? JSON.parse(slot.setting_value) 
             : slot.setting_value;
           label = (shiftValue as any)?.label || (shiftValue as any)?.name || slot.id;
+          startTime = (shiftValue as any)?.start_time || '';
+          endTime = (shiftValue as any)?.end_time || '';
         } catch {
           label = (slot.setting_value as any)?.label || (slot.setting_value as any)?.name || slot.id;
+          startTime = (slot.setting_value as any)?.start_time || '';
+          endTime = (slot.setting_value as any)?.end_time || '';
         }
+        
+        // Format time range
+        const timeRange = startTime && endTime ? `${startTime} - ${endTime}` : '';
+        
         // Add "(Archived)" suffix for inactive shifts
-        timeSlotCache[slot.id] = slot.is_active ? label : `${label} (Archived)`;
+        const finalLabel = slot.is_active ? label : `${label} (Archived)`;
+        
+        timeSlotCache[slot.id] = {
+          label: finalLabel,
+          timeRange
+        };
       }
     });
 
@@ -41,12 +59,19 @@ export async function getTimeSlotMappings(): Promise<Record<string, string>> {
   }
 }
 
-export function mapTimeSlotIds(timeSlots: Record<string, any>, mappings: Record<string, string>): Record<string, any> {
+export function mapTimeSlotIds(timeSlots: Record<string, any>, mappings: Record<string, TimeSlotMapping>): Record<string, any> {
   const mapped: Record<string, any> = {};
   
   Object.entries(timeSlots).forEach(([slotId, days]) => {
-    const label = mappings[slotId] || '[Unknown Shift]';
-    mapped[label] = days;
+    const mapping = mappings[slotId];
+    if (mapping) {
+      const displayLabel = mapping.timeRange 
+        ? `${mapping.label} (${mapping.timeRange})`
+        : mapping.label;
+      mapped[displayLabel] = days;
+    } else {
+      mapped['[Unknown Shift]'] = days;
+    }
   });
   
   return mapped;
