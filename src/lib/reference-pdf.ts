@@ -497,7 +497,7 @@ const generateReferencePDFTemplate = async (
     helper.drawSection('Employment Reference');
     
     helper.drawText('Are you this person\'s current or previous employer?', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     
     if (isBlankTemplate) {
       helper.drawInlineCheckboxes([
@@ -513,9 +513,9 @@ const generateReferencePDFTemplate = async (
       ]);
     }
     
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     helper.drawText('What is your relationship to this person (e.g. "I am her/his manager")?', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     
     if (isBlankTemplate) {
       helper.drawWrappedText(
@@ -531,9 +531,9 @@ const generateReferencePDFTemplate = async (
       );
     }
     
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     helper.drawText('Please state the person\'s job title:', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     
     if (isBlankTemplate) {
       helper.drawText('_'.repeat(60), { color: colors.mutedText });
@@ -541,9 +541,9 @@ const generateReferencePDFTemplate = async (
       helper.drawText(referenceData?.jobTitle || 'Not provided', { color: colors.mutedText });
     }
     
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     helper.drawText('Employment Period:', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     
     if (isBlankTemplate) {
       helper.drawText('From _________________ to _________________', { color: colors.mutedText });
@@ -556,7 +556,7 @@ const generateReferencePDFTemplate = async (
         : 'Not provided';
       helper.drawText(`From ${startDate} to ${endDate}`, { color: colors.mutedText });
     }
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     
     helper.drawText('How would you describe their recent attendance record?', { bold: true, size: 10 });
     helper.addSpacer(4);
@@ -575,7 +575,7 @@ const generateReferencePDFTemplate = async (
       ]);
     }
     
-    helper.addSpacer(12);
+    helper.addSpacer(16);
     helper.drawWrappedText(
       'Why did the person leave your employment (if they are still employed, please write \'still employed\')?',
       helper.page.getWidth() - 2 * margin,
@@ -615,7 +615,7 @@ const generateReferencePDFTemplate = async (
       ]);
     }
     
-    helper.addSpacer(12);
+    helper.addSpacer(16);
     helper.drawText('Please describe your relationship with this person, including how long you have known them:', { bold: true, size: 10 });
     helper.addSpacer(4);
     
@@ -636,6 +636,7 @@ const generateReferencePDFTemplate = async (
   
   // Character Qualities Section
   helper.ensureSpace(120);
+  helper.addSpacer(16);
   helper.drawSection('Character Qualities');
   
   helper.drawText('In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
@@ -714,7 +715,7 @@ const generateReferencePDFTemplate = async (
   // ===== FORCE NEW PAGE FOR CRITICAL SECTIONS =====
   helper.page = helper.doc.addPage();
   helper.y = helper.page.getHeight() - margin;
-  helper.addSpacer(20);
+  helper.addSpacer(30);
   
   // Criminal Background Section
   helper.drawSection('Criminal Background Check');
@@ -725,7 +726,7 @@ const generateReferencePDFTemplate = async (
     { size: 10 }
   );
   
-  helper.addSpacer(4);
+  helper.addSpacer(6);
   
   if (isBlankTemplate) {
     helper.drawInlineCheckboxes([
@@ -739,14 +740,14 @@ const generateReferencePDFTemplate = async (
     ]);
   }
   
-  helper.addSpacer(12);
+  helper.addSpacer(16);
   helper.drawWrappedText(
     'To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?',
     helper.page.getWidth() - 2 * margin,
     { size: 10 }
   );
   
-  helper.addSpacer(4);
+  helper.addSpacer(6);
   
   if (isBlankTemplate) {
     helper.drawInlineCheckboxes([
@@ -760,7 +761,7 @@ const generateReferencePDFTemplate = async (
     ]);
   }
   
-  helper.addSpacer(12);
+  helper.addSpacer(16);
   
   if (!isBlankTemplate && (referenceData?.convictionsKnown === 'yes' || referenceData?.criminalProceedingsKnown === 'yes' || referenceData?.criminalDetails)) {
     helper.drawText('Details provided:', { bold: true, size: 10 });
@@ -780,12 +781,12 @@ const generateReferencePDFTemplate = async (
     );
   }
   
-  helper.addSpacer(16);
+  helper.addSpacer(20);
   
   // Additional Comments
   helper.drawSection('Additional Comments');
   helper.drawText('Any additional comments you would like to make about this person:', { bold: true, size: 10 });
-  helper.addSpacer(4);
+  helper.addSpacer(6);
   
   if (isBlankTemplate) {
     helper.drawWrappedText(
@@ -801,7 +802,7 @@ const generateReferencePDFTemplate = async (
     );
   }
   
-  helper.addSpacer(16);
+  helper.addSpacer(20);
   
   // Declaration
   helper.drawSection('Declaration');
@@ -812,7 +813,7 @@ const generateReferencePDFTemplate = async (
     { size: 10, color: colors.mutedText }
   );
   
-  helper.addSpacer(16);
+  helper.addSpacer(20);
   
   // Referee Information section (Bottom - Full Details)
   helper.drawSection('Referee Information');
