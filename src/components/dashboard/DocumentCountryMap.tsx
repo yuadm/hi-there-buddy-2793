@@ -276,8 +276,8 @@ export function DocumentCountryMap() {
                       key={geo.rsmKey}
                       geography={geo}
                       fill={getFill(value)}
-                      stroke="hsl(var(--border))"
-                      strokeWidth={0.5}
+                      stroke="hsl(var(--muted-foreground) / 0.3)"
+                      strokeWidth={1}
                       style={{
                         default: { 
                           outline: "none",
