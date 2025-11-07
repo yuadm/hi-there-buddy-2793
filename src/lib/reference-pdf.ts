@@ -397,6 +397,38 @@ class PDFHelper {
 }
 
 // Shared template function for generating reference PDF layouts
+interface GenerateReferencePDFTemplateOptions {
+  isBlankTemplate: boolean;
+  referenceType: 'employer' | 'character';
+  applicantName: string;
+  applicantDOB: string;
+  applicantPostcode: string;
+  companySettings: CompanySettings;
+  referenceData?: ReferenceData;
+  refereeInfo?: {
+    name?: string;
+    company?: string;
+    jobTitle?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    town?: string;
+    postcode?: string;
+  };
+  completionDates?: {
+    created: string;
+    sent: string;
+    completed: string;
+  };
+  manualPDFData?: {
+    applicantPosition?: string;
+    employmentFrom?: string;
+    employmentTo?: string;
+    reasonForLeaving?: string;
+    employmentStatus?: 'current' | 'previous' | 'neither';
+  };
+}
+
 const generateReferencePDFTemplate = async (
   isBlankTemplate: boolean,
   referenceType: 'employer' | 'character',
@@ -419,6 +451,13 @@ const generateReferencePDFTemplate = async (
     created: string;
     sent: string;
     completed: string;
+  },
+  manualPDFData?: {
+    applicantPosition?: string;
+    employmentFrom?: string;
+    employmentTo?: string;
+    reasonForLeaving?: string;
+    employmentStatus?: 'current' | 'previous' | 'neither';
   }
 ) => {
   const doc = await PDFDocument.create();
@@ -489,10 +528,11 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
+      const statusToCheck = manualPDFData?.employmentStatus || 'previous';
       helper.drawInlineCheckboxes([
-        { label: 'Current', checked: false },
-        { label: 'Previous', checked: false },
-        { label: 'Neither', checked: false },
+        { label: 'Current', checked: statusToCheck === 'current' },
+        { label: 'Previous', checked: statusToCheck === 'previous' },
+        { label: 'Neither', checked: statusToCheck === 'neither' },
       ]);
     } else {
       helper.drawInlineCheckboxes([
@@ -507,8 +547,11 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
+      const relationshipText = refereeInfo?.jobTitle 
+        ? `I am her/his ${refereeInfo.jobTitle.toLowerCase()}`
+        : '_'.repeat(100);
       helper.drawWrappedText(
-        '_'.repeat(100),
+        relationshipText,
         helper.page.getWidth() - 2 * margin,
         { color: colors.mutedText }
       );
@@ -525,7 +568,8 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
-      helper.drawText('_'.repeat(60), { color: colors.mutedText });
+      const jobTitleText = manualPDFData?.applicantPosition || '_'.repeat(60);
+      helper.drawText(jobTitleText, { color: colors.mutedText });
     } else {
       helper.drawText(referenceData?.jobTitle || 'Not provided', { color: colors.mutedText });
     }
@@ -552,7 +596,7 @@ const generateReferencePDFTemplate = async (
     
     if (isBlankTemplate) {
       helper.drawInlineCheckboxes([
-        { label: 'Good', checked: false },
+        { label: 'Good', checked: true },
         { label: 'Average', checked: false },
         { label: 'Poor', checked: false },
       ]);
@@ -573,8 +617,10 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
+      const leavingReasonText = manualPDFData?.reasonForLeaving || 
+        (manualPDFData?.employmentStatus === 'current' ? 'still employed' : '_'.repeat(100));
       helper.drawWrappedText(
-        '_'.repeat(100),
+        leavingReasonText,
         helper.page.getWidth() - 2 * margin,
         { color: colors.mutedText }
       );
@@ -913,6 +959,13 @@ export const generateManualReferencePDF = async (
     companySettings,
     undefined,
     data.referee,
-    datePlaceholders
+    datePlaceholders,
+    {
+      applicantPosition: data.applicantPosition,
+      employmentFrom: data.employmentFrom,
+      employmentTo: data.employmentTo,
+      reasonForLeaving: data.reasonForLeaving,
+      employmentStatus: data.employmentStatus,
+    }
   );
 };
