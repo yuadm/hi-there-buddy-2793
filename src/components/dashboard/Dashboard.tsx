@@ -475,10 +475,10 @@ export function Dashboard() {
         
         const documentValidityRate = branchDocuments.length > 0 
           ? Math.round((validDocuments / branchDocuments.length) * 100)
-          : 100;
+          : 0;
         const complianceRate = branchCompliance.length > 0
           ? Math.round((completedCompliance / branchCompliance.length) * 100)
-          : 100;
+          : 0;
         
         const pendingLeaveRequests = filteredLeaves?.filter(l => {
           const employee = employeesData?.find(e => e.id === l.employee_id);
