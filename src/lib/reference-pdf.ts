@@ -515,7 +515,11 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawText('Why did the person leave your employment (if they are still employed, please write \'still employed\')?', { bold: true, size: 10 });
+    helper.drawWrappedText(
+      'Why did the person leave your employment (if they are still employed, please write \'still employed\')?',
+      helper.page.getWidth() - 2 * margin,
+      { bold: true, size: 10 }
+    );
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.leavingReason || 'Not provided',
