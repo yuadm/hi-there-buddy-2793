@@ -3,7 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, CheckCircle, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield, Lock, Clock, Save } from 'lucide-react';
+import { TrustBadge } from './ui/TrustBadge';
+import { GlassCard } from './ui/GlassCard';
+import { ProgressRing } from './ui/ProgressRing';
+import { AutoSaveIndicator } from './ui/AutoSaveIndicator';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { JobApplicationData, PersonalInfo, Availability, EmergencyContact, EmploymentHistory, References, SkillsExperience, Declaration, TermsPolicy } from './types';
 import { PersonalInfoStep } from './steps/PersonalInfoStep';
@@ -79,6 +83,7 @@ const [currentStep, setCurrentStep] = useState(1);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [emailUsageCount, setEmailUsageCount] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [lastSaved, setLastSaved] = useState<Date>();
   const { companySettings } = useCompany();
   const { toast } = useToast();
 
@@ -98,6 +103,7 @@ const [currentStep, setCurrentStep] = useState(1);
   useEffect(() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, currentStep }));
+      setLastSaved(new Date());
     } catch {}
   }, [formData, currentStep]);
 
@@ -368,50 +374,89 @@ const handleDownloadPdf = async () => {
     return validateStep(currentStep, formData);
   };
 
+  const progressPercentage = (completedSteps.length / totalSteps) * 100;
+  const estimatedTimeRemaining = Math.max(0, 15 - Math.round((completedSteps.length / totalSteps) * 15));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-3 sm:p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Company Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      {/* Auto-save Indicator */}
+      <AutoSaveIndicator lastSaved={lastSaved} />
+
+      {/* Top Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-muted z-50">
+        <div 
+          className="h-full bg-gradient-primary transition-all duration-500 ease-smooth"
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
+
+      <div className="relative max-w-4xl mx-auto p-3 sm:p-6">
+        {/* Hero Section */}
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          {/* Company Logo */}
+          <div className="flex justify-center mb-6">
             {companySettings.logo ? (
-              <img
-                src={companySettings.logo}
-                alt={companySettings.name}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-                loading="lazy"
-                decoding="async"
-              />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-primary/20 blur-xl group-hover:blur-2xl transition-all duration-300 rounded-full" />
+                <img
+                  src={companySettings.logo}
+                  alt={companySettings.name}
+                  className="relative h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-lg"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             ) : (
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="h-16 w-16 sm:h-20 sm:w-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow">
+                <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-primary-foreground" />
               </div>
             )}
-            <div className="text-center sm:text-left">
-              <div className="text-xl sm:text-2xl font-bold">{companySettings.name}</div>
-              <p className="text-sm sm:text-base text-muted-foreground">{companySettings.tagline}</p>
-            </div>
           </div>
+
+          {/* Title & Tagline */}
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
+            {companySettings.name}
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground mb-6">{companySettings.tagline}</p>
+
+          {/* Trust Badges */}
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            <TrustBadge icon={Lock} text="Secure Application" />
+            <TrustBadge icon={Clock} text={`~${estimatedTimeRemaining} min remaining`} />
+            <TrustBadge icon={Save} text="Auto-saved" />
+          </div>
+
+          {/* Progress Ring */}
+          <div className="flex justify-center mb-6">
+            <ProgressRing progress={progressPercentage} size={100} strokeWidth={6} />
+          </div>
+
+          {/* Progress Text */}
+          <p className="text-sm text-muted-foreground">
+            {completedSteps.length} of {totalSteps} steps completed
+          </p>
         </div>
 
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => window.history.back()}
-              className="text-sm sm:text-base"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Homepage
-            </Button>
-          </div>
-          
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Job Application</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Complete all steps to submit your application</p>
-          </div>
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => window.history.back()}
+            className="text-sm hover:bg-muted/50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Homepage
+          </Button>
+        </div>
 
-          {/* Step Navigation Cards */}
+        {/* Step Navigation */}
+        <div className="mb-8">
           <StepNavigationCards
             currentStep={currentStep}
             totalSteps={totalSteps}
@@ -421,11 +466,17 @@ const handleDownloadPdf = async () => {
           />
         </div>
 
-        <Card className="shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg sm:text-xl">{getStepTitle()}</CardTitle>
+        {/* Form Card */}
+        <GlassCard className="animate-scale-in">
+          <CardHeader className="pb-4 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl sm:text-2xl font-bold">{getStepTitle()}</CardTitle>
+              <div className="text-xs text-muted-foreground font-medium bg-muted px-3 py-1 rounded-full">
+                Step {currentStep} of {totalSteps}
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6 sm:p-8">
             {renderStep()}
             
             {/* Invisible honeypot field */}
@@ -467,7 +518,7 @@ const handleDownloadPdf = async () => {
             </div>
 
           </CardContent>
-        </Card>
+        </GlassCard>
       </div>
     </div>
   );
