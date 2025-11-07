@@ -14,6 +14,8 @@ import {
   FileSignature,
   Menu,
   X,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,7 @@ import { NotificationPopover } from "./NotificationPopover";
 import { useCompany } from "@/contexts/CompanyContext";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useTheme } from "next-themes";
 
 const navigationItems = [
   {
@@ -99,6 +102,7 @@ export function FloatingNavBar() {
   const location = useLocation();
   const { companySettings } = useCompany();
   const { hasPageAccess, loading: permissionsLoading } = usePermissions();
+  const { theme, setTheme } = useTheme();
 
   // Handle scroll behavior - hide on scroll down, show on scroll up
   useEffect(() => {
@@ -189,6 +193,19 @@ export function FloatingNavBar() {
             {/* Right Actions */}
             <div className="flex items-center gap-2">
               <NotificationPopover />
+              
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="w-8 h-8 p-0"
+              >
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+              
               <ProfileDropdown />
               
               {/* Mobile Menu Button */}
