@@ -99,6 +99,12 @@ export function EmployeesContent() {
   const [importing, setImporting] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    name: false,
+    email: false,
+    employee_code: false,
+    branch_id: false
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
@@ -315,10 +321,27 @@ export function EmployeesContent() {
     }
     
     try {
-      if (!newEmployee.name || !newEmployee.email || !newEmployee.branch_id || !newEmployee.employee_code) {
+      // Validate individual fields
+      const errors = {
+        name: !newEmployee.name.trim(),
+        email: !newEmployee.email.trim(),
+        employee_code: !newEmployee.employee_code.trim(),
+        branch_id: !newEmployee.branch_id
+      };
+      
+      setFieldErrors(errors);
+      
+      // Check if any errors exist
+      if (Object.values(errors).some(error => error)) {
+        const missingFields = [];
+        if (errors.name) missingFields.push("Full Name");
+        if (errors.email) missingFields.push("Email");
+        if (errors.employee_code) missingFields.push("Employee Code");
+        if (errors.branch_id) missingFields.push("Branch");
+        
         toast({
-          title: "Missing information",
-          description: "Please fill in all required fields.",
+          title: "Missing required fields",
+          description: `Please complete: ${missingFields.join(", ")}`,
           variant: "destructive",
         });
         return;
@@ -396,6 +419,12 @@ export function EmployeesContent() {
             remaining_leave_days: 28,
             hours_restriction: "",
             created_at: new Date().toISOString()
+          });
+          setFieldErrors({
+            name: false,
+            email: false,
+            employee_code: false,
+            branch_id: false
           });
         }
       });
@@ -1572,7 +1601,17 @@ export function EmployeesContent() {
       </Card>
 
       {/* Add Employee Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setFieldErrors({
+            name: false,
+            email: false,
+            employee_code: false,
+            branch_id: false
+          });
+        }
+      }}>
         <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Employee</DialogTitle>
@@ -1587,8 +1626,14 @@ export function EmployeesContent() {
                 <Input
                   id="name"
                   value={newEmployee.name}
-                  onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                  onChange={(e) => {
+                    setNewEmployee({...newEmployee, name: e.target.value});
+                    if (fieldErrors.name) {
+                      setFieldErrors({...fieldErrors, name: false});
+                    }
+                  }}
                   placeholder="Enter full name"
+                  className={cn(fieldErrors.name && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
               <div className="space-y-2">
@@ -1597,8 +1642,14 @@ export function EmployeesContent() {
                   id="email"
                   type="email"
                   value={newEmployee.email}
-                  onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                  onChange={(e) => {
+                    setNewEmployee({...newEmployee, email: e.target.value});
+                    if (fieldErrors.email) {
+                      setFieldErrors({...fieldErrors, email: false});
+                    }
+                  }}
                   placeholder="Enter email address"
+                  className={cn(fieldErrors.email && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
             </div>
@@ -1608,8 +1659,14 @@ export function EmployeesContent() {
               <Input
                 id="employee_code"
                 value={newEmployee.employee_code}
-                onChange={(e) => setNewEmployee({...newEmployee, employee_code: e.target.value})}
+                onChange={(e) => {
+                  setNewEmployee({...newEmployee, employee_code: e.target.value});
+                  if (fieldErrors.employee_code) {
+                    setFieldErrors({...fieldErrors, employee_code: false});
+                  }
+                }}
                 placeholder="e.g., EMP001"
+                className={cn(fieldErrors.employee_code && "border-destructive focus-visible:ring-destructive")}
               />
             </div>
 
@@ -1618,9 +1675,14 @@ export function EmployeesContent() {
                 <Label htmlFor="branch">Branch *</Label>
                 <Select
                   value={newEmployee.branch_id}
-                  onValueChange={(value) => setNewEmployee({...newEmployee, branch_id: value})}
+                  onValueChange={(value) => {
+                    setNewEmployee({...newEmployee, branch_id: value});
+                    if (fieldErrors.branch_id) {
+                      setFieldErrors({...fieldErrors, branch_id: false});
+                    }
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(fieldErrors.branch_id && "border-destructive focus:ring-destructive")}>
                     <SelectValue placeholder="Select branch" />
                   </SelectTrigger>
                   <SelectContent>
