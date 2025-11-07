@@ -240,12 +240,12 @@ class PDFHelper {
     this.addSpacer(4);
   }
 
-  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left', emoji?: string) {
+  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left') {
     const checkbox = checked ? '☑' : '☐';
     const boxWidth = this.font.widthOfTextAtSize(checkbox, 11);
     
     const columnWidth = (this.page.getWidth() - 2 * margin) / 2;
-    const x = column === 'left' ? margin + 4 : margin + columnWidth + 4;
+    const x = column === 'left' ? margin : margin + columnWidth;
     
     this.page.drawText(checkbox, {
       x,
@@ -255,21 +255,8 @@ class PDFHelper {
       color: checked ? colors.accent : colors.mutedText,
     });
     
-    let labelX = x + boxWidth + 6;
-    
-    if (emoji) {
-      this.page.drawText(emoji, {
-        x: labelX,
-        y: this.y - 11,
-        size: 10,
-        font: this.font,
-        color: colors.darkText,
-      });
-      labelX += this.font.widthOfTextAtSize(emoji + ' ', 10);
-    }
-    
     this.page.drawText(label, {
-      x: labelX,
+      x: x + boxWidth + 6,
       y: this.y - 11,
       size: 10,
       font: this.font,
@@ -577,7 +564,7 @@ export const generateReferencePDF = async (
   helper.ensureSpace(120);
   helper.drawSection('Character Qualities');
   
-  helper.drawText('⭐ In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
+  helper.drawText('In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
   helper.addSpacer(4);
   
   // Draw qualities box
@@ -585,14 +572,14 @@ export const generateReferencePDF = async (
   helper.addSpacer(8);
   
   const qualities = [
-    { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
-    { key: 'communicatesEffectively', label: 'Communicates effectively', emoji: '💬' },
-    { key: 'effectiveTeamMember', label: 'An effective team member', emoji: '👥' },
-    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality', emoji: '🔒' },
-    { key: 'reliablePunctual', label: 'Reliable and punctual', emoji: '⏰' },
-    { key: 'suitablePosition', label: 'Suitable for the position applied for', emoji: '✅' },
-    { key: 'kindCompassionate', label: 'Kind and compassionate', emoji: '❤️' },
-    { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
+    { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
+    { key: 'communicatesEffectively', label: 'Communicates effectively' },
+    { key: 'effectiveTeamMember', label: 'An effective team member' },
+    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
+    { key: 'reliablePunctual', label: 'Reliable and punctual' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
+    { key: 'kindCompassionate', label: 'Kind and compassionate' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
   ];
   
   for (let i = 0; i < qualities.length; i += 2) {
@@ -603,46 +590,30 @@ export const generateReferencePDF = async (
     helper.drawCheckbox(
       left.label,
       !!reference.form_data[left.key as keyof ReferenceData],
-      'left',
-      left.emoji
+      'left'
     );
     
     if (right) {
       helper.drawCheckbox(
         right.label,
         !!reference.form_data[right.key as keyof ReferenceData],
-        'right',
-        right.emoji
+        'right'
       );
     }
     
     helper.y -= lineHeight;
   }
   
-  const qualitiesHeight = startY - helper.y + 8;
-  
-  // Draw background
+  const qualitiesHeight = startY - helper.y;
   helper.page.drawRectangle({
     x: margin - 8,
-    y: helper.y - 8,
+    y: helper.y,
     width: helper.page.getWidth() - 2 * margin + 16,
     height: qualitiesHeight,
-    color: rgb(0.96, 0.99, 0.97),
+    color: colors.checkboxBg,
   });
   
-  // Draw border
-  const qualitiesBorderX = margin - 8;
-  const qualitiesBorderY = helper.y - 8;
-  const qualitiesBorderW = helper.page.getWidth() - 2 * margin + 16;
-  const qualitiesBorderH = qualitiesHeight;
-  const qualitiesBorderColor = rgb(0.85, 0.4, 0.2);
-  
-  helper.page.drawLine({ start: { x: qualitiesBorderX, y: qualitiesBorderY }, end: { x: qualitiesBorderX + qualitiesBorderW, y: qualitiesBorderY }, color: qualitiesBorderColor, thickness: 2 });
-  helper.page.drawLine({ start: { x: qualitiesBorderX, y: qualitiesBorderY + qualitiesBorderH }, end: { x: qualitiesBorderX + qualitiesBorderW, y: qualitiesBorderY + qualitiesBorderH }, color: qualitiesBorderColor, thickness: 2 });
-  helper.page.drawLine({ start: { x: qualitiesBorderX, y: qualitiesBorderY }, end: { x: qualitiesBorderX, y: qualitiesBorderY + qualitiesBorderH }, color: qualitiesBorderColor, thickness: 2 });
-  helper.page.drawLine({ start: { x: qualitiesBorderX + qualitiesBorderW, y: qualitiesBorderY }, end: { x: qualitiesBorderX + qualitiesBorderW, y: qualitiesBorderY + qualitiesBorderH }, color: qualitiesBorderColor, thickness: 2 });
-  
-  helper.addSpacer(12);
+  helper.addSpacer(8);
   
   helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
   helper.addSpacer(2);
