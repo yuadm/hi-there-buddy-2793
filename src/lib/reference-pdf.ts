@@ -393,17 +393,6 @@ class PDFHelper {
       font: this.font,
       color: colors.mutedText,
     });
-    
-    // Timestamp
-    const timestamp = `Generated: ${new Date().toLocaleDateString()}`;
-    const timestampWidth = this.font.widthOfTextAtSize(timestamp, 8);
-    this.page.drawText(timestamp, {
-      x: this.page.getWidth() - margin - timestampWidth,
-      y: footerY,
-      size: 8,
-      font: this.font,
-      color: colors.mutedText,
-    });
   }
 }
 
