@@ -820,40 +820,22 @@ const generateReferencePDFTemplate = async (
   if (isBlankTemplate && refereeInfo) {
     if (refereeInfo.name) {
       helper.drawKeyValue('Referee Name', refereeInfo.name);
+    } else {
+      helper.drawKeyValue('Referee Name', '');
     }
-    // Auto-fill reference type as job title
-    const referenceTypeLabel = referenceType === 'employer' ? 'Employment Reference' : 'Character Reference';
-    helper.drawKeyValue('Referee Job Title', referenceTypeLabel);
     
-    if (refereeInfo.company) {
-      helper.drawKeyValue('Company', refereeInfo.company);
-    }
-    if (refereeInfo.email) {
-      helper.drawKeyValue('Email', refereeInfo.email);
-    }
-    if (refereeInfo.phone) {
-      helper.drawKeyValue('Phone', refereeInfo.phone);
-    }
-    if (refereeInfo.address) {
-      helper.drawKeyValue('Address', refereeInfo.address);
-    }
-    if (refereeInfo.town) {
-      helper.drawKeyValue('Town', refereeInfo.town);
-    }
-    if (refereeInfo.postcode) {
-      helper.drawKeyValue('Postcode', refereeInfo.postcode);
+    if (refereeInfo.jobTitle) {
+      helper.drawKeyValue('Referee Job Title', refereeInfo.jobTitle);
+    } else {
+      helper.drawKeyValue('Referee Job Title', '');
     }
     
     // Add date placeholders
     if (completionDates) {
-      helper.addSpacer(8);
       helper.drawKeyValue('Referee Created', completionDates.created);
       helper.drawKeyValue('Referee Sent', completionDates.sent);
       helper.drawKeyValue('Referee Completed', completionDates.completed);
     }
-    
-    helper.addSpacer(8);
-    helper.drawKeyValue('Date', '_________________');
   } else if (referenceData && completionDates) {
     helper.drawKeyValue('Referee Name', referenceData.refereeFullName || 'Not provided');
     helper.drawKeyValue('Referee Job Title', referenceData.refereeJobTitle || 'Not provided');
