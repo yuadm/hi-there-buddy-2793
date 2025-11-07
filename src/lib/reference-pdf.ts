@@ -180,13 +180,14 @@ class PDFHelper {
   }
 
   drawKeyValueHorizontal(items: Array<{ label: string; value: string }>) {
-    const availableWidth = this.page.getWidth() - 2 * margin;
-    const itemSpacing = availableWidth / items.length;
+    const sectionPadding = 4;
+    const availableWidth = this.page.getWidth() - 2 * margin - (2 * sectionPadding);
+    const itemWidth = availableWidth / items.length;
     
     items.forEach((item, index) => {
       const labelText = `${item.label}: `;
       const labelWidth = this.boldFont.widthOfTextAtSize(labelText, 11);
-      const xPos = margin + (index * itemSpacing);
+      const xPos = margin + sectionPadding + (index * itemWidth);
       
       this.page.drawText(labelText, {
         x: xPos,
@@ -196,7 +197,21 @@ class PDFHelper {
         color: colors.darkText,
       });
       
-      this.page.drawText(item.value ?? '', {
+      const valueText = item.value ?? '';
+      const maxValueWidth = itemWidth - labelWidth - 10;
+      const valueWidth = this.font.widthOfTextAtSize(valueText, 11);
+      
+      // Truncate value if too long
+      let displayValue = valueText;
+      if (valueWidth > maxValueWidth) {
+        let truncated = valueText;
+        while (this.font.widthOfTextAtSize(truncated + '...', 11) > maxValueWidth && truncated.length > 0) {
+          truncated = truncated.slice(0, -1);
+        }
+        displayValue = truncated + '...';
+      }
+      
+      this.page.drawText(displayValue, {
         x: xPos + labelWidth,
         y: this.y - 11,
         size: 11,
@@ -513,7 +528,11 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawText('Why did the person leave your employment (if they are still employed, please write \'still employed\')?', { bold: true, size: 10 });
+    helper.drawWrappedText(
+      'Why did the person leave your employment (if they are still employed, please write \'still employed\')?',
+      helper.page.getWidth() - 2 * margin,
+      { bold: true, size: 10 }
+    );
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.leavingReason || 'Not provided',
