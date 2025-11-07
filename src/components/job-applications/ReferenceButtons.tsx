@@ -228,13 +228,16 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       const applicantName = application.personal_info?.fullName || 'Unknown Applicant';
       const applicantDOB = application.personal_info?.dateOfBirth || 'Not provided';
       const applicantPostcode = application.personal_info?.postcode || 'Not provided';
-      await generateReferencePDF(
+      const pdf = await generateReferencePDF(
         completedRef, 
         applicantName, 
         applicantDOB, 
         applicantPostcode, 
         { name: companySettings.name, logo: companySettings.logo }
       );
+      
+      const fileName = `reference-${completedRef.reference_name.replace(/\s+/g, '-')}-${applicantName.replace(/\s+/g, '-')}.pdf`;
+      pdf.save(fileName);
       
       toast({
         title: "Reference Downloaded",
@@ -286,7 +289,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
         }
       }
       
-      await generateManualReferencePDF({
+      const pdf = await generateManualReferencePDF({
         applicantName,
         applicantPosition: refType === 'employer' ? (matchedEmployer?.position || application.employment_history?.recentEmployer?.position || '') : personalInfo.positionAppliedFor,
         referenceType: refType as 'employer' | 'character',
@@ -308,6 +311,9 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
           postcode: reference.postcode,
         },
       }, { name: companySettings.name, logo: companySettings.logo });
+
+      const fileName = `manual-reference-${reference.name?.replace(/\s+/g, '-') || referenceKey}-${applicantName.replace(/\s+/g, '-')}.pdf`;
+      pdf.save(fileName);
 
       toast({
         title: 'Manual PDF Generated',

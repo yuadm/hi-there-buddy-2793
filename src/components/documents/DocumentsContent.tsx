@@ -22,7 +22,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
-import { cn } from "@/lib/utils";
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import countries from "world-countries";
@@ -144,11 +143,6 @@ export function DocumentsContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({
-    employee_id: false,
-    document_type_id: false,
-    expiry_date: false
-  });
 
   useEffect(() => {
     if (newDocument.employee_id && newDocument.document_type_id) {
@@ -244,25 +238,10 @@ export function DocumentsContent() {
 
   const addDocument = async () => {
     try {
-      // Validate individual fields
-      const errors = {
-        employee_id: !newDocument.employee_id,
-        document_type_id: !newDocument.document_type_id,
-        expiry_date: !newDocument.expiry_date
-      };
-      
-      setFieldErrors(errors);
-      
-      // Check if any errors exist
-      if (Object.values(errors).some(error => error)) {
-        const missingFields = [];
-        if (errors.employee_id) missingFields.push("Employee");
-        if (errors.document_type_id) missingFields.push("Document Type");
-        if (errors.expiry_date) missingFields.push("Expiry Date");
-        
+      if (!newDocument.employee_id || !newDocument.document_type_id || !newDocument.expiry_date) {
         toast({
-          title: "Missing required fields",
-          description: `Please complete: ${missingFields.join(", ")}`,
+          title: "Missing information",
+          description: "Please fill in all required fields.",
           variant: "destructive",
         });
         return;
@@ -392,11 +371,6 @@ export function DocumentsContent() {
       });
       setSponsored(false);
       setTwentyHours(false);
-      setFieldErrors({
-        employee_id: false,
-        document_type_id: false,
-        expiry_date: false
-      });
       
       // Trigger manual sync after successful creation
       syncNow();
@@ -1268,16 +1242,7 @@ export function DocumentsContent() {
       </Card>
 
       {/* Add Document Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) {
-          setFieldErrors({
-            employee_id: false,
-            document_type_id: false,
-            expiry_date: false
-          });
-        }
-      }}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Document</DialogTitle>
@@ -1288,17 +1253,12 @@ export function DocumentsContent() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="employee">Employee *</Label>
+                <Label htmlFor="employee">Employee</Label>
                 <Select
                   value={newDocument.employee_id}
-                  onValueChange={(value) => {
-                    handleEmployeeChange(value);
-                    if (fieldErrors.employee_id) {
-                      setFieldErrors({...fieldErrors, employee_id: false});
-                    }
-                  }}
+                  onValueChange={handleEmployeeChange}
                 >
-                  <SelectTrigger className={cn(fieldErrors.employee_id && "border-destructive focus:ring-destructive")}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1313,17 +1273,12 @@ export function DocumentsContent() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="document_type">Document Type *</Label>
+                <Label htmlFor="document_type">Document Type</Label>
                 <Select
                   value={newDocument.document_type_id}
-                  onValueChange={(value) => {
-                    handleDocumentTypeChange(value);
-                    if (fieldErrors.document_type_id) {
-                      setFieldErrors({...fieldErrors, document_type_id: false});
-                    }
-                  }}
+                  onValueChange={handleDocumentTypeChange}
                 >
-                  <SelectTrigger className={cn(fieldErrors.document_type_id && "border-destructive focus:ring-destructive")}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1360,14 +1315,8 @@ export function DocumentsContent() {
                 <Label>Expiry Date *</Label>
                 <DateTextPicker
                   value={newDocument.expiry_date}
-                  onChange={(value) => {
-                    setNewDocument({...newDocument, expiry_date: value});
-                    if (fieldErrors.expiry_date) {
-                      setFieldErrors({...fieldErrors, expiry_date: false});
-                    }
-                  }}
+                  onChange={(value) => setNewDocument({...newDocument, expiry_date: value})}
                   placeholder="Pick date or enter text (e.g., NOT REQUIRED)"
-                  className={cn(fieldErrors.expiry_date && "border-destructive")}
                 />
               </div>
             </div>
