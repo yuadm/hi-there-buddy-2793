@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FieldDesigner } from "./FieldDesigner";
+import { TemplateDeleteDialog } from "./TemplateDeleteDialog";
 
 interface DocumentTemplate {
   id: string;
@@ -30,6 +31,8 @@ export function TemplateManager() {
   const [fieldDesignerOpen, setFieldDesignerOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [selectedTemplateUrl, setSelectedTemplateUrl] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<DocumentTemplate | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch templates
@@ -104,6 +107,8 @@ export function TemplateManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-templates"] });
       toast.success("Template deleted successfully");
+      setDeleteDialogOpen(false);
+      setTemplateToDelete(null);
     },
     onError: (error) => {
       toast.error("Failed to delete template: " + error.message);
@@ -116,6 +121,12 @@ export function TemplateManager() {
       return;
     }
     uploadTemplateMutation.mutate(uploadData);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (templateToDelete) {
+      deleteTemplateMutation.mutate(templateToDelete);
+    }
   };
 
   const getFileUrl = (filePath: string) => {
@@ -253,9 +264,8 @@ export function TemplateManager() {
                       variant="destructive"
                       size="sm"
                       onClick={() => {
-                        if (confirm("Are you sure you want to delete this template?")) {
-                          deleteTemplateMutation.mutate(template);
-                        }
+                        setTemplateToDelete(template);
+                        setDeleteDialogOpen(true);
                       }}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -290,6 +300,15 @@ export function TemplateManager() {
           templateUrl={selectedTemplateUrl ?? getFileUrl(selectedTemplate.file_path)}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <TemplateDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        template={templateToDelete}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deleteTemplateMutation.isPending}
+      />
     </div>
   );
 }
