@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileCheck, Eye } from "lucide-react";
+import { Download, FileCheck, Eye, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { SignedDocumentDeleteDialog } from "./SignedDocumentDeleteDialog";
+import { useDocumentSigningActions } from "@/hooks/queries/useDocumentSigningQueries";
 interface SignedDocument {
   id: string;
   final_document_path: string;
@@ -23,6 +25,9 @@ interface SignedDocument {
 
 export function CompletedDocuments() {
   const queryClient = useQueryClient();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<SignedDocument | null>(null);
+  const { deleteSignedDocument } = useDocumentSigningActions();
 
   // Fetch completed documents
   const { data: completedDocs, isLoading } = useQuery({
@@ -86,6 +91,23 @@ export function CompletedDocuments() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (documentToDelete) {
+      deleteSignedDocument.mutate(
+        {
+          documentId: documentToDelete.id,
+          filePath: documentToDelete.final_document_path,
+        },
+        {
+          onSuccess: () => {
+            setDeleteDialogOpen(false);
+            setDocumentToDelete(null);
+          },
+        }
+      );
+    }
   };
 
   if (isLoading) {
@@ -154,6 +176,17 @@ export function CompletedDocuments() {
                       <Download className="w-4 h-4 mr-1" />
                       Download
                     </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setDocumentToDelete(doc);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -171,6 +204,14 @@ export function CompletedDocuments() {
           </CardContent>
         </Card>
       )}
+
+      <SignedDocumentDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        document={documentToDelete}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deleteSignedDocument.isPending}
+      />
     </div>
   );
 }

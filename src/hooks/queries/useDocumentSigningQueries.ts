@@ -256,9 +256,63 @@ export function useDocumentSigningActions() {
     },
   });
 
+  const deleteSignedDocument = useMutation({
+    mutationFn: async ({ documentId, filePath }: { documentId: string; filePath: string }) => {
+      // First, try to delete the PDF file from storage
+      const { error: storageError } = await supabase.storage
+        .from('company-assets')
+        .remove([filePath]);
+      
+      // Log storage error but don't fail (file might already be deleted)
+      if (storageError) {
+        console.warn('Storage deletion warning:', storageError);
+      }
+      
+      // Delete the database record
+      const { error: dbError } = await supabase
+        .from('signed_documents')
+        .delete()
+        .eq('id', documentId);
+      
+      if (dbError) throw dbError;
+    },
+    // Optimistic update for immediate UI feedback
+    onMutate: async ({ documentId }) => {
+      await queryClient.cancelQueries({ queryKey: documentSigningQueryKeys.completed() });
+      
+      const previousDocuments = queryClient.getQueryData<SignedDocument[]>(documentSigningQueryKeys.completed());
+      
+      queryClient.setQueryData<SignedDocument[]>(documentSigningQueryKeys.completed(), (old) => {
+        if (!old) return [];
+        return old.filter(doc => doc.id !== documentId);
+      });
+      
+      return { previousDocuments };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: documentSigningQueryKeys.completed() });
+      queryClient.invalidateQueries({ queryKey: documentSigningQueryKeys.stats() });
+      toast({
+        title: "Success",
+        description: "Document deleted successfully.",
+      });
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(documentSigningQueryKeys.completed(), context.previousDocuments);
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete document.",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     createTemplate,
     deleteTemplate,
     sendSigningRequest,
+    deleteSignedDocument,
   };
 }
