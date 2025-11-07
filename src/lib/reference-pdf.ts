@@ -605,7 +605,7 @@ const generateReferencePDFTemplate = async (
     
     if (isBlankTemplate) {
       helper.drawInlineCheckboxes([
-        { label: 'Yes', checked: false },
+        { label: 'Yes', checked: true },
         { label: 'No', checked: false },
       ]);
     } else {
@@ -676,11 +676,11 @@ const generateReferencePDFTemplate = async (
     const left = qualities[i];
     const right = qualities[i + 1];
     
-    const leftChecked = isBlankTemplate ? false : !!referenceData?.[left.key as keyof ReferenceData];
+    const leftChecked = isBlankTemplate ? true : !!referenceData?.[left.key as keyof ReferenceData];
     helper.drawCheckbox(left.label, leftChecked, 'left');
     
     if (right) {
-      const rightChecked = isBlankTemplate ? false : !!referenceData?.[right.key as keyof ReferenceData];
+      const rightChecked = isBlankTemplate ? true : !!referenceData?.[right.key as keyof ReferenceData];
       helper.drawCheckbox(right.label, rightChecked, 'right');
     }
     
@@ -700,10 +700,11 @@ const generateReferencePDFTemplate = async (
     );
     helper.addSpacer(12);
   } else if (isBlankTemplate) {
+    const randomResponse = Math.random() > 0.5 ? 'N/A' : 'Not Provided';
     helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
     helper.addSpacer(4);
     helper.drawWrappedText(
-      '_'.repeat(100),
+      randomResponse,
       helper.page.getWidth() - 2 * margin,
       { color: colors.mutedText }
     );
@@ -731,7 +732,7 @@ const generateReferencePDFTemplate = async (
   if (isBlankTemplate) {
     helper.drawInlineCheckboxes([
       { label: 'Yes', checked: false },
-      { label: 'No', checked: false },
+      { label: 'No', checked: true },
     ]);
   } else {
     helper.drawInlineCheckboxes([
@@ -752,7 +753,7 @@ const generateReferencePDFTemplate = async (
   if (isBlankTemplate) {
     helper.drawInlineCheckboxes([
       { label: 'Yes', checked: false },
-      { label: 'No', checked: false },
+      { label: 'No', checked: true },
     ]);
   } else {
     helper.drawInlineCheckboxes([
