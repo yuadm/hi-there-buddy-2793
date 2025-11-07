@@ -180,14 +180,13 @@ class PDFHelper {
   }
 
   drawKeyValueHorizontal(items: Array<{ label: string; value: string }>) {
-    const sectionPadding = 4;
-    const availableWidth = this.page.getWidth() - 2 * margin - (2 * sectionPadding);
-    const itemWidth = availableWidth / items.length;
+    const availableWidth = this.page.getWidth() - 2 * margin;
+    const itemSpacing = availableWidth / items.length;
     
     items.forEach((item, index) => {
       const labelText = `${item.label}: `;
       const labelWidth = this.boldFont.widthOfTextAtSize(labelText, 11);
-      const xPos = margin + sectionPadding + (index * itemWidth);
+      const xPos = margin + (index * itemSpacing);
       
       this.page.drawText(labelText, {
         x: xPos,
@@ -197,21 +196,7 @@ class PDFHelper {
         color: colors.darkText,
       });
       
-      const valueText = item.value ?? '';
-      const maxValueWidth = itemWidth - labelWidth - 10;
-      const valueWidth = this.font.widthOfTextAtSize(valueText, 11);
-      
-      // Truncate value if too long
-      let displayValue = valueText;
-      if (valueWidth > maxValueWidth) {
-        let truncated = valueText;
-        while (this.font.widthOfTextAtSize(truncated + '...', 11) > maxValueWidth && truncated.length > 0) {
-          truncated = truncated.slice(0, -1);
-        }
-        displayValue = truncated + '...';
-      }
-      
-      this.page.drawText(displayValue, {
+      this.page.drawText(item.value ?? '', {
         x: xPos + labelWidth,
         y: this.y - 11,
         size: 11,
@@ -240,7 +225,7 @@ class PDFHelper {
     this.addSpacer(4);
   }
 
-  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left', emoji?: string) {
+  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left') {
     const checkbox = checked ? '☑' : '☐';
     const boxWidth = this.font.widthOfTextAtSize(checkbox, 11);
     
@@ -255,22 +240,8 @@ class PDFHelper {
       color: checked ? colors.accent : colors.mutedText,
     });
     
-    let textX = x + boxWidth + 6;
-    
-    // Add emoji if provided
-    if (emoji) {
-      this.page.drawText(emoji, {
-        x: textX,
-        y: this.y - 11,
-        size: 10,
-        font: this.font,
-        color: colors.darkText,
-      });
-      textX += this.font.widthOfTextAtSize(emoji, 10) + 4;
-    }
-    
     this.page.drawText(label, {
-      x: textX,
+      x: x + boxWidth + 6,
       y: this.y - 11,
       size: 10,
       font: this.font,
@@ -542,11 +513,7 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawWrappedText(
-      'Why did the person leave your employment (if they are still employed, please write \'still employed\')?',
-      helper.page.getWidth() - 2 * margin,
-      { bold: true, size: 10 }
-    );
+    helper.drawText('Why did the person leave your employment (if they are still employed, please write \'still employed\')?', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.leavingReason || 'Not provided',
@@ -578,7 +545,7 @@ export const generateReferencePDF = async (
   helper.ensureSpace(120);
   helper.drawSection('Character Qualities');
   
-  helper.drawText('⭐ In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
+  helper.drawText('In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
   helper.addSpacer(4);
   
   // Draw qualities box
@@ -586,14 +553,14 @@ export const generateReferencePDF = async (
   helper.addSpacer(8);
   
   const qualities = [
-    { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
-    { key: 'communicatesEffectively', label: 'Communicates effectively', emoji: '💬' },
-    { key: 'effectiveTeamMember', label: 'An effective team member', emoji: '👥' },
-    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality', emoji: '🔒' },
-    { key: 'reliablePunctual', label: 'Reliable and punctual', emoji: '🎯' },
-    { key: 'suitablePosition', label: 'Suitable for the position applied for', emoji: '✅' },
-    { key: 'kindCompassionate', label: 'Kind and compassionate', emoji: '❤️' },
-    { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
+    { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
+    { key: 'communicatesEffectively', label: 'Communicates effectively' },
+    { key: 'effectiveTeamMember', label: 'An effective team member' },
+    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
+    { key: 'reliablePunctual', label: 'Reliable and punctual' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
+    { key: 'kindCompassionate', label: 'Kind and compassionate' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
   ];
   
   for (let i = 0; i < qualities.length; i += 2) {
@@ -604,16 +571,14 @@ export const generateReferencePDF = async (
     helper.drawCheckbox(
       left.label,
       !!reference.form_data[left.key as keyof ReferenceData],
-      'left',
-      left.emoji
+      'left'
     );
     
     if (right) {
       helper.drawCheckbox(
         right.label,
         !!reference.form_data[right.key as keyof ReferenceData],
-        'right',
-        right.emoji
+        'right'
       );
     }
     
@@ -626,7 +591,7 @@ export const generateReferencePDF = async (
     y: helper.y,
     width: helper.page.getWidth() - 2 * margin + 16,
     height: qualitiesHeight,
-    color: rgb(0.96, 0.99, 0.97), // Light green/mint background
+    color: colors.checkboxBg,
   });
   
   helper.addSpacer(8);
