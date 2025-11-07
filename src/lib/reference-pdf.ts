@@ -673,45 +673,6 @@ export const generateReferencePDF = async (
   }
   
   helper.addSpacer(8);
-  const criticalHeight = criticalStartY - helper.y;
-  
-  // Draw critical section border and background
-  helper.page.drawRectangle({
-    x: margin - 8,
-    y: helper.y,
-    width: helper.page.getWidth() - 2 * margin + 16,
-    height: criticalHeight,
-    color: colors.criticalBg,
-  });
-  
-  // Draw critical section border (4 lines for border)
-  const borderX = margin - 8;
-  const borderY = helper.y;
-  const borderWidth = helper.page.getWidth() - 2 * margin + 16;
-  helper.page.drawLine({
-    start: { x: borderX, y: borderY },
-    end: { x: borderX + borderWidth, y: borderY },
-    color: colors.criticalBorder,
-    thickness: 2,
-  });
-  helper.page.drawLine({
-    start: { x: borderX, y: borderY + criticalHeight },
-    end: { x: borderX + borderWidth, y: borderY + criticalHeight },
-    color: colors.criticalBorder,
-    thickness: 2,
-  });
-  helper.page.drawLine({
-    start: { x: borderX, y: borderY },
-    end: { x: borderX, y: borderY + criticalHeight },
-    color: colors.criticalBorder,
-    thickness: 2,
-  });
-  helper.page.drawLine({
-    start: { x: borderX + borderWidth, y: borderY },
-    end: { x: borderX + borderWidth, y: borderY + criticalHeight },
-    color: colors.criticalBorder,
-    thickness: 2,
-  });
   
   // Additional Comments
   helper.ensureSpace(60);
