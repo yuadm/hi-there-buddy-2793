@@ -548,7 +548,7 @@ const generateReferencePDFTemplate = async (
     
     if (isBlankTemplate) {
       const relationshipText = refereeInfo?.jobTitle 
-        ? `I am her/his ${refereeInfo.jobTitle}`
+        ? `I am her/his ${refereeInfo.jobTitle.toLowerCase()}`
         : '_'.repeat(100);
       helper.drawWrappedText(
         relationshipText,
