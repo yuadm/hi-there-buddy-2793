@@ -481,6 +481,16 @@ const generateReferencePDFTemplate = async (
     if (refereeInfo.name) {
       refereeItems.push({ label: 'Referee Name', value: refereeInfo.name });
     }
+    // Auto-fill reference type as job title
+    const referenceTypeLabel = referenceType === 'employer' ? 'Employment Reference' : 'Character Reference';
+    refereeItems.push({ label: 'Referee Job Title', value: referenceTypeLabel });
+    
+    // Add date placeholders
+    if (completionDates) {
+      refereeItems.push({ label: 'Referee Created', value: completionDates.created });
+      refereeItems.push({ label: 'Referee Sent', value: completionDates.sent });
+      refereeItems.push({ label: 'Referee Completed', value: completionDates.completed });
+    }
   } else if (referenceData) {
     refereeItems.push({ label: 'Referee Name', value: referenceData.refereeFullName || 'Not provided' });
     if (referenceData.refereeJobTitle) {
