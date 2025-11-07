@@ -19,7 +19,6 @@ import { useClientData } from "@/hooks/useClientData";
 import { useClientActions } from "@/hooks/queries/useClientQueries";
 import { useActivitySync } from "@/hooks/useActivitySync";
 import { ClientDeleteConfirmDialog } from "./ClientDeleteConfirmDialog";
-import { cn } from "@/lib/utils";
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -71,10 +70,6 @@ export function ClientsContent() {
   const [pageSize, setPageSize] = useState(50);
   const { isAdmin, hasPageAction, getAccessibleBranches } = usePermissions();
   const { toast } = useToast();
-  const [fieldErrors, setFieldErrors] = useState({
-    name: false,
-    branch_id: false
-  });
 
   const [newClient, setNewClient] = useState({
     name: "",
@@ -100,23 +95,10 @@ export function ClientsContent() {
       return;
     }
     
-    // Validate individual fields
-    const errors = {
-      name: !newClient.name.trim(),
-      branch_id: !newClient.branch_id
-    };
-    
-    setFieldErrors(errors);
-    
-    // Check if any errors exist
-    if (Object.values(errors).some(error => error)) {
-      const missingFields = [];
-      if (errors.name) missingFields.push("Client Name");
-      if (errors.branch_id) missingFields.push("Branch");
-      
+    if (!newClient.name || !newClient.branch_id) {
       toast({
-        title: "Missing required fields",
-        description: `Please complete: ${missingFields.join(", ")}`,
+        title: "Missing information",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
@@ -135,10 +117,6 @@ export function ClientsContent() {
           name: "",
           branch_id: "",
           created_at: new Date()
-        });
-        setFieldErrors({
-          name: false,
-          branch_id: false
         });
       }
     });
@@ -782,47 +760,28 @@ export function ClientsContent() {
 
 
       {/* Add Client Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) {
-          setFieldErrors({
-            name: false,
-            branch_id: false
-          });
-        }
-      }}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Client</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Client Name *</Label>
+              <Label htmlFor="name">Client Name</Label>
               <Input
                 id="name"
                 value={newClient.name}
-                onChange={(e) => {
-                  setNewClient({ ...newClient, name: e.target.value });
-                  if (fieldErrors.name) {
-                    setFieldErrors({...fieldErrors, name: false});
-                  }
-                }}
+                onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                 placeholder="Enter client name"
-                className={cn(fieldErrors.name && "border-destructive focus-visible:ring-destructive")}
               />
             </div>
             <div>
-              <Label htmlFor="branch">Branch *</Label>
+              <Label htmlFor="branch">Branch</Label>
               <Select
                 value={newClient.branch_id}
-                onValueChange={(value) => {
-                  setNewClient({ ...newClient, branch_id: value });
-                  if (fieldErrors.branch_id) {
-                    setFieldErrors({...fieldErrors, branch_id: false});
-                  }
-                }}
+                onValueChange={(value) => setNewClient({ ...newClient, branch_id: value })}
               >
-                <SelectTrigger className={cn(fieldErrors.branch_id && "border-destructive focus:ring-destructive")}>
+                <SelectTrigger>
                   <SelectValue placeholder="Select branch" />
                 </SelectTrigger>
                 <SelectContent>

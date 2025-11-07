@@ -211,45 +211,6 @@ All colors MUST be HSL. This creates a sophisticated, modern design with subtle 
     border: 1px solid hsl(var(--border) / 0.2);
   }
   
-  /* Enhanced glassmorphism */
-  .glass-strong {
-    backdrop-filter: blur(24px) saturate(180%);
-    background: linear-gradient(145deg, hsl(var(--card) / 0.9), hsl(var(--background) / 0.7));
-    border: 1px solid hsl(var(--border) / 0.3);
-    box-shadow: 0 8px 32px hsl(var(--card-shadow));
-  }
-  
-  /* Floating animation */
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-  
-  /* Confetti animation */
-  .animate-confetti-fall {
-    animation: confetti-fall linear forwards;
-  }
-  
-  /* Shimmer animation */
-  .animate-shimmer {
-    animation: shimmer-slide 2s infinite;
-  }
-  
-  /* Hero gradient background */
-  .hero-gradient {
-    background: linear-gradient(135deg, 
-      hsl(var(--primary) / 0.03),
-      hsl(var(--secondary) / 0.05),
-      hsl(var(--primary) / 0.02)
-    );
-    background-size: 200% 200%;
-    animation: gradient-shift 15s ease infinite;
-  }
-  
-  @keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-  }
-  
   /* Floating navigation bar */
   .floating-nav {
     position: relative;
@@ -399,35 +360,6 @@ All colors MUST be HSL. This creates a sophisticated, modern design with subtle 
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-100vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-@keyframes shimmer-slide {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
   }
 }
 
