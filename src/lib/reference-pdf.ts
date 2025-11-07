@@ -179,6 +179,35 @@ class PDFHelper {
     this.y -= lineHeight;
   }
 
+  drawKeyValueHorizontal(items: Array<{ label: string; value: string }>) {
+    const availableWidth = this.page.getWidth() - 2 * margin;
+    const itemSpacing = availableWidth / items.length;
+    
+    items.forEach((item, index) => {
+      const labelText = `${item.label}: `;
+      const labelWidth = this.boldFont.widthOfTextAtSize(labelText, 11);
+      const xPos = margin + (index * itemSpacing);
+      
+      this.page.drawText(labelText, {
+        x: xPos,
+        y: this.y - 11,
+        size: 11,
+        font: this.boldFont,
+        color: colors.darkText,
+      });
+      
+      this.page.drawText(item.value ?? '', {
+        x: xPos + labelWidth,
+        y: this.y - 11,
+        size: 11,
+        font: this.font,
+        color: colors.darkText,
+      });
+    });
+    
+    this.y -= lineHeight;
+  }
+
   drawSection(title: string) {
     this.ensureSpace(30);
     this.addSpacer(6);
@@ -418,16 +447,21 @@ export const generateReferencePDF = async (
   
   // Applicant Information Section
   helper.drawSection('Applicant Information');
-  helper.drawKeyValue('Name', applicantName);
-  helper.drawKeyValue('Date of Birth', applicantDOB);
-  helper.drawKeyValue('Postcode', applicantPostcode);
+  helper.drawKeyValueHorizontal([
+    { label: 'Name', value: applicantName },
+    { label: 'Date of Birth', value: applicantDOB },
+    { label: 'Postcode', value: applicantPostcode }
+  ]);
   
   // Referee Information Section
   helper.drawSection('Referee Information');
-  helper.drawKeyValue('Referee Name', reference.form_data.refereeFullName || 'Not provided');
+  const refereeItems = [
+    { label: 'Referee Name', value: reference.form_data.refereeFullName || 'Not provided' }
+  ];
   if (reference.form_data.refereeJobTitle) {
-    helper.drawKeyValue('Job Title', reference.form_data.refereeJobTitle);
+    refereeItems.push({ label: 'Job Title', value: reference.form_data.refereeJobTitle });
   }
+  helper.drawKeyValueHorizontal(refereeItems);
   
   // Reference Type Specific Content
   if (reference.reference_type === 'employer') {
