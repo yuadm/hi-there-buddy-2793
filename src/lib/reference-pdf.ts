@@ -358,6 +358,17 @@ class PDFHelper {
     });
     cursorY -= companySize + 8;
     
+    // Reference type title
+    const titleSize = 13;
+    const titleWidth = this.boldFont.widthOfTextAtSize(referenceType, titleSize);
+    this.page.drawText(referenceType, {
+      x: this.page.getWidth() / 2 - titleWidth / 2,
+      y: cursorY - titleSize,
+      size: titleSize,
+      font: this.boldFont,
+      color: colors.accent,
+    });
+    
     // Divider line
     this.page.drawRectangle({
       x: margin,
@@ -379,6 +390,17 @@ class PDFHelper {
       x: this.page.getWidth() / 2 - footerWidth / 2,
       y: footerY,
       size: 9,
+      font: this.font,
+      color: colors.mutedText,
+    });
+    
+    // Timestamp
+    const timestamp = `Generated: ${new Date().toLocaleDateString()}`;
+    const timestampWidth = this.font.widthOfTextAtSize(timestamp, 8);
+    this.page.drawText(timestamp, {
+      x: this.page.getWidth() - margin - timestampWidth,
+      y: footerY,
+      size: 8,
       font: this.font,
       color: colors.mutedText,
     });
