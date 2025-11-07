@@ -578,6 +578,18 @@ export const generateReferencePDF = async (
     { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
   ];
   
+  // Calculate approximate height for background (8 qualities in 4 rows)
+  const estimatedHeight = (qualities.length / 2) * lineHeight + 16;
+  
+  // Draw background FIRST so checkboxes appear on top
+  helper.page.drawRectangle({
+    x: margin - 8,
+    y: helper.y - estimatedHeight,
+    width: helper.page.getWidth() - 2 * margin + 16,
+    height: estimatedHeight,
+    color: colors.checkboxBg,
+  });
+  
   for (let i = 0; i < qualities.length; i += 2) {
     helper.ensureSpace(16);
     const left = qualities[i];
@@ -601,15 +613,6 @@ export const generateReferencePDF = async (
     
     helper.y -= lineHeight;
   }
-  
-  const qualitiesHeight = startY - helper.y;
-  helper.page.drawRectangle({
-    x: margin - 8,
-    y: helper.y,
-    width: helper.page.getWidth() - 2 * margin + 16,
-    height: qualitiesHeight,
-    color: colors.checkboxBg,
-  });
   
   helper.addSpacer(8);
   
