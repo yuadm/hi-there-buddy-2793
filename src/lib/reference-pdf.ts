@@ -269,14 +269,14 @@ export const generateReferencePDF = async (
   yPosition += lineHeight + 3;
 
   const qualities = [
-    { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
-    { key: 'communicatesEffectively', label: 'Communicates effectively' },
-    { key: 'effectiveTeamMember', label: 'An effective team member' },
-    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
-    { key: 'reliablePunctual', label: 'Reliable and punctual' },
-    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
-    { key: 'kindCompassionate', label: 'Kind and compassionate' },
-    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
+    { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
+    { key: 'communicatesEffectively', label: 'Communicates effectively', emoji: '💬' },
+    { key: 'effectiveTeamMember', label: 'An effective team member', emoji: '👥' },
+    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality', emoji: '🔒' },
+    { key: 'reliablePunctual', label: 'Reliable and punctual', emoji: '⏰' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for', emoji: '✅' },
+    { key: 'kindCompassionate', label: 'Kind and compassionate', emoji: '❤️' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
   ];
 
   pdf.setFont('helvetica', 'normal');
@@ -291,7 +291,7 @@ export const generateReferencePDF = async (
     const leftChecked = reference.form_data[leftQuality.key as keyof ReferenceData];
     const leftCheckbox = leftChecked ? '[X]' : '[ ]';
     pdf.text(leftCheckbox, margin, yPosition);
-    pdf.text(leftQuality.label, margin + 10, yPosition);
+    pdf.text(`${leftQuality.emoji} ${leftQuality.label}`, margin + 10, yPosition);
     
     // Right column quality (if exists)
     if (i + 1 < qualities.length) {
@@ -300,7 +300,7 @@ export const generateReferencePDF = async (
       const rightCheckbox = rightChecked ? '[X]' : '[ ]';
       const rightStartX = margin + columnWidth;
       pdf.text(rightCheckbox, rightStartX, yPosition);
-      pdf.text(rightQuality.label, rightStartX + 10, yPosition);
+      pdf.text(`${rightQuality.emoji} ${rightQuality.label}`, rightStartX + 10, yPosition);
     }
     
     yPosition += lineHeight;
@@ -646,14 +646,14 @@ export const generateManualReferencePDF = async (
   yPosition += lineHeight + 3;
 
   const qualities = [
-    'Honest and trustworthy',
-    'Communicates effectively',
-    'An effective team member',
-    'Respectful of confidentiality',
-    'Reliable and punctual',
-    'Suitable for the position applied for',
-    'Kind and compassionate',
-    'Able to work well without close supervision',
+    { label: 'Honest and trustworthy', emoji: '🤝' },
+    { label: 'Communicates effectively', emoji: '💬' },
+    { label: 'An effective team member', emoji: '👥' },
+    { label: 'Respectful of confidentiality', emoji: '🔒' },
+    { label: 'Reliable and punctual', emoji: '⏰' },
+    { label: 'Suitable for the position applied for', emoji: '✅' },
+    { label: 'Kind and compassionate', emoji: '❤️' },
+    { label: 'Able to work well without close supervision', emoji: '🎯' },
   ];
 
   pdf.setFont('helvetica', 'normal');
@@ -665,13 +665,13 @@ export const generateManualReferencePDF = async (
     
     // Left column quality - preselected
     pdf.text('[X]', margin, yPosition);
-    pdf.text(qualities[i], margin + 15, yPosition);
+    pdf.text(`${qualities[i].emoji} ${qualities[i].label}`, margin + 15, yPosition);
     
     // Right column quality (if exists) - preselected
     if (i + 1 < qualities.length) {
       const rightStartX = margin + columnWidth;
       pdf.text('[X]', rightStartX, yPosition);
-      pdf.text(qualities[i + 1], rightStartX + 15, yPosition);
+      pdf.text(`${qualities[i + 1].emoji} ${qualities[i + 1].label}`, rightStartX + 15, yPosition);
     }
     
     yPosition += lineHeight;
