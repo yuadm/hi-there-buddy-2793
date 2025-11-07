@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { differenceInDays, parseISO, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Employee {
   id: string;
@@ -46,6 +47,12 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { getAccessibleBranches, isAdmin } = usePermissions();
+  const [fieldErrors, setFieldErrors] = useState({
+    employee: false,
+    leaveType: false,
+    startDate: false,
+    endDate: false
+  });
 
   useEffect(() => {
     if (open) {
@@ -112,10 +119,27 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
   };
 
   const handleSubmit = async () => {
-    if (!selectedEmployee || !selectedLeaveType || !startDate || !endDate) {
+    // Validate individual fields
+    const errors = {
+      employee: !selectedEmployee,
+      leaveType: !selectedLeaveType,
+      startDate: !startDate,
+      endDate: !endDate
+    };
+    
+    setFieldErrors(errors);
+    
+    // Check if any errors exist
+    if (Object.values(errors).some(error => error)) {
+      const missingFields = [];
+      if (errors.employee) missingFields.push("Employee");
+      if (errors.leaveType) missingFields.push("Leave Type");
+      if (errors.startDate) missingFields.push("Start Date");
+      if (errors.endDate) missingFields.push("End Date");
+      
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: "Missing required fields",
+        description: `Please complete: ${missingFields.join(", ")}`,
         variant: "destructive",
       });
       return;
@@ -158,6 +182,12 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
       setStartDate(undefined);
       setEndDate(undefined);
       setNotes("");
+      setFieldErrors({
+        employee: false,
+        leaveType: false,
+        startDate: false,
+        endDate: false
+      });
       
       // Close dialog and refresh
       onOpenChange(false);
@@ -175,7 +205,17 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      onOpenChange(isOpen);
+      if (!isOpen) {
+        setFieldErrors({
+          employee: false,
+          leaveType: false,
+          startDate: false,
+          endDate: false
+        });
+      }
+    }}>
       <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Request Leave</DialogTitle>
@@ -184,8 +224,13 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="employee">Employee *</Label>
-            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-              <SelectTrigger className="h-11">
+            <Select value={selectedEmployee} onValueChange={(value) => {
+              setSelectedEmployee(value);
+              if (fieldErrors.employee) {
+                setFieldErrors({...fieldErrors, employee: false});
+              }
+            }}>
+              <SelectTrigger className={cn("h-11", fieldErrors.employee && "border-destructive focus:ring-destructive")}>
                 <SelectValue placeholder="Select employee" />
               </SelectTrigger>
               <SelectContent className="z-50 bg-background">
@@ -200,8 +245,13 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
 
           <div className="space-y-2">
             <Label htmlFor="leave-type">Leave Type *</Label>
-            <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
-              <SelectTrigger className="h-11">
+            <Select value={selectedLeaveType} onValueChange={(value) => {
+              setSelectedLeaveType(value);
+              if (fieldErrors.leaveType) {
+                setFieldErrors({...fieldErrors, leaveType: false});
+              }
+            }}>
+              <SelectTrigger className={cn("h-11", fieldErrors.leaveType && "border-destructive focus:ring-destructive")}>
                 <SelectValue placeholder="Select leave type" />
               </SelectTrigger>
               <SelectContent className="z-50 bg-background">
@@ -217,11 +267,29 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Start Date *</Label>
-              <DatePicker date={startDate} onDateChange={setStartDate} />
+              <DatePicker 
+                date={startDate} 
+                onDateChange={(date) => {
+                  setStartDate(date);
+                  if (fieldErrors.startDate) {
+                    setFieldErrors({...fieldErrors, startDate: false});
+                  }
+                }}
+                className={cn(fieldErrors.startDate && "border-destructive")}
+              />
             </div>
             <div className="space-y-2">
               <Label>End Date *</Label>
-              <DatePicker date={endDate} onDateChange={setEndDate} />
+              <DatePicker 
+                date={endDate} 
+                onDateChange={(date) => {
+                  setEndDate(date);
+                  if (fieldErrors.endDate) {
+                    setFieldErrors({...fieldErrors, endDate: false});
+                  }
+                }}
+                className={cn(fieldErrors.endDate && "border-destructive")}
+              />
             </div>
           </div>
 
