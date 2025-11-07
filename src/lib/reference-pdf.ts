@@ -481,8 +481,15 @@ const generateReferencePDFTemplate = async (
     if (refereeInfo.name) {
       refereeItems.push({ label: 'Referee Name', value: refereeInfo.name });
     }
-    if (refereeInfo.jobTitle) {
-      refereeItems.push({ label: 'Job Title', value: refereeInfo.jobTitle });
+    // Auto-fill reference type as job title
+    const referenceTypeLabel = referenceType === 'employer' ? 'Employment Reference' : 'Character Reference';
+    refereeItems.push({ label: 'Referee Job Title', value: referenceTypeLabel });
+    
+    // Add date placeholders
+    if (completionDates) {
+      refereeItems.push({ label: 'Referee Created', value: completionDates.created });
+      refereeItems.push({ label: 'Referee Sent', value: completionDates.sent });
+      refereeItems.push({ label: 'Referee Completed', value: completionDates.completed });
     }
   } else if (referenceData) {
     refereeItems.push({ label: 'Referee Name', value: referenceData.refereeFullName || 'Not provided' });
@@ -824,9 +831,10 @@ const generateReferencePDFTemplate = async (
     if (refereeInfo.name) {
       helper.drawKeyValue('Referee Name', refereeInfo.name);
     }
-    if (refereeInfo.jobTitle) {
-      helper.drawKeyValue('Job Title', refereeInfo.jobTitle);
-    }
+    // Auto-fill reference type as job title
+    const referenceTypeLabel = referenceType === 'employer' ? 'Employment Reference' : 'Character Reference';
+    helper.drawKeyValue('Referee Job Title', referenceTypeLabel);
+    
     if (refereeInfo.company) {
       helper.drawKeyValue('Company', refereeInfo.company);
     }
@@ -845,6 +853,15 @@ const generateReferencePDFTemplate = async (
     if (refereeInfo.postcode) {
       helper.drawKeyValue('Postcode', refereeInfo.postcode);
     }
+    
+    // Add date placeholders
+    if (completionDates) {
+      helper.addSpacer(8);
+      helper.drawKeyValue('Referee Created', completionDates.created);
+      helper.drawKeyValue('Referee Sent', completionDates.sent);
+      helper.drawKeyValue('Referee Completed', completionDates.completed);
+    }
+    
     helper.addSpacer(8);
     helper.drawKeyValue('Date', '_________________');
   } else if (referenceData && completionDates) {
@@ -899,7 +916,7 @@ export interface ManualReferenceInput {
   employmentTo?: string;
   reasonForLeaving?: string;
   employmentStatus?: 'current' | 'previous' | 'neither';
-  referenceNumber?: number;
+  referenceNumber?: number; // 1 or 2 for placeholder generation
   referee: {
     name?: string;
     company?: string;
@@ -916,6 +933,14 @@ export const generateManualReferencePDF = async (
   data: ManualReferenceInput,
   companySettings: CompanySettings = { name: 'Company Name' }
 ) => {
+  // Generate date placeholders based on reference number
+  const refNum = data.referenceNumber || 1;
+  const datePlaceholders = {
+    created: `{R${refNum}_Created}`,
+    sent: `{R${refNum}_Sent}`,
+    completed: `{R${refNum}_Signed}`,
+  };
+  
   return generateReferencePDFTemplate(
     true,
     data.referenceType,
@@ -924,6 +949,7 @@ export const generateManualReferencePDF = async (
     data.applicantPostcode || '',
     companySettings,
     undefined,
-    data.referee
+    data.referee,
+    datePlaceholders
   );
 };
