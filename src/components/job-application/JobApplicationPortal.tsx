@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, CheckCircle, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield, Sparkles, Award, Clock } from 'lucide-react';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { JobApplicationData, PersonalInfo, Availability, EmergencyContact, EmploymentHistory, References, SkillsExperience, Declaration, TermsPolicy } from './types';
 import { PersonalInfoStep } from './steps/PersonalInfoStep';
@@ -16,7 +16,9 @@ import { DeclarationStep } from './steps/DeclarationStep';
 import { TermsPolicyStep } from './steps/TermsPolicyStep';
 import { generateJobApplicationPdf } from '@/lib/job-application-pdf';
 import { validateStep } from './ValidationLogic';
-import { StepNavigationCards } from './StepNavigationCards';
+import { ModernProgressTimeline } from './ModernProgressTimeline';
+import { GlassmorphicCard } from './GlassmorphicCard';
+import { SuccessConfetti } from './SuccessConfetti';
 
 const initialFormData: JobApplicationData = {
   personalInfo: {
@@ -290,28 +292,74 @@ const handleDownloadPdf = async () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-3 sm:p-6 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <Card className="w-full max-w-md mx-4 sm:mx-auto shadow-lg">
-          <CardHeader className="text-center pb-4">
-            <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 text-green-500 mx-auto mb-4" />
-            <CardTitle className="text-xl sm:text-2xl text-green-700">Application Submitted!</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4 p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Thank you for your interest in joining our team. We have received your application and will review it shortly.
-            </p>
-            <Button onClick={() => {
-              // Reset form data and redirect to start fresh application
-              setFormData(initialFormData);
-              setCurrentStep(1);
-              setIsSubmitted(false);
-              window.location.href = '/';
-            }} className="w-full min-h-[44px]">
-              Return to Homepage
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <SuccessConfetti />
+        <div className="min-h-screen flex items-center justify-center p-3 sm:p-6 hero-gradient">
+          <GlassmorphicCard className="w-full max-w-2xl mx-4 sm:mx-auto animate-scale-in">
+            <div className="p-8 sm:p-12 text-center space-y-6">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-green-500/20 rounded-full blur-2xl animate-pulse" />
+                <CheckCircle className="relative w-20 h-20 sm:w-24 sm:h-24 text-green-500 mx-auto animate-scale-in" />
+              </div>
+              
+              <div className="space-y-2">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Application Submitted!
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  Thank you for your interest in joining {companySettings.name}
+                </p>
+              </div>
+
+              <div className="bg-muted/50 rounded-xl p-6 space-y-4 backdrop-blur-sm">
+                <h3 className="font-semibold text-lg flex items-center justify-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  What Happens Next?
+                </h3>
+                <div className="space-y-3 text-sm text-left">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      1
+                    </div>
+                    <p className="text-muted-foreground">
+                      We'll review your application within <strong className="text-foreground">48 hours</strong>
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      2
+                    </div>
+                    <p className="text-muted-foreground">
+                      Qualified candidates will be contacted for an interview within <strong className="text-foreground">1 week</strong>
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      3
+                    </div>
+                    <p className="text-muted-foreground">
+                      Check your email regularly for updates from our team
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  setFormData(initialFormData);
+                  setCurrentStep(1);
+                  setIsSubmitted(false);
+                  window.location.href = '/';
+                }} 
+                size="lg"
+                className="w-full sm:w-auto min-h-[44px] shadow-lg hover:shadow-xl transition-all"
+              >
+                Return to Homepage
+              </Button>
+            </div>
+          </GlassmorphicCard>
+        </div>
+      </>
     );
   }
 
@@ -369,63 +417,96 @@ const handleDownloadPdf = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-3 sm:p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Company Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-            {companySettings.logo ? (
-              <img
-                src={companySettings.logo}
-                alt={companySettings.name}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+    <div className="min-h-screen hero-gradient p-3 sm:p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Modern Header with Glassmorphism */}
+        <GlassmorphicCard className="mb-6 sm:mb-8 animate-fade-in">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                {companySettings.logo ? (
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-xl blur-xl animate-pulse" />
+                    <img
+                      src={companySettings.logo}
+                      alt={companySettings.name}
+                      className="relative h-12 w-12 sm:h-16 sm:w-16 object-contain rounded-xl"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg animate-float">
+                    <Shield className="h-7 w-7 sm:h-10 sm:w-10 text-primary-foreground" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                    {companySettings.name}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">{companySettings.tagline}</p>
+                </div>
               </div>
-            )}
-            <div className="text-center sm:text-left">
-              <div className="text-xl sm:text-2xl font-bold">{companySettings.name}</div>
-              <p className="text-sm sm:text-base text-muted-foreground">{companySettings.tagline}</p>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.history.back()}
+                className="hover:bg-primary/10"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full text-xs font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <span>Quick & Easy</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full text-xs font-medium">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                <span>~10 minutes</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full text-xs font-medium">
+                <Award className="w-3.5 h-3.5 text-primary" />
+                <span>Join 500+ team members</span>
+              </div>
             </div>
           </div>
+        </GlassmorphicCard>
+
+        {/* Modern Progress Timeline */}
+        <div className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <GlassmorphicCard>
+            <div className="p-4 sm:p-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2">Job Application</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Complete all steps to join our amazing team
+                </p>
+              </div>
+
+              <ModernProgressTimeline
+                currentStep={currentStep}
+                totalSteps={totalSteps}
+                completedSteps={completedSteps}
+                onStepClick={goToStep}
+                canAccessStep={canAccessStep}
+              />
+            </div>
+          </GlassmorphicCard>
         </div>
 
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => window.history.back()}
-              className="text-sm sm:text-base"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Homepage
-            </Button>
-          </div>
-          
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Job Application</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Complete all steps to submit your application</p>
-          </div>
+        {/* Step Content Card */}
+        <GlassmorphicCard className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="p-6 sm:p-8">
+            <div className="mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold">{getStepTitle()}</h3>
+              <div className="h-1 w-20 bg-gradient-to-r from-primary to-primary/50 rounded-full mt-2" />
+            </div>
 
-          {/* Step Navigation Cards */}
-          <StepNavigationCards
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            completedSteps={completedSteps}
-            onStepClick={goToStep}
-            canAccessStep={canAccessStep}
-          />
-        </div>
-
-        <Card className="shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg sm:text-xl">{getStepTitle()}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
             {renderStep()}
             
             {/* Invisible honeypot field */}
@@ -442,32 +523,37 @@ const handleDownloadPdf = async () => {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-8">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 sm:mt-10 pt-6 border-t border-border/50">
               {currentStep === totalSteps ? (
                 <Button
                   onClick={handleSubmit}
                   disabled={!canProceed() || isSubmitting}
-                  className="w-full sm:w-auto min-h-[44px]"
+                  className="w-full sm:w-auto min-h-[48px] text-base shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
                   size="lg"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                  <CheckCircle className="w-4 h-4 ml-2" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                    <CheckCircle className="w-5 h-5" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
               ) : (
                 <Button
                   onClick={nextStep}
                   disabled={!canProceed()}
-                  className="w-full sm:w-auto min-h-[44px]"
+                  className="w-full sm:w-auto min-h-[48px] text-base shadow-lg hover:shadow-xl transition-all relative overflow-hidden group"
                   size="lg"
                 >
-                  Continue to Next Step
-                  <CheckCircle className="w-4 h-4 ml-2" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    Continue to Next Step
+                    <CheckCircle className="w-5 h-5" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
               )}
             </div>
-
-          </CardContent>
-        </Card>
+          </div>
+        </GlassmorphicCard>
       </div>
     </div>
   );
