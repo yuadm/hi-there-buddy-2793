@@ -431,7 +431,7 @@ export const generateReferencePDF = async (
   
   // Reference Type Specific Content
   if (reference.reference_type === 'employer') {
-    helper.drawSection('Employment Details');
+    helper.drawSection('Employment Reference');
     
     helper.drawText('Are you this person\'s current or previous employer?', { bold: true, size: 10 });
     helper.addSpacer(2);
@@ -443,7 +443,7 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawText('Relationship to applicant:', { bold: true, size: 10 });
+    helper.drawText('What is your relationship to this person (e.g. "I am her/his manager")?', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.relationshipDescription || 'Not provided',
@@ -452,8 +452,11 @@ export const generateReferencePDF = async (
     );
     
     helper.addSpacer(6);
-    helper.drawKeyValue('Job Title', reference.form_data.jobTitle || 'Not provided');
+    helper.drawText('Please state the person\'s job title:', { bold: true, size: 10 });
+    helper.addSpacer(2);
+    helper.drawText(reference.form_data.jobTitle || 'Not provided', { color: colors.mutedText });
     
+    helper.addSpacer(6);
     if (reference.form_data.startDate || reference.form_data.endDate) {
       const startDate = reference.form_data.startDate 
         ? new Date(reference.form_data.startDate).toLocaleDateString() 
@@ -461,11 +464,13 @@ export const generateReferencePDF = async (
       const endDate = reference.form_data.endDate 
         ? new Date(reference.form_data.endDate).toLocaleDateString() 
         : 'Not provided';
-      helper.drawKeyValue('Employment Period', `${startDate} to ${endDate}`);
+      helper.drawText('Employment Period:', { bold: true, size: 10 });
+      helper.addSpacer(2);
+      helper.drawText(`From ${startDate} to ${endDate}`, { color: colors.mutedText });
+      helper.addSpacer(6);
     }
     
-    helper.addSpacer(6);
-    helper.drawText('Attendance record:', { bold: true, size: 10 });
+    helper.drawText('How would you describe their recent attendance record?', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawInlineCheckboxes([
       { label: 'Good', checked: reference.form_data.attendance === 'good' },
@@ -474,7 +479,7 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawText('Reason for leaving:', { bold: true, size: 10 });
+    helper.drawText('Why did the person leave your employment (if they are still employed, please write \'still employed\')?', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.leavingReason || 'Not provided',
@@ -483,7 +488,7 @@ export const generateReferencePDF = async (
     );
   } else {
     // Character reference
-    helper.drawSection('Character Reference Details');
+    helper.drawSection('Character Reference');
     
     helper.drawText('Do you know this person from outside employment or education?', { bold: true, size: 10 });
     helper.addSpacer(2);
@@ -493,7 +498,7 @@ export const generateReferencePDF = async (
     ]);
     
     helper.addSpacer(6);
-    helper.drawText('Your relationship with this person:', { bold: true, size: 10 });
+    helper.drawText('Please describe your relationship with this person, including how long you have known them:', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawWrappedText(
       reference.form_data.relationshipDescription || 'Not provided',
@@ -504,9 +509,9 @@ export const generateReferencePDF = async (
   
   // Character Qualities Section
   helper.ensureSpace(120);
-  helper.drawSection('Character Assessment');
+  helper.drawSection('Character Qualities');
   
-  helper.drawText('Which of the following describes this person? (Tick all that apply)', { bold: true, size: 10 });
+  helper.drawText('In your opinion, which of the following describes this person (tick each that is true)?', { bold: true, size: 10 });
   helper.addSpacer(4);
   
   // Draw qualities box
@@ -516,12 +521,12 @@ export const generateReferencePDF = async (
   const qualities = [
     { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
     { key: 'communicatesEffectively', label: 'Communicates effectively' },
-    { key: 'effectiveTeamMember', label: 'Effective team member' },
+    { key: 'effectiveTeamMember', label: 'An effective team member' },
     { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
     { key: 'reliablePunctual', label: 'Reliable and punctual' },
-    { key: 'suitablePosition', label: 'Suitable for position' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
     { key: 'kindCompassionate', label: 'Kind and compassionate' },
-    { key: 'worksIndependently', label: 'Works independently' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
   ];
   
   for (let i = 0; i < qualities.length; i += 2) {
@@ -557,15 +562,14 @@ export const generateReferencePDF = async (
   
   helper.addSpacer(8);
   
-  if (reference.form_data.qualitiesNotTickedReason) {
-    helper.drawText('Reason for unticked qualities:', { bold: true, size: 10 });
-    helper.addSpacer(2);
-    helper.drawWrappedText(
-      reference.form_data.qualitiesNotTickedReason,
-      helper.page.getWidth() - 2 * margin,
-      { color: colors.mutedText }
-    );
-  }
+  helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
+  helper.addSpacer(2);
+  helper.drawWrappedText(
+    reference.form_data.qualitiesNotTickedReason || 'Not provided',
+    helper.page.getWidth() - 2 * margin,
+    { color: colors.mutedText }
+  );
+  helper.addSpacer(6);
   
   // Criminal Background Section - CRITICAL
   helper.ensureSpace(140);
@@ -575,19 +579,19 @@ export const generateReferencePDF = async (
   helper.addSpacer(8);
   
   // Critical header
-  helper.page.drawText('⚠ CRITICAL SECTION - Criminal Background Check', {
+  helper.page.drawText('CRIMINAL BACKGROUND CHECK', {
     x: margin,
     y: helper.y - 12,
     size: 12,
     font: boldFont,
-    color: colors.criticalBorder,
+    color: colors.darkText,
   });
   helper.y -= 20;
   
   helper.drawWrappedText(
-    'The position involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974?',
+    'The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?',
     helper.page.getWidth() - 2 * margin,
-    { size: 10, bold: true }
+    { size: 10 }
   );
   
   helper.addSpacer(4);
@@ -598,9 +602,9 @@ export const generateReferencePDF = async (
   
   helper.addSpacer(8);
   helper.drawWrappedText(
-    'To your knowledge, is this person currently subject to any criminal proceedings or police investigation?',
+    'To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?',
     helper.page.getWidth() - 2 * margin,
-    { size: 10, bold: true }
+    { size: 10 }
   );
   
   helper.addSpacer(4);
@@ -609,12 +613,12 @@ export const generateReferencePDF = async (
     { label: 'No', checked: reference.form_data.criminalProceedingsKnown === 'no' },
   ]);
   
-  if (reference.form_data.criminalDetails) {
+  if (reference.form_data.convictionsKnown === 'yes' || reference.form_data.criminalProceedingsKnown === 'yes' || reference.form_data.criminalDetails) {
     helper.addSpacer(8);
     helper.drawText('Details provided:', { bold: true, size: 10 });
     helper.addSpacer(2);
     helper.drawWrappedText(
-      reference.form_data.criminalDetails,
+      reference.form_data.criminalDetails || 'Not provided',
       helper.page.getWidth() - 2 * margin,
       { color: colors.mutedText }
     );
@@ -662,16 +666,16 @@ export const generateReferencePDF = async (
   });
   
   // Additional Comments
-  if (reference.form_data.additionalComments) {
-    helper.ensureSpace(60);
-    helper.addSpacer(12);
-    helper.drawSection('Additional Comments');
-    helper.drawWrappedText(
-      reference.form_data.additionalComments,
-      helper.page.getWidth() - 2 * margin,
-      { color: colors.mutedText }
-    );
-  }
+  helper.ensureSpace(60);
+  helper.addSpacer(12);
+  helper.drawSection('Additional Comments');
+  helper.drawText('Any additional comments you would like to make about this person:', { bold: true, size: 10 });
+  helper.addSpacer(2);
+  helper.drawWrappedText(
+    reference.form_data.additionalComments || 'Not provided',
+    helper.page.getWidth() - 2 * margin,
+    { color: colors.mutedText }
+  );
   
   // Declaration
   helper.ensureSpace(80);
@@ -686,7 +690,11 @@ export const generateReferencePDF = async (
   
   helper.addSpacer(12);
   
-  // Reference metadata
+  // Referee Information section
+  helper.addSpacer(8);
+  helper.drawSection('Referee Information');
+  helper.drawKeyValue('Referee Name', reference.form_data.refereeFullName || 'Not provided');
+  helper.drawKeyValue('Referee Job Title', reference.form_data.refereeJobTitle || 'Not provided');
   helper.drawKeyValue('Reference Created', new Date(reference.created_at).toLocaleDateString());
   helper.drawKeyValue('Reference Sent', new Date(reference.sent_at).toLocaleDateString());
   helper.drawKeyValue('Reference Completed', new Date(reference.completed_at).toLocaleDateString());
