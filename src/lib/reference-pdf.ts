@@ -226,12 +226,12 @@ class PDFHelper {
     this.addSpacer(4);
   }
 
-  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left', emoji?: string) {
+  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left') {
     const checkbox = checked ? '☑' : '☐';
-    const boxSize = 12;
+    const boxSize = 13;
     
     const columnWidth = (this.page.getWidth() - 2 * margin) / 2;
-    let x = column === 'left' ? margin + 4 : margin + columnWidth + 4;
+    const x = column === 'left' ? margin + 6 : margin + columnWidth + 6;
     
     // Draw checkbox with better styling
     this.page.drawText(checkbox, {
@@ -242,23 +242,8 @@ class PDFHelper {
       color: checked ? colors.successText : colors.mutedText,
     });
     
-    x += boxSize + 8;
-    
-    // Draw emoji if provided
-    if (emoji) {
-      this.page.drawText(emoji, {
-        x,
-        y: this.y - 11,
-        size: 11,
-        font: this.font,
-        color: colors.darkText,
-      });
-      const emojiWidth = this.font.widthOfTextAtSize(emoji, 11);
-      x += emojiWidth + 6;
-    }
-    
     this.page.drawText(label, {
-      x,
+      x: x + boxSize + 8,
       y: this.y - 10,
       size: 10,
       font: this.font,
@@ -570,18 +555,18 @@ export const generateReferencePDF = async (
   helper.addSpacer(6);
   
   const qualities = [
-    { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
-    { key: 'communicatesEffectively', label: 'Communicates effectively', emoji: '💬' },
-    { key: 'effectiveTeamMember', label: 'An effective team member', emoji: '👥' },
-    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality', emoji: '🔒' },
-    { key: 'reliablePunctual', label: 'Reliable and punctual', emoji: '⏰' },
-    { key: 'suitablePosition', label: 'Suitable for the position applied for', emoji: '✅' },
-    { key: 'kindCompassionate', label: 'Kind and compassionate', emoji: '❤️' },
-    { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
+    { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
+    { key: 'communicatesEffectively', label: 'Communicates effectively' },
+    { key: 'effectiveTeamMember', label: 'An effective team member' },
+    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
+    { key: 'reliablePunctual', label: 'Reliable and punctual' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
+    { key: 'kindCompassionate', label: 'Kind and compassionate' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
   ];
   
   // Calculate height for background with better padding
-  const estimatedHeight = (qualities.length / 2) * (lineHeight + 2) + 20;
+  const estimatedHeight = (qualities.length / 2) * 20 + 24;
   
   // Draw background with rounded appearance
   helper.page.drawRectangle({
@@ -597,27 +582,25 @@ export const generateReferencePDF = async (
   helper.addSpacer(8);
   
   for (let i = 0; i < qualities.length; i += 2) {
-    helper.ensureSpace(18);
+    helper.ensureSpace(22);
     const left = qualities[i];
     const right = qualities[i + 1];
     
     helper.drawCheckbox(
       left.label,
       !!reference.form_data[left.key as keyof ReferenceData],
-      'left',
-      left.emoji
+      'left'
     );
     
     if (right) {
       helper.drawCheckbox(
         right.label,
         !!reference.form_data[right.key as keyof ReferenceData],
-        'right',
-        right.emoji
+        'right'
       );
     }
     
-    helper.y -= lineHeight + 2;
+    helper.y -= 20;
   }
   
   helper.addSpacer(8);
