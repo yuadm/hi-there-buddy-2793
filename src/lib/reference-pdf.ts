@@ -507,20 +507,20 @@ export const generateReferencePDF = async (
     }
     
     helper.drawText('How would you describe their recent attendance record?', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawInlineCheckboxes([
       { label: 'Good', checked: reference.form_data.attendance === 'good' },
       { label: 'Average', checked: reference.form_data.attendance === 'average' },
       { label: 'Poor', checked: reference.form_data.attendance === 'poor' },
     ]);
     
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     helper.drawWrappedText(
       'Why did the person leave your employment (if they are still employed, please write \'still employed\')?',
       helper.page.getWidth() - 2 * margin,
       { bold: true, size: 10 }
     );
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawWrappedText(
       reference.form_data.leavingReason || 'Not provided',
       helper.page.getWidth() - 2 * margin,
@@ -531,15 +531,15 @@ export const generateReferencePDF = async (
     helper.drawSection('Character Reference');
     
     helper.drawText('Do you know this person from outside employment or education?', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawInlineCheckboxes([
       { label: 'Yes', checked: reference.form_data.employmentStatus === 'yes' },
       { label: 'No', checked: reference.form_data.employmentStatus === 'no' },
     ]);
     
-    helper.addSpacer(6);
+    helper.addSpacer(12);
     helper.drawText('Please describe your relationship with this person, including how long you have known them:', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawWrappedText(
       reference.form_data.relationshipDescription || 'Not provided',
       helper.page.getWidth() - 2 * margin,
@@ -612,33 +612,25 @@ export const generateReferencePDF = async (
   // Only show the optional reason field if there's actual content
   if (reference.form_data.qualitiesNotTickedReason) {
     helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawWrappedText(
       reference.form_data.qualitiesNotTickedReason,
       helper.page.getWidth() - 2 * margin,
       { color: colors.mutedText }
     );
-    helper.addSpacer(6);
+    helper.addSpacer(12);
   } else {
-    helper.addSpacer(6);
+    helper.addSpacer(12);
   }
   
-  // Criminal Background Section - CRITICAL
-  helper.ensureSpace(140);
-  helper.addSpacer(12);
+  // ===== FORCE NEW PAGE FOR CRITICAL SECTIONS =====
+  // Ensure Criminal Background, Additional Comments, Declaration, and Referee Info are on page 2
+  helper.page = helper.doc.addPage();
+  helper.y = helper.page.getHeight() - margin;
+  helper.addSpacer(20);
   
-  const criticalStartY = helper.y;
-  helper.addSpacer(8);
-  
-  // Critical header
-  helper.page.drawText('CRIMINAL BACKGROUND CHECK', {
-    x: margin,
-    y: helper.y - 12,
-    size: 12,
-    font: boldFont,
-    color: colors.darkText,
-  });
-  helper.y -= 20;
+  // Criminal Background Section
+  helper.drawSection('Criminal Background Check');
   
   helper.drawWrappedText(
     'The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?',
@@ -652,7 +644,7 @@ export const generateReferencePDF = async (
     { label: 'No', checked: reference.form_data.convictionsKnown === 'no' },
   ]);
   
-  helper.addSpacer(8);
+  helper.addSpacer(12);
   helper.drawWrappedText(
     'To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?',
     helper.page.getWidth() - 2 * margin,
@@ -666,9 +658,9 @@ export const generateReferencePDF = async (
   ]);
   
   if (reference.form_data.convictionsKnown === 'yes' || reference.form_data.criminalProceedingsKnown === 'yes' || reference.form_data.criminalDetails) {
-    helper.addSpacer(8);
+    helper.addSpacer(12);
     helper.drawText('Details provided:', { bold: true, size: 10 });
-    helper.addSpacer(2);
+    helper.addSpacer(4);
     helper.drawWrappedText(
       reference.form_data.criminalDetails || 'Not provided',
       helper.page.getWidth() - 2 * margin,
@@ -676,23 +668,21 @@ export const generateReferencePDF = async (
     );
   }
   
-  helper.addSpacer(8);
+  helper.addSpacer(16);
   
   // Additional Comments
-  helper.ensureSpace(60);
-  helper.addSpacer(12);
   helper.drawSection('Additional Comments');
   helper.drawText('Any additional comments you would like to make about this person:', { bold: true, size: 10 });
-  helper.addSpacer(2);
+  helper.addSpacer(4);
   helper.drawWrappedText(
     reference.form_data.additionalComments || 'Not provided',
     helper.page.getWidth() - 2 * margin,
     { color: colors.mutedText }
   );
   
+  helper.addSpacer(16);
+  
   // Declaration
-  helper.ensureSpace(80);
-  helper.addSpacer(12);
   helper.drawSection('Declaration');
   
   helper.drawWrappedText(
@@ -701,10 +691,9 @@ export const generateReferencePDF = async (
     { size: 10, color: colors.mutedText }
   );
   
-  helper.addSpacer(12);
+  helper.addSpacer(16);
   
   // Referee Information section
-  helper.addSpacer(8);
   helper.drawSection('Referee Information');
   helper.drawKeyValue('Referee Name', reference.form_data.refereeFullName || 'Not provided');
   helper.drawKeyValue('Referee Job Title', reference.form_data.refereeJobTitle || 'Not provided');
