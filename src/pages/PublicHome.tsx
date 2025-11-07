@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Badge, Building, User, KeyRound, AlertTriangle } from 'lucide-react';
+import { Briefcase, Badge, Building, User, KeyRound, AlertTriangle, Moon, Sun } from 'lucide-react';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
+import { useTheme } from 'next-themes';
 
 function PublicHomeContent() {
   const { user, userRole, loading, signOut } = useAuth();
   const { companySettings, loading: companyLoading } = useCompany();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
@@ -87,7 +89,19 @@ function PublicHomeContent() {
 
   // Show both job application and employee login for non-authenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-6 relative">
+      {/* Dark Mode Toggle */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="fixed top-6 right-6 z-50"
+      >
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 pt-8">
           <div className={`mx-auto mb-6 w-20 h-20 rounded-lg flex items-center justify-center ${companySettings.logo ? '' : 'bg-primary/10'}`}>
