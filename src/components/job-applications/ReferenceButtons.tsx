@@ -237,7 +237,16 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       );
       
       const fileName = `reference-${completedRef.reference_name.replace(/\s+/g, '-')}-${applicantName.replace(/\s+/g, '-')}.pdf`;
-      pdf.save(fileName);
+      const pdfBytes = await pdf.save();
+      const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Reference Downloaded",
@@ -313,7 +322,16 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       }, { name: companySettings.name, logo: companySettings.logo });
 
       const fileName = `manual-reference-${reference.name?.replace(/\s+/g, '-') || referenceKey}-${applicantName.replace(/\s+/g, '-')}.pdf`;
-      pdf.save(fileName);
+      const pdfBytes = await pdf.save();
+      const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: 'Manual PDF Generated',
