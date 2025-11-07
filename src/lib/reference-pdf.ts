@@ -605,14 +605,19 @@ export const generateReferencePDF = async (
   
   helper.addSpacer(8);
   
-  helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
-  helper.addSpacer(2);
-  helper.drawWrappedText(
-    reference.form_data.qualitiesNotTickedReason || 'Not provided',
-    helper.page.getWidth() - 2 * margin,
-    { color: colors.mutedText }
-  );
-  helper.addSpacer(6);
+  // Only show the optional reason field if there's actual content
+  if (reference.form_data.qualitiesNotTickedReason) {
+    helper.drawText('If you did not tick one or more of the above, please tell us why here:', { bold: true, size: 10 });
+    helper.addSpacer(2);
+    helper.drawWrappedText(
+      reference.form_data.qualitiesNotTickedReason,
+      helper.page.getWidth() - 2 * margin,
+      { color: colors.mutedText }
+    );
+    helper.addSpacer(6);
+  } else {
+    helper.addSpacer(6);
+  }
   
   // Criminal Background Section - CRITICAL
   helper.ensureSpace(140);
