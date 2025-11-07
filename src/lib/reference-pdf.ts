@@ -65,7 +65,8 @@ const colors = {
   criticalBorder: rgb(0.9, 0.4, 0.2),
   criticalBg: rgb(1, 0.97, 0.95),
   border: rgb(0.85, 0.85, 0.87),
-  checkboxBg: rgb(0.97, 0.98, 0.99),
+  checkboxBg: rgb(0.94, 0.98, 0.94), // Light green tint like reference
+  successText: rgb(0.13, 0.54, 0.13), // Green for checked items
 };
 
 const margin = 40;
@@ -227,37 +228,38 @@ class PDFHelper {
 
   drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left', emoji?: string) {
     const checkbox = checked ? '☑' : '☐';
-    const boxWidth = this.font.widthOfTextAtSize(checkbox, 11);
+    const boxSize = 12;
     
     const columnWidth = (this.page.getWidth() - 2 * margin) / 2;
-    let x = column === 'left' ? margin : margin + columnWidth;
+    let x = column === 'left' ? margin + 4 : margin + columnWidth + 4;
     
+    // Draw checkbox with better styling
     this.page.drawText(checkbox, {
       x,
-      y: this.y - 11,
-      size: 11,
+      y: this.y - boxSize,
+      size: boxSize,
       font: this.font,
-      color: checked ? colors.accent : colors.mutedText,
+      color: checked ? colors.successText : colors.mutedText,
     });
     
-    x += boxWidth + 6;
+    x += boxSize + 8;
     
     // Draw emoji if provided
     if (emoji) {
       this.page.drawText(emoji, {
         x,
         y: this.y - 11,
-        size: 10,
+        size: 11,
         font: this.font,
         color: colors.darkText,
       });
-      const emojiWidth = this.font.widthOfTextAtSize(emoji, 10);
-      x += emojiWidth + 4;
+      const emojiWidth = this.font.widthOfTextAtSize(emoji, 11);
+      x += emojiWidth + 6;
     }
     
     this.page.drawText(label, {
       x,
-      y: this.y - 11,
+      y: this.y - 10,
       size: 10,
       font: this.font,
       color: colors.darkText,
@@ -565,7 +567,7 @@ export const generateReferencePDF = async (
   
   // Draw qualities box
   const startY = helper.y;
-  helper.addSpacer(8);
+  helper.addSpacer(6);
   
   const qualities = [
     { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
@@ -578,20 +580,24 @@ export const generateReferencePDF = async (
     { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
   ];
   
-  // Calculate approximate height for background (8 qualities in 4 rows)
-  const estimatedHeight = (qualities.length / 2) * lineHeight + 16;
+  // Calculate height for background with better padding
+  const estimatedHeight = (qualities.length / 2) * (lineHeight + 2) + 20;
   
-  // Draw background FIRST so checkboxes appear on top
+  // Draw background with rounded appearance
   helper.page.drawRectangle({
-    x: margin - 8,
+    x: margin - 10,
     y: helper.y - estimatedHeight,
-    width: helper.page.getWidth() - 2 * margin + 16,
+    width: helper.page.getWidth() - 2 * margin + 20,
     height: estimatedHeight,
     color: colors.checkboxBg,
+    borderColor: rgb(0.85, 0.92, 0.85),
+    borderWidth: 1,
   });
   
+  helper.addSpacer(8);
+  
   for (let i = 0; i < qualities.length; i += 2) {
-    helper.ensureSpace(16);
+    helper.ensureSpace(18);
     const left = qualities[i];
     const right = qualities[i + 1];
     
@@ -611,7 +617,7 @@ export const generateReferencePDF = async (
       );
     }
     
-    helper.y -= lineHeight;
+    helper.y -= lineHeight + 2;
   }
   
   helper.addSpacer(8);
