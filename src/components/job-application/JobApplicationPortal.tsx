@@ -187,6 +187,8 @@ const handleDownloadPdf = async () => {
         setCompletedSteps(prev => [...prev, currentStep]);
       }
       setCurrentStep(prev => prev + 1);
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -195,6 +197,8 @@ const handleDownloadPdf = async () => {
     const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
     if (step <= maxAccessibleStep && step <= totalSteps) {
       setCurrentStep(step);
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
