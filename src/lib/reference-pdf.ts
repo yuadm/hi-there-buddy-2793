@@ -225,12 +225,12 @@ class PDFHelper {
     this.addSpacer(4);
   }
 
-  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left') {
+  drawCheckbox(label: string, checked: boolean, column: 'left' | 'right' = 'left', emoji?: string) {
     const checkbox = checked ? '☑' : '☐';
     const boxWidth = this.font.widthOfTextAtSize(checkbox, 11);
     
     const columnWidth = (this.page.getWidth() - 2 * margin) / 2;
-    const x = column === 'left' ? margin : margin + columnWidth;
+    let x = column === 'left' ? margin : margin + columnWidth;
     
     this.page.drawText(checkbox, {
       x,
@@ -240,8 +240,23 @@ class PDFHelper {
       color: checked ? colors.accent : colors.mutedText,
     });
     
+    x += boxWidth + 6;
+    
+    // Draw emoji if provided
+    if (emoji) {
+      this.page.drawText(emoji, {
+        x,
+        y: this.y - 11,
+        size: 10,
+        font: this.font,
+        color: colors.darkText,
+      });
+      const emojiWidth = this.font.widthOfTextAtSize(emoji, 10);
+      x += emojiWidth + 4;
+    }
+    
     this.page.drawText(label, {
-      x: x + boxWidth + 6,
+      x,
       y: this.y - 11,
       size: 10,
       font: this.font,
@@ -553,14 +568,14 @@ export const generateReferencePDF = async (
   helper.addSpacer(8);
   
   const qualities = [
-    { key: 'honestTrustworthy', label: 'Honest and trustworthy' },
-    { key: 'communicatesEffectively', label: 'Communicates effectively' },
-    { key: 'effectiveTeamMember', label: 'An effective team member' },
-    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality' },
-    { key: 'reliablePunctual', label: 'Reliable and punctual' },
-    { key: 'suitablePosition', label: 'Suitable for the position applied for' },
-    { key: 'kindCompassionate', label: 'Kind and compassionate' },
-    { key: 'worksIndependently', label: 'Able to work well without close supervision' },
+    { key: 'honestTrustworthy', label: 'Honest and trustworthy', emoji: '🤝' },
+    { key: 'communicatesEffectively', label: 'Communicates effectively', emoji: '💬' },
+    { key: 'effectiveTeamMember', label: 'An effective team member', emoji: '👥' },
+    { key: 'respectfulConfidentiality', label: 'Respectful of confidentiality', emoji: '🔒' },
+    { key: 'reliablePunctual', label: 'Reliable and punctual', emoji: '⏰' },
+    { key: 'suitablePosition', label: 'Suitable for the position applied for', emoji: '✅' },
+    { key: 'kindCompassionate', label: 'Kind and compassionate', emoji: '❤️' },
+    { key: 'worksIndependently', label: 'Able to work well without close supervision', emoji: '🎯' },
   ];
   
   for (let i = 0; i < qualities.length; i += 2) {
@@ -571,14 +586,16 @@ export const generateReferencePDF = async (
     helper.drawCheckbox(
       left.label,
       !!reference.form_data[left.key as keyof ReferenceData],
-      'left'
+      'left',
+      left.emoji
     );
     
     if (right) {
       helper.drawCheckbox(
         right.label,
         !!reference.form_data[right.key as keyof ReferenceData],
-        'right'
+        'right',
+        right.emoji
       );
     }
     
