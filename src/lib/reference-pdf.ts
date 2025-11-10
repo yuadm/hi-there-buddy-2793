@@ -3,6 +3,20 @@ import fontkit from '@pdf-lib/fontkit';
 import DejaVuSansRegularUrl from '@/assets/fonts/dejavu/DejaVuSans.ttf';
 import DejaVuSansBoldUrl from '@/assets/fonts/dejavu/DejaVuSans-Bold.ttf';
 
+// Helper function to format dates from yyyy-mm-dd to dd/mm/yyyy
+const formatDateToDDMMYYYY = (dateString: string): string => {
+  if (!dateString) return dateString;
+  
+  // Check if date is in yyyy-mm-dd format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  }
+  
+  // If already in dd/mm/yyyy format or other format, return as is
+  return dateString;
+};
+
 interface ReferenceData {
   refereeFullName: string;
   refereeJobTitle?: string;
@@ -497,7 +511,7 @@ const generateReferencePDFTemplate = async (
   helper.drawSection('Applicant Information');
   helper.drawKeyValueHorizontal([
     { label: 'Name', value: applicantName },
-    { label: 'Date of Birth', value: applicantDOB },
+    { label: 'Date of Birth', value: formatDateToDDMMYYYY(applicantDOB) },
     { label: 'Postcode', value: applicantPostcode }
   ]);
   
@@ -584,10 +598,10 @@ const generateReferencePDFTemplate = async (
       helper.drawText(`From ${fromDate} to ${toDate}`, { color: colors.mutedText });
     } else {
       const startDate = referenceData?.startDate 
-        ? new Date(referenceData.startDate).toLocaleDateString() 
+        ? formatDateToDDMMYYYY(referenceData.startDate)
         : 'Not provided';
       const endDate = referenceData?.endDate 
-        ? new Date(referenceData.endDate).toLocaleDateString() 
+        ? formatDateToDDMMYYYY(referenceData.endDate)
         : 'Not provided';
       helper.drawText(`From ${startDate} to ${endDate}`, { color: colors.mutedText });
     }
