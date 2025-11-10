@@ -509,7 +509,7 @@ const handleDownloadPdf = async () => {
               {currentStep > 1 && (
                 <Button
                   onClick={prevStep}
-                  variant="outline"
+                  variant="default"
                   className="w-full sm:w-auto min-h-[44px]"
                   size="lg"
                 >
