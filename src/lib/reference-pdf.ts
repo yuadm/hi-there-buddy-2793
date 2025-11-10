@@ -593,8 +593,12 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
-      const fromDate = manualPDFData?.employmentFrom || '_________________';
-      const toDate = manualPDFData?.employmentTo || '_________________';
+      const fromDate = manualPDFData?.employmentFrom 
+        ? formatDateToDDMMYYYY(manualPDFData.employmentFrom)
+        : '_________________';
+      const toDate = manualPDFData?.employmentTo 
+        ? formatDateToDDMMYYYY(manualPDFData.employmentTo)
+        : '_________________';
       helper.drawText(`From ${fromDate} to ${toDate}`, { color: colors.mutedText });
     } else {
       const startDate = referenceData?.startDate 
