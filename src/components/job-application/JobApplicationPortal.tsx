@@ -69,9 +69,21 @@ const initialFormData: JobApplicationData = {
   termsPolicy: { consentToTerms: false, signature: '', fullName: '', date: '' }
 };
 
-function JobApplicationPortalContent() {
-const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<JobApplicationData>(initialFormData);
+interface JobApplicationPortalContentProps {
+  initialData?: JobApplicationData;
+  isEditMode?: boolean;
+  applicationId?: string;
+  onEditComplete?: () => void;
+}
+
+export function JobApplicationPortalContent({
+  initialData,
+  isEditMode = false,
+  applicationId,
+  onEditComplete,
+}: JobApplicationPortalContentProps = {}) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<JobApplicationData>(initialData || initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [honeypotField, setHoneypotField] = useState('');
@@ -84,7 +96,10 @@ const [currentStep, setCurrentStep] = useState(1);
 
   const DRAFT_KEY = 'job_application_draft';
 
+  // Load draft from localStorage only if not in edit mode
   useEffect(() => {
+    if (isEditMode) return; // Skip draft loading in edit mode
+    
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
@@ -93,13 +108,16 @@ const [currentStep, setCurrentStep] = useState(1);
         if (saved?.currentStep) setCurrentStep(saved.currentStep);
       }
     } catch {}
-  }, []);
+  }, [isEditMode]);
 
+  // Save draft to localStorage only if not in edit mode
   useEffect(() => {
+    if (isEditMode) return; // Skip draft saving in edit mode
+    
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, currentStep }));
     } catch {}
-  }, [formData, currentStep]);
+  }, [formData, currentStep, isEditMode]);
 
   // Auto-fill Terms & Policy fields when reaching step 8
   useEffect(() => {
@@ -211,76 +229,104 @@ const handleDownloadPdf = async () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Anti-abuse checks
-      // 1. Honeypot field check
-      if (honeypotField.trim() !== '') {
-        console.warn('Bot detected: honeypot field filled');
+      if (isEditMode) {
+        // Edit mode: Update existing application
+        const { error } = await supabase
+          .from('job_applications')
+          .update({
+            personal_info: formData.personalInfo as any,
+            availability: formData.availability as any,
+            emergency_contact: formData.emergencyContact as any,
+            employment_history: formData.employmentHistory as any,
+            reference_info: formData.references as any,
+            skills_experience: formData.skillsExperience as any,
+            declarations: formData.declaration as any,
+            consent: formData.termsPolicy as any,
+          })
+          .eq('id', applicationId);
+
+        if (error) throw error;
+
         toast({
-          title: "Submission Failed",
-          description: "Please try again later.",
-          variant: "destructive",
+          title: "Application Updated",
+          description: "The job application has been updated successfully.",
         });
-        return;
-      }
 
-      // 2. Time-based validation (submissions too fast are suspicious)
-      const timeTaken = Date.now() - startTime;
-      if (timeTaken < 30000) { // Less than 30 seconds
-        console.warn('Bot detected: submission too fast');
+        onEditComplete?.();
+      } else {
+        // Create mode: Anti-abuse checks and insert
+        // 1. Honeypot field check
+        if (honeypotField.trim() !== '') {
+          console.warn('Bot detected: honeypot field filled');
+          toast({
+            title: "Submission Failed",
+            description: "Please try again later.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // 2. Time-based validation (submissions too fast are suspicious)
+        const timeTaken = Date.now() - startTime;
+        if (timeTaken < 30000) { // Less than 30 seconds
+          console.warn('Bot detected: submission too fast');
+          toast({
+            title: "Submission Failed", 
+            description: "Please take your time to complete the application.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // 3. Email duplicate detection
+        const { data: existingApplications, error: checkError } = await supabase
+          .from('job_applications')
+          .select('id')
+          .filter('personal_info->>email', 'eq', formData.personalInfo.email)
+          .limit(3);
+
+        if (checkError) {
+          console.error('Error checking duplicates:', checkError);
+        } else if (existingApplications && existingApplications.length >= 2) {
+          toast({
+            title: "Application Limit Reached",
+            description: "This email address has already been used for the maximum number of applications (2). Please contact us directly if you need assistance.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { error } = await supabase
+          .from('job_applications')
+          .insert([{
+            personal_info: formData.personalInfo,
+            availability: formData.availability,
+            emergency_contact: formData.emergencyContact,
+            employment_history: formData.employmentHistory,
+            reference_info: formData.references,
+            skills_experience: formData.skillsExperience,
+            declarations: formData.declaration,
+            consent: formData.termsPolicy,
+            status: 'new'
+          }] as any);
+
+        if (error) throw error;
+
+        setIsSubmitted(true);
+        // Clear the draft after successful submission
+        localStorage.removeItem(DRAFT_KEY);
         toast({
-          title: "Submission Failed", 
-          description: "Please take your time to complete the application.",
-          variant: "destructive",
+          title: "Application Submitted",
+          description: "Your job application has been submitted successfully. We'll be in touch soon!",
         });
-        return;
       }
-
-      // 3. Email duplicate detection
-      const { data: existingApplications, error: checkError } = await supabase
-        .from('job_applications')
-        .select('id')
-        .filter('personal_info->>email', 'eq', formData.personalInfo.email)
-        .limit(3);
-
-      if (checkError) {
-        console.error('Error checking duplicates:', checkError);
-      } else if (existingApplications && existingApplications.length >= 2) {
-        toast({
-          title: "Application Limit Reached",
-          description: "This email address has already been used for the maximum number of applications (2). Please contact us directly if you need assistance.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('job_applications')
-        .insert([{
-          personal_info: formData.personalInfo,
-          availability: formData.availability,
-          emergency_contact: formData.emergencyContact,
-          employment_history: formData.employmentHistory,
-          reference_info: formData.references,
-          skills_experience: formData.skillsExperience,
-          declarations: formData.declaration,
-          consent: formData.termsPolicy,
-          status: 'new'
-        }] as any);
-
-      if (error) throw error;
-
-      setIsSubmitted(true);
-      // Clear the draft after successful submission
-      localStorage.removeItem(DRAFT_KEY);
-      toast({
-        title: "Application Submitted",
-        description: "Your job application has been submitted successfully. We'll be in touch soon!",
-      });
     } catch (error) {
       console.error('Error submitting application:', error);
       toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your application. Please try again.",
+        title: isEditMode ? "Update Failed" : "Submission Failed",
+        description: isEditMode 
+          ? "There was an error updating the application. Please try again."
+          : "There was an error submitting your application. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -371,44 +417,53 @@ const handleDownloadPdf = async () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 p-3 sm:p-6">
       <div className="max-w-2xl mx-auto">
-        {/* Company Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-            {companySettings.logo ? (
-              <img
-                src={companySettings.logo}
-                alt={companySettings.name}
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+        {/* Company Header - only show in create mode */}
+        {!isEditMode && (
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+              {companySettings.logo ? (
+                <img
+                  src={companySettings.logo}
+                  alt={companySettings.name}
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                </div>
+              )}
+              <div className="text-center sm:text-left">
+                <div className="text-xl sm:text-2xl font-bold">{companySettings.name}</div>
+                <p className="text-sm sm:text-base text-muted-foreground">{companySettings.tagline}</p>
               </div>
-            )}
-            <div className="text-center sm:text-left">
-              <div className="text-xl sm:text-2xl font-bold">{companySettings.name}</div>
-              <p className="text-sm sm:text-base text-muted-foreground">{companySettings.tagline}</p>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => window.history.back()}
-              className="text-sm sm:text-base"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Homepage
-            </Button>
-          </div>
+          {/* Back button - only show in create mode */}
+          {!isEditMode && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => window.history.back()}
+                className="text-sm sm:text-base"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Homepage
+              </Button>
+            </div>
+          )}
           
           <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Job Application</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Complete all steps to submit your application</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {isEditMode ? 'Edit Application' : 'Job Application'}
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {isEditMode ? 'Update your application details' : 'Complete all steps to submit your application'}
+            </p>
           </div>
 
           {/* Step Navigation Cards */}
@@ -450,7 +505,10 @@ const handleDownloadPdf = async () => {
                   className="w-full sm:w-auto min-h-[44px]"
                   size="lg"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  {isSubmitting 
+                    ? (isEditMode ? 'Updating...' : 'Submitting...') 
+                    : (isEditMode ? 'Update Application' : 'Submit Application')
+                  }
                   <CheckCircle className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
