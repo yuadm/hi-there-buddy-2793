@@ -455,7 +455,7 @@ const handleDownloadPdf = async () => {
           {!isEditMode && (
             <div className="flex flex-wrap gap-2 mb-4">
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => window.history.back()}
                 className="text-sm sm:text-base"
               >
