@@ -210,6 +210,14 @@ const handleDownloadPdf = async () => {
     }
   };
 
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const goToStep = (step: number) => {
     // Can only go to completed steps or the next step after the last completed
     const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
@@ -497,31 +505,45 @@ const handleDownloadPdf = async () => {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 sm:mt-8">
-              {currentStep === totalSteps ? (
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sm:mt-8">
+              {currentStep > 1 && (
                 <Button
-                  onClick={handleSubmit}
-                  disabled={!canProceed() || isSubmitting}
+                  onClick={prevStep}
+                  variant="outline"
                   className="w-full sm:w-auto min-h-[44px]"
                   size="lg"
                 >
-                  {isSubmitting 
-                    ? (isEditMode ? 'Updating...' : 'Submitting...') 
-                    : (isEditMode ? 'Update Application' : 'Submit Application')
-                  }
-                  <CheckCircle className="w-4 h-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={nextStep}
-                  disabled={!canProceed()}
-                  className="w-full sm:w-auto min-h-[44px]"
-                  size="lg"
-                >
-                  Continue to Next Step
-                  <CheckCircle className="w-4 h-4 ml-2" />
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous Step
                 </Button>
               )}
+              
+              <div className="flex flex-col sm:flex-row gap-3 sm:ml-auto">
+                {currentStep === totalSteps ? (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!canProceed() || isSubmitting}
+                    className="w-full sm:w-auto min-h-[44px]"
+                    size="lg"
+                  >
+                    {isSubmitting 
+                      ? (isEditMode ? 'Updating...' : 'Submitting...') 
+                      : (isEditMode ? 'Update Application' : 'Submit Application')
+                    }
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={nextStep}
+                    disabled={!canProceed()}
+                    className="w-full sm:w-auto min-h-[44px]"
+                    size="lg"
+                  >
+                    Continue to Next Step
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+              </div>
             </div>
 
           </CardContent>
