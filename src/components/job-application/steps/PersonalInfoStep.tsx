@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -167,14 +167,6 @@ export function PersonalInfoStep({ data, updateData, onEmailValidationChange }: 
 
   const getSettingsByType = (type: string) => {
     return personalSettings.filter(s => s.setting_type === type).map(s => s.value);
-  };
-
-  const addLanguage = () => {
-    if (selectedLanguage && !data.otherLanguages?.includes(selectedLanguage)) {
-      const currentLanguages = data.otherLanguages || [];
-      updateData('otherLanguages', [...currentLanguages, selectedLanguage]);
-      setSelectedLanguage('');
-    }
   };
 
   const removeLanguage = (languageToRemove: string) => {
@@ -455,29 +447,27 @@ export function PersonalInfoStep({ data, updateData, onEmailValidationChange }: 
       <div>
         <Label>Which other languages do you speak? *</Label>
         <div className="space-y-3 mt-2">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-              <SelectTrigger className="flex-1 min-h-[44px]">
-                <SelectValue placeholder="Select a language" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border shadow-md z-50">
-                {getSettingsByType('language')
-                  .filter(lang => !data.otherLanguages?.includes(lang))
-                  .map(language => (
-                    <SelectItem key={language} value={language}>{language}</SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              type="button" 
-              onClick={addLanguage} 
-              disabled={!selectedLanguage}
-              className="w-full sm:w-auto min-h-[44px] px-6"
-            >
-              <Plus className="h-4 w-4 mr-2 sm:mr-0" />
-              <span className="sm:hidden">Add Language</span>
-            </Button>
-          </div>
+          <Select 
+            value={selectedLanguage} 
+            onValueChange={(value) => {
+              if (value && !data.otherLanguages?.includes(value)) {
+                const currentLanguages = data.otherLanguages || [];
+                updateData('otherLanguages', [...currentLanguages, value]);
+                setSelectedLanguage('');
+              }
+            }}
+          >
+            <SelectTrigger className="min-h-[44px]">
+              <SelectValue placeholder="Select a language to add" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-md z-50">
+              {getSettingsByType('language')
+                .filter(lang => lang.toLowerCase() !== 'english' && !data.otherLanguages?.includes(lang))
+                .map(language => (
+                  <SelectItem key={language} value={language}>{language}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
           
           {data.otherLanguages && data.otherLanguages.length > 0 && (
             <div className="space-y-2">
