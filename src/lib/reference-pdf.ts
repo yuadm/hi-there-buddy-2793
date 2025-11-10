@@ -2,12 +2,25 @@ import { PDFDocument, rgb, PDFPage, PDFFont } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import DejaVuSansRegularUrl from '@/assets/fonts/dejavu/DejaVuSans.ttf';
 import DejaVuSansBoldUrl from '@/assets/fonts/dejavu/DejaVuSans-Bold.ttf';
+import { format, parseISO } from 'date-fns';
 
-// Helper function to format dates from yyyy-mm-dd to dd/mm/yyyy
+// Helper function to format dates from yyyy-mm-dd or ISO string to dd/mm/yyyy
 const formatDateToDDMMYYYY = (dateString: string): string => {
   if (!dateString) return dateString;
   
-  // Check if date is in yyyy-mm-dd format
+  try {
+    // Try to parse as ISO date string (e.g., "2025-11-01T00:00:00.000Z")
+    const date = parseISO(dateString);
+    
+    // Check if date is valid
+    if (!isNaN(date.getTime())) {
+      return format(date, 'dd/MM/yyyy');
+    }
+  } catch (error) {
+    // If parsing fails, continue to manual parsing
+  }
+  
+  // Fallback: Check if date is in yyyy-mm-dd format
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
