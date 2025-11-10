@@ -548,7 +548,7 @@ const generateReferencePDFTemplate = async (
     
     if (isBlankTemplate) {
       const relationshipText = refereeInfo?.jobTitle 
-        ? `I am her/his ${refereeInfo.jobTitle.toLowerCase()}`
+        ? refereeInfo.jobTitle
         : '_'.repeat(100);
       helper.drawWrappedText(
         relationshipText,
@@ -579,7 +579,9 @@ const generateReferencePDFTemplate = async (
     helper.addSpacer(4);
     
     if (isBlankTemplate) {
-      helper.drawText('From _________________ to _________________', { color: colors.mutedText });
+      const fromDate = manualPDFData?.employmentFrom || '_________________';
+      const toDate = manualPDFData?.employmentTo || '_________________';
+      helper.drawText(`From ${fromDate} to ${toDate}`, { color: colors.mutedText });
     } else {
       const startDate = referenceData?.startDate 
         ? new Date(referenceData.startDate).toLocaleDateString() 
