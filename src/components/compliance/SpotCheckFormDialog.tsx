@@ -52,8 +52,8 @@ export default function SpotCheckFormDialog({ open, onOpenChange, onSubmit, init
   const { companySettings } = useCompany();
   const { toast } = useToast();
 
-  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
-  const [employees, setEmployees] = useState<Array<{ id: string; name: string }>>([]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string; branchName?: string }>>([]);
+  const [employees, setEmployees] = useState<Array<{ id: string; name: string; branchName?: string }>>([]);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [employee1SearchOpen, setEmployee1SearchOpen] = useState(false);
   const [employee2SearchOpen, setEmployee2SearchOpen] = useState(false);
@@ -84,12 +84,30 @@ export default function SpotCheckFormDialog({ open, onOpenChange, onSubmit, init
     const fetchData = async () => {
       try {
         const [clientsRes, employeesRes] = await Promise.all([
-          supabase.from('clients').select('id, name').order('name'),
-          supabase.from('employees').select('id, name').order('name')
+          supabase
+            .from('clients')
+            .select('id, name, branches(name)')
+            .order('name'),
+          supabase
+            .from('employees')
+            .select('id, name, branches(name)')
+            .order('name')
         ]);
         
-        if (clientsRes.data) setClients(clientsRes.data);
-        if (employeesRes.data) setEmployees(employeesRes.data);
+        if (clientsRes.data) {
+          setClients(clientsRes.data.map(client => ({
+            id: client.id,
+            name: client.name,
+            branchName: (client.branches as any)?.name || undefined
+          })));
+        }
+        if (employeesRes.data) {
+          setEmployees(employeesRes.data.map(employee => ({
+            id: employee.id,
+            name: employee.name,
+            branchName: (employee.branches as any)?.name || undefined
+          })));
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -249,24 +267,29 @@ React.useEffect(() => {
                     <CommandList>
                       <CommandEmpty>No client found.</CommandEmpty>
                       <CommandGroup>
-                        {clients.map((client) => (
-                          <CommandItem
-                            key={client.id}
-                            value={client.name}
-                            onSelect={(currentValue) => {
-                              updateField("serviceUserName", currentValue === form.serviceUserName ? "" : currentValue);
-                              setClientSearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.serviceUserName === client.name ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {client.name}
-                          </CommandItem>
-                        ))}
+                        {clients.map((client) => {
+                          const displayName = client.branchName 
+                            ? `${client.name} (${client.branchName})`
+                            : client.name;
+                          return (
+                            <CommandItem
+                              key={client.id}
+                              value={displayName}
+                              onSelect={(currentValue) => {
+                                updateField("serviceUserName", currentValue === form.serviceUserName ? "" : currentValue);
+                                setClientSearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.serviceUserName === displayName ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {displayName}
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -299,24 +322,29 @@ React.useEffect(() => {
                     <CommandList>
                       <CommandEmpty>No employee found.</CommandEmpty>
                       <CommandGroup>
-                        {employees.map((employee) => (
-                          <CommandItem
-                            key={employee.id}
-                            value={employee.name}
-                            onSelect={(currentValue) => {
-                              updateField("careWorker1", currentValue === form.careWorker1 ? "" : currentValue);
-                              setEmployee1SearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.careWorker1 === employee.name ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {employee.name}
-                          </CommandItem>
-                        ))}
+                        {employees.map((employee) => {
+                          const displayName = employee.branchName 
+                            ? `${employee.name} (${employee.branchName})`
+                            : employee.name;
+                          return (
+                            <CommandItem
+                              key={employee.id}
+                              value={displayName}
+                              onSelect={(currentValue) => {
+                                updateField("careWorker1", currentValue === form.careWorker1 ? "" : currentValue);
+                                setEmployee1SearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.careWorker1 === displayName ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {displayName}
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -345,24 +373,29 @@ React.useEffect(() => {
                     <CommandList>
                       <CommandEmpty>No employee found.</CommandEmpty>
                       <CommandGroup>
-                        {employees.map((employee) => (
-                          <CommandItem
-                            key={employee.id}
-                            value={employee.name}
-                            onSelect={(currentValue) => {
-                              updateField("careWorker2", currentValue === form.careWorker2 ? "" : currentValue);
-                              setEmployee2SearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.careWorker2 === employee.name ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {employee.name}
-                          </CommandItem>
-                        ))}
+                        {employees.map((employee) => {
+                          const displayName = employee.branchName 
+                            ? `${employee.name} (${employee.branchName})`
+                            : employee.name;
+                          return (
+                            <CommandItem
+                              key={employee.id}
+                              value={displayName}
+                              onSelect={(currentValue) => {
+                                updateField("careWorker2", currentValue === form.careWorker2 ? "" : currentValue);
+                                setEmployee2SearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.careWorker2 === displayName ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {displayName}
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
