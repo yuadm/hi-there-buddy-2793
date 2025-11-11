@@ -112,23 +112,25 @@ export function EditApplicationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-xl font-semibold">
+      <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b px-6 py-4 backdrop-blur-sm">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Editing Application: {getApplicantName()}
           </DialogTitle>
         </DialogHeader>
-        <CompanyProvider>
-          <JobApplicationPortalContent
-            initialData={transformToJobAppData()}
-            isEditMode={true}
-            applicationId={application.id}
-            onEditComplete={() => {
-              onSuccess();
-              onOpenChange(false);
-            }}
-          />
-        </CompanyProvider>
+        <div className="flex-1 overflow-y-auto">
+          <CompanyProvider>
+            <JobApplicationPortalContent
+              initialData={transformToJobAppData()}
+              isEditMode={true}
+              applicationId={application.id}
+              onEditComplete={() => {
+                onSuccess();
+                onOpenChange(false);
+              }}
+            />
+          </CompanyProvider>
+        </div>
       </DialogContent>
     </Dialog>
   );
