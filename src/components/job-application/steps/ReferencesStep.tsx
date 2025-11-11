@@ -129,6 +129,16 @@ export function ReferencesStep({ data, employmentHistory, updateData, updateEmpl
   useEffect(() => {
     if (!employmentHistory) return;
 
+    // Check if reference data already exists (edit mode) - if so, skip auto-fill
+    const hasExistingRef1 = data.reference1?.name?.trim() || data.reference1?.email?.trim();
+    const hasExistingRef2 = data.reference2?.name?.trim() || data.reference2?.email?.trim();
+    
+    if (hasExistingRef1 && hasExistingRef2) {
+      // Mark as auto-filled to prevent future overwrites
+      setAutoFilledFields({ reference1: true, reference2: true });
+      return;
+    }
+
     const employers = [];
     
     // Add recent employer if exists
@@ -143,8 +153,8 @@ export function ReferencesStep({ data, employmentHistory, updateData, updateEmpl
       ));
     }
 
-    // Auto-fill reference 1
-    if (!autoFilledFields.reference1) {
+    // Auto-fill reference 1 (only if no existing data)
+    if (!autoFilledFields.reference1 && !hasExistingRef1) {
       if (employers.length >= 1) {
         // Employer reference
         const employer = employers[0];
@@ -176,8 +186,8 @@ export function ReferencesStep({ data, employmentHistory, updateData, updateEmpl
       setAutoFilledFields(prev => ({ ...prev, reference1: true }));
     }
 
-    // Auto-fill reference 2
-    if (!autoFilledFields.reference2) {
+    // Auto-fill reference 2 (only if no existing data)
+    if (!autoFilledFields.reference2 && !hasExistingRef2) {
       if (employers.length >= 2) {
         // Employer reference
         const employer = employers[1];
