@@ -62,7 +62,7 @@ export default function ClientSpotCheckFormDialog({
   const { companySettings } = useCompany();
   const { toast } = useToast();
 
-  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string; branchName?: string }>>([]);
   const [serviceUserPopoverOpen, setServiceUserPopoverOpen] = useState(false);
 
   const [errors, setErrors] = useState<{
@@ -194,7 +194,7 @@ export default function ClientSpotCheckFormDialog({
     const fetchClients = async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name')
+        .select('id, name, branches(name)')
         .eq('is_active', true)
         .order('name');
       
@@ -202,7 +202,11 @@ export default function ClientSpotCheckFormDialog({
         console.error('Error fetching clients:', error);
         toast({ title: "Error loading clients", variant: "destructive" });
       } else {
-        setClients(data || []);
+        setClients((data || []).map(client => ({
+          id: client.id,
+          name: client.name,
+          branchName: (client.branches as any)?.name || undefined
+        })));
       }
     };
 
@@ -446,24 +450,29 @@ export default function ClientSpotCheckFormDialog({
                       <CommandList>
                         <CommandEmpty>No client found.</CommandEmpty>
                         <CommandGroup>
-                          {clients.map((client) => (
-                            <CommandItem
-                              key={client.id}
-                              value={client.name}
-                              onSelect={(currentValue) => {
-                                updateField("serviceUserName", currentValue === form.serviceUserName ? "" : currentValue);
-                                setServiceUserPopoverOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  form.serviceUserName === client.name ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {client.name}
-                            </CommandItem>
-                          ))}
+                          {clients.map((client) => {
+                            const displayName = client.branchName 
+                              ? `${client.name} (${client.branchName})`
+                              : client.name;
+                            return (
+                              <CommandItem
+                                key={client.id}
+                                value={displayName}
+                                onSelect={(currentValue) => {
+                                  updateField("serviceUserName", currentValue === form.serviceUserName ? "" : currentValue);
+                                  setServiceUserPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    form.serviceUserName === displayName ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {displayName}
+                              </CommandItem>
+                            );
+                          })}
                         </CommandGroup>
                       </CommandList>
                     </Command>
