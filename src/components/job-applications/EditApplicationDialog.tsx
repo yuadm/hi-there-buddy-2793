@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { JobApplicationPortalContent } from "@/components/job-application/JobApplicationPortal";
 import { JobApplicationData } from "@/components/job-application/types";
 import { CompanyProvider } from "@/contexts/CompanyContext";
@@ -105,9 +105,16 @@ export function EditApplicationDialog({
     };
   };
 
+  const pi = application.personal_info || {};
+  const applicantName = pi.fullName || `${pi.firstName || ''} ${pi.lastName || ''}`.trim() || 'Applicant';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-y-auto">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle>Edit Application - {applicantName}</DialogTitle>
+          <DialogDescription>Update application details for {applicantName}</DialogDescription>
+        </DialogHeader>
         <CompanyProvider>
           <JobApplicationPortalContent
             initialData={transformToJobAppData()}
