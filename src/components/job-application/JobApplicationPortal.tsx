@@ -219,6 +219,14 @@ const handleDownloadPdf = async () => {
   };
 
   const goToStep = (step: number) => {
+    // In edit mode, allow navigation to any step
+    if (isEditMode) {
+      if (step >= 1 && step <= totalSteps) {
+        setCurrentStep(step);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
     // Can only go to completed steps or the next step after the last completed
     const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
     if (step <= maxAccessibleStep && step <= totalSteps) {
@@ -229,6 +237,8 @@ const handleDownloadPdf = async () => {
   };
 
   const canAccessStep = (step: number) => {
+    // In edit mode, all steps are accessible since data is pre-filled
+    if (isEditMode) return true;
     // Can access completed steps or the next step after the last completed
     const maxAccessibleStep = Math.max(...completedSteps, 0) + 1;
     return step <= maxAccessibleStep;
