@@ -298,7 +298,7 @@ export async function generateSpotCheckPdf(data: SpotCheckFormData, company?: Co
   const url = URL.createObjectURL(blob)
   const checkDate = data.date ? new Date(data.date) : new Date()
   const quarter = Math.floor(checkDate.getMonth() / 3) + 1
-  const filename = `${data.serviceUserName || 'Employee'} Q${quarter} ${checkDate.getFullYear()} spot check.pdf`
+  const filename = `${data.careWorker1 || 'Employee'} Q${quarter} ${checkDate.getFullYear()} spot check.pdf`
   const a = document.createElement('a')
   a.href = url
   a.download = filename
