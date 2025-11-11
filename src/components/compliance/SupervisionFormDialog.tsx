@@ -162,7 +162,7 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
 
   const [step, setStep] = useState<number>(1); // 1: personal, 2: service users list, 3..n: per user, last: office
   const [showPersonalErrors, setShowPersonalErrors] = useState(false);
-  const [clients, setClients] = useState<Array<{ id: string; name: string; branchName?: string }>>([]);
+  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [serviceUserPopovers, setServiceUserPopovers] = useState<Record<number, boolean>>({});
   const [bodyDiagramModal, setBodyDiagramModal] = useState<{
     open: boolean;
@@ -201,7 +201,7 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
     const fetchClients = async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, branches(name)')
+        .select('id, name')
         .eq('is_active', true)
         .order('name');
       
@@ -209,11 +209,7 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
         console.error('Error fetching clients:', error);
         toast({ title: "Error loading clients", variant: "destructive" });
       } else {
-        setClients((data || []).map(client => ({
-          id: client.id,
-          name: client.name,
-          branchName: (client.branches as any)?.name || undefined
-        })));
+        setClients(data || []);
       }
     };
 
@@ -545,28 +541,23 @@ export default function SupervisionFormDialog({ open, onOpenChange, onSubmit, in
                       <CommandList>
                         <CommandEmpty>No client found.</CommandEmpty>
                         <CommandGroup>
-                          {clients.map((client) => {
-                            const displayName = client.branchName 
-                              ? `${client.name} (${client.branchName})`
-                              : client.name;
-                            return (
-                              <CommandItem
-                                key={client.id}
-                                value={displayName}
-                                onSelect={(currentValue) => {
-                                  updateServiceUserName(i, currentValue === form.serviceUserNames[i] ? "" : currentValue);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    form.serviceUserNames[i] === displayName ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {displayName}
-                              </CommandItem>
-                            );
-                          })}
+                          {clients.map((client) => (
+                            <CommandItem
+                              key={client.id}
+                              value={client.name}
+                              onSelect={(currentValue) => {
+                                updateServiceUserName(i, currentValue === form.serviceUserNames[i] ? "" : currentValue);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.serviceUserNames[i] === client.name ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {client.name}
+                            </CommandItem>
+                          ))}
                         </CommandGroup>
                       </CommandList>
                     </Command>
