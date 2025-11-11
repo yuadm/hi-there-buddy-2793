@@ -111,9 +111,20 @@ export function EditApplicationDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>Edit Application - {applicantName}</DialogTitle>
-          <DialogDescription>Update application details for {applicantName}</DialogDescription>
+        <DialogHeader className="px-8 pt-8 pb-6 border-b bg-gradient-to-r from-primary/5 to-primary/10">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-xl font-semibold text-primary">
+                {applicantName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-bold">{applicantName}</DialogTitle>
+              <DialogDescription className="text-base mt-1">
+                Editing application details
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <CompanyProvider>
           <JobApplicationPortalContent
