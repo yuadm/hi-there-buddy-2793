@@ -1,6 +1,6 @@
 
 import { useState, useRef } from "react";
-import { Plus, Search, Filter, Mail, Phone, MapPin, Calendar, Users, Building, Clock, User, Upload, Download, X, FileSpreadsheet, AlertCircle, Eye, Edit3, Trash2, Check, Square, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Key, CalendarIcon, Activity } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, MapPin, Calendar, Users, Building, Clock, User, Upload, Download, X, FileSpreadsheet, AlertCircle, Eye, Edit3, Trash2, Check, Square, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Key, CalendarIcon, Activity, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { usePagePermissions } from "@/hooks/usePagePermissions";
 import { useEmployeeData } from "@/hooks/useEmployeeData";
 import { useEmployeeActions } from "@/hooks/queries/useEmployeeQueries";
 import { useActivitySync } from "@/hooks/useActivitySync";
+import { LanguageSelector } from "@/components/employees/LanguageSelector";
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -43,6 +44,7 @@ interface Employee {
   leave_taken?: number;
   remaining_leave_days?: number;
   hours_restriction?: string;
+  languages?: string[];
   is_active?: boolean;
   password_hash?: string;
   must_change_password?: boolean;
@@ -119,6 +121,7 @@ export function EmployeesContent() {
     leave_taken: 0,
     remaining_leave_days: 28,
     hours_restriction: "",
+    languages: [] as string[],
     created_at: new Date().toISOString()
   });
   const [editedEmployee, setEditedEmployee] = useState({
@@ -134,6 +137,7 @@ export function EmployeesContent() {
     leave_taken: 0,
     remaining_leave_days: 28,
     hours_restriction: "",
+    languages: [] as string[],
     created_at: new Date()
   });
   const [page, setPage] = useState(1);
@@ -369,6 +373,7 @@ export function EmployeesContent() {
         leave_taken: 0,
         remaining_leave_days: newEmployee.leave_allowance,
         hours_restriction: newEmployee.hours_restriction || undefined,
+        languages: newEmployee.languages,
         password_hash: passwordHash,
         must_change_password: true,
         is_active: true,
@@ -418,6 +423,7 @@ export function EmployeesContent() {
             leave_taken: 0,
             remaining_leave_days: 28,
             hours_restriction: "",
+            languages: [],
             created_at: new Date().toISOString()
           });
           setFieldErrors({
@@ -453,6 +459,7 @@ export function EmployeesContent() {
       leave_taken: employee.leave_taken || 0,
       remaining_leave_days: employee.remaining_leave_days || 28,
       hours_restriction: employee.hours_restriction || "",
+      languages: employee.languages || [],
       created_at: employee.created_at ? new Date(employee.created_at) : new Date()
     });
     setEditMode(false);
@@ -566,7 +573,8 @@ export function EmployeesContent() {
         leave_allowance: editedEmployee.leave_allowance,
         leave_taken: editedEmployee.leave_taken,
         remaining_leave_days: editedEmployee.remaining_leave_days,
-        hours_restriction: editedEmployee.hours_restriction || undefined
+        hours_restriction: editedEmployee.hours_restriction || undefined,
+        languages: editedEmployee.languages
       }, {
         onSuccess: () => {
           syncNow();
@@ -1726,6 +1734,14 @@ export function EmployeesContent() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="languages">Languages Spoken</Label>
+              <LanguageSelector
+                selectedLanguages={newEmployee.languages}
+                onChange={(languages) => setNewEmployee({...newEmployee, languages})}
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="leave_allowance">Annual Leave Allowance (days)</Label>
@@ -2143,6 +2159,28 @@ export function EmployeesContent() {
                     <div className="p-2 bg-muted rounded text-sm">{selectedEmployee.working_hours || 'N/A'}</div>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="view_languages">Languages Spoken</Label>
+                {editMode ? (
+                  <LanguageSelector
+                    selectedLanguages={editedEmployee.languages}
+                    onChange={(languages) => setEditedEmployee({...editedEmployee, languages})}
+                  />
+                ) : (
+                  <div className="p-2 bg-muted rounded text-sm">
+                    {selectedEmployee.languages && selectedEmployee.languages.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedEmployee.languages.map((lang) => (
+                          <Badge key={lang} variant="secondary">{lang}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      'No languages specified'
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">

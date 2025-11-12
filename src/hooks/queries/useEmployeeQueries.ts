@@ -18,6 +18,7 @@ interface Employee {
   leave_taken?: number;
   remaining_leave_days?: number;
   hours_restriction?: string;
+  languages?: string[];
   is_active?: boolean;
   password_hash?: string;
   must_change_password?: boolean;
@@ -59,7 +60,16 @@ async function fetchEmployees(): Promise<Employee[]> {
     .order('name');
 
   if (error) throw error;
-  return data || [];
+  
+  // Transform languages field from JSON to array
+  const employees = (data || []).map(emp => ({
+    ...emp,
+    languages: emp.languages && Array.isArray(emp.languages) 
+      ? emp.languages.filter((lang): lang is string => typeof lang === 'string') 
+      : []
+  })) as Employee[];
+  
+  return employees;
 }
 
 // Fetch branches

@@ -1231,6 +1231,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           job_title: string | null
+          languages: Json | null
           last_login: string | null
           leave_allowance: number | null
           leave_taken: number | null
@@ -1256,6 +1257,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          languages?: Json | null
           last_login?: string | null
           leave_allowance?: number | null
           leave_taken?: number | null
@@ -1281,6 +1283,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          languages?: Json | null
           last_login?: string | null
           leave_allowance?: number | null
           leave_taken?: number | null

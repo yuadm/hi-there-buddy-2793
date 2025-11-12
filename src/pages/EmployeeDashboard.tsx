@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Calendar, FileText, User, LogOut, Clock, CheckCircle, XCircle, Shield, Plus } from 'lucide-react';
+import { Calendar, FileText, User, LogOut, Clock, CheckCircle, XCircle, Shield, Plus, Languages, Edit } from 'lucide-react';
 import { LeaveRequestDialog } from '@/components/employee/LeaveRequestDialog';
 import { DocumentUploadDialog } from '@/components/employee/DocumentUploadDialog';
 import { ComplianceOverview } from '@/components/employee/ComplianceOverview';
+import { LanguageEditDialog } from '@/components/employee/LanguageEditDialog';
 import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { CareWorkerStatementForm } from '@/components/compliance/CareWorkerStatementForm';
 import { format } from 'date-fns';
@@ -39,6 +40,7 @@ function EmployeeDashboardContent() {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [statements, setStatements] = useState([]);
   const [selectedStatement, setSelectedStatement] = useState(null);
   const [isStatementFormOpen, setIsStatementFormOpen] = useState(false);
@@ -58,6 +60,13 @@ function EmployeeDashboardContent() {
       fetchStatements();
     }
   }, [employee, loading, navigate]);
+  
+  const refetchEmployee = async () => {
+    if (employee) {
+      fetchLeaveRequests();
+      fetchStatements();
+    }
+  };
   const fetchLeaveRequests = async () => {
     if (!employee) return;
     try {
@@ -309,6 +318,36 @@ function EmployeeDashboardContent() {
                       </div>
                     </div>)}
                 </div>
+
+                {/* Languages Section */}
+                <div className="border-t pt-3 sm:pt-4">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <div className="flex items-center gap-2">
+                      <Languages className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                      <h3 className="text-sm sm:text-base font-semibold">Languages</h3>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowLanguageDialog(true)}
+                      className="h-8 text-xs sm:text-sm"
+                    >
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {employee.languages && employee.languages.length > 0 ? (
+                      employee.languages.map((lang: string) => (
+                        <Badge key={lang} variant="secondary" className="text-xs sm:text-sm">
+                          {lang}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-xs sm:text-sm text-muted-foreground">No languages specified. Click Edit to add.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -529,6 +568,14 @@ function EmployeeDashboardContent() {
       <LeaveRequestDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog} employeeId={employee.id} onSuccess={fetchLeaveRequests} />
       
       <DocumentUploadDialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog} employeeId={employee.id} />
+      
+      <LanguageEditDialog 
+        open={showLanguageDialog} 
+        onOpenChange={setShowLanguageDialog} 
+        employeeId={employee.id}
+        currentLanguages={employee.languages || []}
+        onSuccess={refetchEmployee}
+      />
       
       <CareWorkerStatementForm
         open={isStatementFormOpen}
