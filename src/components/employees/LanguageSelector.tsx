@@ -41,7 +41,10 @@ export function LanguageSelector({ selectedLanguages, onChange, disabled }: Lang
         .eq('is_active', true)
         .order('display_order');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching languages:', error);
+        return;
+      }
 
       if (data && data.length > 0) {
         const languages = data
