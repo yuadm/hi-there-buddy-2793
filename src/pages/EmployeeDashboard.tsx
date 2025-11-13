@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Calendar, FileText, User, LogOut, Clock, CheckCircle, XCircle, Shield, Plus } from 'lucide-react';
+import { Calendar, FileText, User, LogOut, Clock, CheckCircle, XCircle, Shield, Plus, Languages as LanguagesIcon, X } from 'lucide-react';
 import { LeaveRequestDialog } from '@/components/employee/LeaveRequestDialog';
 import { DocumentUploadDialog } from '@/components/employee/DocumentUploadDialog';
 import { ComplianceOverview } from '@/components/employee/ComplianceOverview';
@@ -14,6 +14,9 @@ import { CompanyProvider, useCompany } from '@/contexts/CompanyContext';
 import { CareWorkerStatementForm } from '@/components/compliance/CareWorkerStatementForm';
 import { format } from 'date-fns';
 import { useTheme } from 'next-themes';
+import { useLanguageOptions } from '@/hooks/queries/useLanguageQueries';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 interface LeaveRequest {
   id: string;
   start_date: string;
@@ -42,6 +45,11 @@ function EmployeeDashboardContent() {
   const [statements, setStatements] = useState([]);
   const [selectedStatement, setSelectedStatement] = useState(null);
   const [isStatementFormOpen, setIsStatementFormOpen] = useState(false);
+  const [isEditingLanguages, setIsEditingLanguages] = useState(false);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  
+  const { data: languageOptions = [] } = useLanguageOptions();
+  const { toast } = useToast();
   
   useEffect(() => {
     // Force light mode on this page
@@ -56,6 +64,7 @@ function EmployeeDashboardContent() {
     if (employee) {
       fetchLeaveRequests();
       fetchStatements();
+      setSelectedLanguages(employee.languages || []);
     }
   }, [employee, loading, navigate]);
   const fetchLeaveRequests = async () => {
@@ -110,6 +119,52 @@ function EmployeeDashboardContent() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/employee-login');
+  };
+
+  const handleSaveLanguages = async () => {
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update({ languages: selectedLanguages } as any)
+        .eq('id', employee.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Languages updated successfully.",
+      });
+      
+      setIsEditingLanguages(false);
+      // Refresh employee data
+      if (employee) {
+        const { data } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('id', employee.id)
+          .single();
+        
+        if (data) {
+          setSelectedLanguages((data as any).languages || []);
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update languages.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddLanguage = (language: string) => {
+    if (language && !selectedLanguages.includes(language)) {
+      setSelectedLanguages([...selectedLanguages, language]);
+    }
+  };
+
+  const handleRemoveLanguage = (language: string) => {
+    setSelectedLanguages(selectedLanguages.filter(l => l !== language));
   };
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -299,7 +354,7 @@ function EmployeeDashboardContent() {
                   label: 'Job Title',
                   value: employee.job_title || 'Not specified',
                   icon: CheckCircle
-                }].map((item, index) => <div key={item.label} className="flex items-start sm:items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-secondary transition-colors min-h-[44px]">
+                  }].map((item, index) => <div key={item.label} className="flex items-start sm:items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-secondary transition-colors min-h-[44px]">
                       <div className="h-7 w-7 sm:h-8 sm:w-8 bg-secondary rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0 mt-1 sm:mt-0">
                         <item.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                       </div>
@@ -308,6 +363,86 @@ function EmployeeDashboardContent() {
                         <p className="font-medium text-foreground text-sm sm:text-base truncate leading-tight mt-0.5 sm:mt-0">{item.value}</p>
                       </div>
                     </div>)}
+                  
+                  {/* Languages Section */}
+                  <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl hover:bg-secondary transition-colors">
+                    <div className="flex items-start gap-3 sm:gap-4 mb-2">
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 bg-secondary rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
+                        <LanguagesIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs sm:text-sm text-muted-foreground leading-tight">Languages</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsEditingLanguages(!isEditingLanguages)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            {isEditingLanguages ? 'Cancel' : 'Edit'}
+                          </Button>
+                        </div>
+                        
+                        {isEditingLanguages ? (
+                          <div className="space-y-3 mt-2">
+                            <Select
+                              value=""
+                              onValueChange={handleAddLanguage}
+                            >
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Add language" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {languageOptions
+                                  .filter(lang => !selectedLanguages.includes(lang))
+                                  .map((lang) => (
+                                    <SelectItem key={lang} value={lang}>
+                                      {lang}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+
+                            {selectedLanguages.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedLanguages.map((lang) => (
+                                  <Badge key={lang} variant="secondary" className="gap-1 px-2 py-1 text-xs">
+                                    <span>{lang}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveLanguage(lang)}
+                                      className="ml-1 hover:bg-destructive/20 rounded-full"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            <Button
+                              onClick={handleSaveLanguages}
+                              className="w-full h-9 text-xs"
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {employee.languages && employee.languages.length > 0 ? (
+                              employee.languages.map((lang) => (
+                                <Badge key={lang} variant="secondary" className="text-xs">
+                                  {lang}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No languages specified</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

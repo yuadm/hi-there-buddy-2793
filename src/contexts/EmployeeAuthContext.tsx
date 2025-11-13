@@ -13,6 +13,7 @@ interface Employee {
   leave_allowance: number;
   remaining_leave_days: number;
   leave_taken: number;
+  languages?: string[];
   branches?: {
     id: string;
     name: string;
