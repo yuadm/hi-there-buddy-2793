@@ -105,19 +105,9 @@ export function EditApplicationDialog({
     };
   };
 
-  const getApplicantName = () => {
-    const pi = application.personal_info || {};
-    return pi.fullName || `${pi.firstName || ''} ${pi.lastName || ''}`.trim() || 'Unknown Applicant';
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 gap-0 overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-xl font-semibold">
-            Editing Application: {getApplicantName()}
-          </DialogTitle>
-        </DialogHeader>
         <CompanyProvider>
           <JobApplicationPortalContent
             initialData={transformToJobAppData()}
