@@ -479,11 +479,6 @@ const handleDownloadPdf = async () => {
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">
               {isEditMode ? 'Edit Application' : 'Job Application'}
             </h1>
-            {isEditMode && formData.personalInfo.fullName && (
-              <p className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-1">
-                {formData.personalInfo.fullName}
-              </p>
-            )}
             <p className="text-sm sm:text-base text-muted-foreground">
               {isEditMode ? 'Update your application details' : 'Complete all steps to submit your application'}
             </p>

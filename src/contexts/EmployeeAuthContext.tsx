@@ -13,7 +13,6 @@ interface Employee {
   leave_allowance: number;
   remaining_leave_days: number;
   leave_taken: number;
-  languages?: string[];
   branches?: {
     id: string;
     name: string;
@@ -67,15 +66,7 @@ export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      // Transform languages field from JSON to array
-      const transformedEmployee = {
-        ...employeeData,
-        languages: employeeData.languages && Array.isArray(employeeData.languages)
-          ? employeeData.languages.filter((lang: any): lang is string => typeof lang === 'string')
-          : []
-      };
-
-      setEmployee(transformedEmployee as Employee);
+      setEmployee(employeeData);
       return true;
     } catch (error) {
       console.error('Error in fetchEmployeeData:', error);
