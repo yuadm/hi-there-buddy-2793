@@ -1,6 +1,7 @@
 
 import { useState, useRef } from "react";
 import { Plus, Search, Filter, Mail, Phone, MapPin, Calendar, Users, Building, Clock, User, Upload, Download, X, FileSpreadsheet, AlertCircle, Eye, Edit3, Trash2, Check, Square, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Key, CalendarIcon, Activity } from "lucide-react";
+import { useLanguageOptions } from "@/hooks/queries/useLanguageQueries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,7 @@ interface Employee {
   failed_login_attempts?: number;
   last_login?: string | null;
   created_at?: string;
+  languages?: string[];
   branches?: {
     id: string;
     name: string;
@@ -79,6 +81,7 @@ export function EmployeesContent() {
   const { employees, branches, loading, refetchData } = useEmployeeData();
   const { createEmployee: createEmployeeMutation, updateEmployee: updateEmployeeMutation, deleteEmployee: deleteEmployeeMutation } = useEmployeeActions();
   const { syncNow } = useActivitySync();
+  const { data: languageOptions = [] } = useLanguageOptions();
   const { getAccessibleBranches, isAdmin } = usePermissions();
   const { canViewEmployees, canCreateEmployees, canEditEmployees, canDeleteEmployees } = usePagePermissions();
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,6 +122,7 @@ export function EmployeesContent() {
     leave_taken: 0,
     remaining_leave_days: 28,
     hours_restriction: "",
+    languages: [] as string[],
     created_at: new Date().toISOString()
   });
   const [editedEmployee, setEditedEmployee] = useState({
@@ -369,6 +373,7 @@ export function EmployeesContent() {
         leave_taken: 0,
         remaining_leave_days: newEmployee.leave_allowance,
         hours_restriction: newEmployee.hours_restriction || undefined,
+        languages: newEmployee.languages,
         password_hash: passwordHash,
         must_change_password: true,
         is_active: true,
@@ -418,6 +423,7 @@ export function EmployeesContent() {
             leave_taken: 0,
             remaining_leave_days: 28,
             hours_restriction: "",
+            languages: [],
             created_at: new Date().toISOString()
           });
           setFieldErrors({
@@ -1746,6 +1752,62 @@ export function EmployeesContent() {
                   placeholder="e.g., 20 hours max"
                 />
               </div>
+            </div>
+
+            {/* Languages Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="language-select">Languages Spoken</Label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  if (value && !newEmployee.languages.includes(value)) {
+                    setNewEmployee({
+                      ...newEmployee,
+                      languages: [...newEmployee.languages, value]
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger id="language-select" className="min-h-[44px]">
+                  <SelectValue placeholder="Select languages to add" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-md z-50 max-h-[300px] overflow-y-auto">
+                  {languageOptions
+                    .filter(lang => !newEmployee.languages.includes(lang))
+                    .map((language, index) => (
+                      <SelectItem key={index} value={language}>
+                        {language}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {/* Selected Languages Display */}
+              {newEmployee.languages.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Selected Languages:</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {newEmployee.languages.map((lang, index) => (
+                      <Badge key={index} variant="secondary" className="gap-1 px-3 py-1">
+                        <span>{lang}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewEmployee({
+                              ...newEmployee,
+                              languages: newEmployee.languages.filter(l => l !== lang)
+                            });
+                          }}
+                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                          aria-label={`Remove ${lang}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -24,6 +24,7 @@ interface Employee {
   failed_login_attempts?: number;
   last_login?: string | null;
   created_at?: string;
+  languages?: string[];
   branches?: {
     id: string;
     name: string;
