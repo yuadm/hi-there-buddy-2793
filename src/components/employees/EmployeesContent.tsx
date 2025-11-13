@@ -138,7 +138,8 @@ export function EmployeesContent() {
     leave_taken: 0,
     remaining_leave_days: 28,
     hours_restriction: "",
-    created_at: new Date()
+    created_at: new Date(),
+    languages: [] as string[]
   });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -459,7 +460,8 @@ export function EmployeesContent() {
       leave_taken: employee.leave_taken || 0,
       remaining_leave_days: employee.remaining_leave_days || 28,
       hours_restriction: employee.hours_restriction || "",
-      created_at: employee.created_at ? new Date(employee.created_at) : new Date()
+      created_at: employee.created_at ? new Date(employee.created_at) : new Date(),
+      languages: employee.languages || []
     });
     setEditMode(false);
     setViewDialogOpen(true);
@@ -572,7 +574,8 @@ export function EmployeesContent() {
         leave_allowance: editedEmployee.leave_allowance,
         leave_taken: editedEmployee.leave_taken,
         remaining_leave_days: editedEmployee.remaining_leave_days,
-        hours_restriction: editedEmployee.hours_restriction || undefined
+        hours_restriction: editedEmployee.hours_restriction || undefined,
+        languages: editedEmployee.languages
       }, {
         onSuccess: () => {
           syncNow();
@@ -1386,6 +1389,7 @@ export function EmployeesContent() {
                         Leave Balance {getSortIcon('remaining_leave_days')}
                       </Button>
                     </TableHead>
+                    <TableHead>Languages</TableHead>
                     <TableHead className="w-32">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1501,6 +1505,24 @@ export function EmployeesContent() {
                               </div>
                             </div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {employee.languages && employee.languages.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {employee.languages.slice(0, 2).map((lang, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {lang}
+                                </Badge>
+                              ))}
+                              {employee.languages.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{employee.languages.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">None</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -2284,6 +2306,77 @@ export function EmployeesContent() {
                   )}
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label>Languages</Label>
+                {editMode ? (
+                  <>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value && !editedEmployee.languages.includes(value)) {
+                          setEditedEmployee({
+                            ...editedEmployee,
+                            languages: [...editedEmployee.languages, value]
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select languages" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languageOptions
+                          .filter(lang => !editedEmployee.languages.includes(lang))
+                          .map((lang, index) => (
+                            <SelectItem key={index} value={lang}>
+                              {lang}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+
+                    {editedEmployee.languages.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Selected Languages:</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {editedEmployee.languages.map((lang, index) => (
+                            <Badge key={index} variant="secondary" className="gap-1 px-3 py-1">
+                              <span>{lang}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditedEmployee({
+                                    ...editedEmployee,
+                                    languages: editedEmployee.languages.filter(l => l !== lang)
+                                  });
+                                }}
+                                className="ml-1 hover:bg-destructive/20 rounded-full"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-2 bg-muted rounded text-sm">
+                    {selectedEmployee.languages && selectedEmployee.languages.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedEmployee.languages.map((lang, index) => (
+                          <Badge key={index} variant="secondary">
+                            {lang}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      'None specified'
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="view_created_at">Creation Date (for compliance periods)</Label>
